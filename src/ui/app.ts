@@ -3,10 +3,10 @@ import { audio } from '../audio/sfx';
 import { coinsFor, starsFor } from '../core/damage';
 import { clamp, len } from '../core/math';
 import { Rng } from '../core/rng';
-import { pullToAim } from '../core/trajectory';
+import { launch, pullToAim, SIM_DT, speedFor, step } from '../core/trajectory';
 import { PLAYER_WEAPONS, WEAPONS, type WeaponId } from '../core/weapons';
 import { Duel, Fighter, type DuelEvent, type FighterSetup, type Mode, type Side } from '../game/duel';
-import { generateLevel, type LevelDef } from '../game/levels';
+import { endlessLevel, generateLevel, type LevelDef } from '../game/levels';
 import {
   buy,
   COLOR_PRICE,
@@ -27,9 +27,11 @@ import {
   type HatId,
   type SaveData,
   type ShopItem,
+  type TipId,
 } from '../game/progress';
 import { Ragdoll } from '../game/ragdoll';
 import { writeSave } from '../game/save';
+import { addProgress, chestReady, claimChest, claimMission, dailyHasReady, missionReady, refreshDaily } from '../game/daily';
 import { LEVELS_PER_WORLD, WORLDS, worldByIndex } from '../game/worlds';
 import { getLang, setLang, t, detectLang, type Key } from '../i18n';
 import { GameplayTracker, MidgameThrottle, type Platform } from '../platform/ads';
@@ -51,6 +53,8 @@ interface Session {
 }
 
 const MAX_DPR = 2;
+/** How long a rewarded button shows "no ad available" before it can be tried again. */
+export const AD_FAIL_MS = 2500;
 
 export class App {
   private canvas: HTMLCanvasElement;
@@ -79,6 +83,11 @@ export class App {
   speed = 1;
   /** Stops the simulation but keeps rendering (cover renders). */
   freeze = false;
+  /** First-time tutorial running (level 1-1). */
+  private tutorialActive = false;
+  private tutEl: HTMLElement | null = null;
+  private tipQueue: string[] = [];
+  private tipShown: HTMLElement | null = null;
 
   constructor(
     private readonly root: HTMLElement,
@@ -122,13 +131,11 @@ export class App {
     audio.setMuted(this.adPlaying || this.platform.platformMuted());
   }
 
-  onAdStart(): void {
-    this.adPlaying = true;
+  /** Called by the platform: true while an ad plays (audio muted, game paused), false after. */
+  onAdPause(paused: boolean): void {
+    this.adPlaying = paused;
     this.applyAudio();
-  }
-  onAdEnd(): void {
-    this.adPlaying = false;
-    this.applyAudio();
+    if (!paused) this.last = performance.now();
   }
 
   private persist(): void {
@@ -162,9 +169,10 @@ export class App {
     this.last = now;
     if (this.duel && this.scene && !this.paused && !this.adPlaying && !this.freeze) {
       for (let i = 0; i < this.speed; i++) {
-        const slow = this.duel.slowmo > 0 ? 0.35 : 1;
+        // kill cam / headshot slow motion
+        const slow = this.duel.timeScale;
         this.duel.update(dt * slow);
-        this.scene.update(dt * slow, this.view);
+        this.scene.update(dt * slow, this.view, dt);
       }
       if (this.session?.attract) this.attractTick();
       else this.duelTick(dt);
@@ -215,6 +223,11 @@ export class App {
     const cv = this.canvas;
     cv.addEventListener('pointerdown', (e) => {
       audio.unlock();
+      // tap to skip the kill cam
+      if (this.duel?.killCam && !this.session?.attract) {
+        this.duel.skipKillCam();
+        return;
+      }
       if (!this.duel?.humanAiming || this.paused || this.drag) return;
       cv.setPointerCapture(e.pointerId);
       this.drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY };
@@ -322,6 +335,61 @@ export class App {
     d.on((e) => this.onEvent(e));
   }
 
+  private dailyButton(): HTMLElement {
+    if (refreshDaily(this.save, new Date())) this.persist();
+    const b = this.btn(t('menu.daily'), () => this.daily(), 'daily', { id: 'daily' });
+    if (dailyHasReady(this.save)) b.append(h('span.dot', { 'aria-label': '!' }));
+    return b;
+  }
+
+  /** Daily chest + 3 daily missions. */
+  daily(): void {
+    if (refreshDaily(this.save, new Date())) this.persist();
+    const d = this.save.daily;
+    const ready = chestReady(this.save);
+    const chest = h(`div.chest${ready ? '.ready' : '.open'}`, { html: CHEST_SVG });
+    const chestBtn = ready
+      ? this.btn(t('daily.open'), () => {
+          const got = claimChest(this.save, new Rng(Date.now()));
+          if (!got) return;
+          this.persist();
+          audio.play('coin');
+          window.setTimeout(() => audio.play('star', { index: 2 }), 200);
+          this.flash(got.hat ? t('daily.hat', { h: t(`hat.${got.hat}` as Key) }) : t('daily.got', { n: got.coins }), 'info', 1800);
+          this.daily();
+        }, 'primary', { id: 'open-chest' })
+      : h('div.sub', {}, t('daily.opened'));
+    const missions = h('div.missions', {}, ...d.missions.map((m, i) => {
+      const pct = Math.round((m.progress / m.goal) * 100);
+      const action = m.claimed
+        ? h('span.tag.eq', {}, t('daily.claimed'))
+        : missionReady(m)
+          ? this.btn(`${t('daily.claim')} +${m.reward}`, () => {
+              if (claimMission(this.save, i) > 0) {
+                this.persist();
+                audio.play('coin');
+                this.daily();
+              }
+            }, 'small buy', { 'data-mission': m.kind })
+          : h('span.tag', {}, `${m.progress}/${m.goal}`);
+      return h(`div.mission${m.claimed ? '.done' : ''}`, {},
+        h('div.mtext', {}, h('b', {}, t(`mission.${m.kind}` as Key, { n: m.goal })), h('div.mbar', {}, h('i', { style: `width:${pct}%` }))),
+        action,
+      );
+    }));
+    this.show(
+      h('div.screen.setup', {},
+        h('div.topbar', {}, this.btn('‹ ' + t('common.back'), () => this.title(), 'small'), this.coinsBadge()),
+        h('div.card.dailycard', {},
+          h('h2', {}, t('daily.title')),
+          h('div.chestrow', {}, chest, h('div', {}, h('b', {}, t('daily.chest')), d.streak > 0 ? h('div.sub', {}, t('daily.streak', { n: d.streak })) : null, chestBtn)),
+          h('div.label', {}, t('daily.missions')),
+          missions,
+        ),
+      ),
+    );
+  }
+
   title(): void {
     this.paused = false;
     this.resultShown = false;
@@ -342,6 +410,7 @@ export class App {
           ),
           h('div.row', {},
             this.btn(t('menu.shop'), () => this.shop('weapon'), '', { id: 'shop' }),
+            this.dailyButton(),
             this.btn(t('menu.settings'), () => this.settings(() => this.title()), '', { id: 'settings' }),
           ),
         ),
@@ -461,13 +530,10 @@ export class App {
     const locked = PLAYER_WEAPONS.find((id) => !this.save.weapons.includes(id) && id !== s.tryWeapon);
     let tryBtn: HTMLElement | null = null;
     if (s.mode === 'adventure' && locked && !s.tryWeapon && this.platform.adsUnavailable() === null) {
-      tryBtn = this.btn(`▶ ${t('intro.try', { w: t(`weapon.${locked}` as Key) })}`, () => {
-        void this.rewarded().then((ok) => {
-          if (!ok) return;
-          s.tryWeapon = locked;
-          this.prepareDuel();
-          this.showIntro();
-        });
+      tryBtn = this.adButton(`▶ ${t('intro.try', { w: t(`weapon.${locked}` as Key) })}`, () => {
+        s.tryWeapon = locked;
+        this.prepareDuel();
+        this.showIntro();
       }, 'ad small', { id: 'try-weapon' });
     }
     const bossIntro = L.boss ? h('p.bossline', {}, `“${t(`boss.${W.boss.id}.intro` as Key)}”`) : null;
@@ -505,9 +571,176 @@ export class App {
     this.resultShown = false;
     this.buildHud();
     this.hud.classList.remove('hidden');
+    const s = this.session;
+    this.tutorialActive = s.mode === 'adventure' && s.world === 1 && s.level === 1 && !this.save.tutorial;
     duel.start();
     this.tracker.start();
-    if (!this.save.tutorial) this.flash(t('hud.dragHint'), 'hint', 2600);
+    if (!this.save.tutorial && !this.tutorialActive) this.flash(t('hud.dragHint'), 'hint', 2600);
+    if (s.L.boss && s.mode === 'adventure') this.scene?.say(1, t(`taunt.${s.L.world.boss.id}` as Key), 2.6);
+    if (duel.bonuses.length && !this.tutorialActive) this.tip('bonus', t('tip.bonus'), 1600);
+  }
+
+  /** A random line from a "a|b|c" translation. */
+  private line(key: Key): string {
+    const opts = t(key).split('|');
+    return opts[Math.floor(Math.random() * opts.length)] ?? '';
+  }
+
+  /** Power-up badge icons (fire / triple / shield), drawn once. */
+  private powerIcon(kind: string): string {
+    const key = `power-${kind}`;
+    const hit = this.icons.get(key);
+    if (hit) return hit;
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const ctx = c.getContext('2d') as CanvasRenderingContext2D;
+    ctx.translate(32, 32);
+    ctx.scale(110, 110);
+    this.scene?.drawRewardIcon(ctx, kind, 0, 0, 0.2, 0.03);
+    const url = c.toDataURL();
+    this.icons.set(key, url);
+    return url;
+  }
+
+  // ───────────── tutorial & tips ─────────────
+
+  /** Level 1-1, first time: an animated hand shows the drag, a glowing path shows a good shot. */
+  private showTutorial(): void {
+    const duel = this.duel;
+    const scene = this.scene;
+    if (!duel || !scene || !duel.humanAiming) return;
+    const shot = duel.autoShot(false);
+    if (!shot) return;
+    const me = duel.current;
+    const foe = duel.other(me.side);
+    // the ghost path: the real flight of that shot, up to the enemy
+    const f = launch(me.launchPoint(shot.angle), shot.angle, speedFor(shot.power, me.def));
+    const pts: Array<{ x: number; y: number }> = [];
+    const fx = foe.center().x;
+    for (let i = 0; i < 240 * 4 && (f.x - fx) * me.facing < 0; i++) {
+      step(f, me.def, { wind: duel.wind }, SIM_DT);
+      if (i % 12 === 0) pts.push({ x: f.x, y: f.y });
+    }
+    scene.ghost = pts;
+    scene.fullPreview = true;
+    // the hand: presses beside the hero and pulls back along the right drag
+    const dpr = this.view.dpr;
+    const sh = me.rag.shoulder();
+    const [sx, sy] = scene.toScreen(sh.x, sh.y, this.view);
+    const pull = shot.power * this.maxPull();
+    const x0 = clamp(sx / dpr + 110, 40, window.innerWidth - 60);
+    const y0 = clamp(sy / dpr - 10, 120, window.innerHeight - 160);
+    const dx = -Math.cos(shot.angle) * pull;
+    const dy = -Math.sin(shot.angle) * pull;
+    this.tutEl?.remove();
+    this.tutEl = h('div.tutorial', {},
+      h('div.tutbubble', {}, h('b', {}, t('tut.drag')), h('span', {}, t('tut.follow'))),
+      h('div.hand', { style: `left:${x0}px;top:${y0}px;--dx:${dx.toFixed(0)}px;--dy:${dy.toFixed(0)}px`, html: HAND_SVG }),
+      h('div.handtrail', { style: `left:${x0}px;top:${y0}px;--dx:${dx.toFixed(0)}px;--dy:${dy.toFixed(0)}px` }),
+      h<'button'>('button.btn.small.skip#skip-tutorial', { onclick: () => this.endTutorial() }, t('tut.skip')),
+    );
+    this.hud.append(this.tutEl);
+  }
+
+  private endTutorial(): void {
+    this.tutorialActive = false;
+    this.tutEl?.remove();
+    this.tutEl = null;
+    if (this.scene) {
+      this.scene.ghost = null;
+      this.scene.fullPreview = false;
+    }
+    if (!this.save.tutorial) {
+      this.save.tutorial = true;
+      this.persist();
+    }
+  }
+
+  /** A short tip, shown only the first time (saved). One at a time: later tips wait their turn. */
+  private tip(id: TipId, text: string, delay = 0): void {
+    if (this.save.tips.includes(id) || this.session?.attract) return;
+    this.save.tips.push(id);
+    this.persist();
+    window.setTimeout(() => {
+      this.tipQueue.push(text);
+      this.nextTip();
+    }, delay);
+  }
+
+  private nextTip(): void {
+    if (this.tipShown) return;
+    const text = this.tipQueue.shift();
+    if (!text) return;
+    const el = h('div.tipbubble', { role: 'status' }, text);
+    let done = false;
+    const close = () => {
+      if (done) return;
+      done = true;
+      el.remove();
+      this.tipShown = null;
+      window.setTimeout(() => this.nextTip(), 250);
+    };
+    el.addEventListener('click', close);
+    this.tipShown = el;
+    this.hud.append(el);
+    this.placeTip(el);
+    window.setTimeout(close, 4800);
+  }
+
+  /** Puts a tip where it covers no fighter, floating bonus or HUD element (tries a few spots). */
+  private placeTip(el: HTMLElement): void {
+    const avoid = this.screenObstacles();
+    const hudBottom = this.hud.querySelector('.hudtop')?.getBoundingClientRect().bottom ?? 90;
+    el.style.setProperty('--hud-h', `${Math.round(hudBottom + 8)}px`);
+    const spots = ['pos-bottom', 'pos-top', 'pos-corner'];
+    let best = spots[0] as string;
+    let bestArea = Infinity;
+    for (const spot of spots) {
+      el.classList.remove(...spots);
+      el.classList.add(spot);
+      const r = el.getBoundingClientRect();
+      let area = 0;
+      for (const o of avoid) {
+        const w = Math.min(r.right, o.x1) - Math.max(r.left, o.x0);
+        const hh = Math.min(r.bottom, o.y1) - Math.max(r.top, o.y0);
+        if (w > 0 && hh > 0) area += w * hh;
+      }
+      if (r.left < 0 || r.top < 0 || r.right > window.innerWidth || r.bottom > window.innerHeight) area += 1e9;
+      if (area < bestArea) {
+        best = spot;
+        bestArea = area;
+      }
+      if (area === 0) break;
+    }
+    el.classList.remove(...spots);
+    el.classList.add(best);
+  }
+
+  /** Screen rectangles (CSS px) of the fighters, floating bonuses and HUD widgets. */
+  private screenObstacles(): Array<{ x0: number; y0: number; x1: number; y1: number }> {
+    const out: Array<{ x0: number; y0: number; x1: number; y1: number }> = [];
+    const duel = this.duel;
+    const scene = this.scene;
+    const v = this.view;
+    if (duel && scene) {
+      const box = (x0: number, y0: number, x1: number, y1: number) => {
+        const [a, b] = scene.toScreen(x0, y0, v);
+        const [c, d] = scene.toScreen(x1, y1, v);
+        out.push({ x0: a / v.dpr, y0: b / v.dpr, x1: c / v.dpr, y1: d / v.dpr });
+      };
+      for (const f of duel.fighters) {
+        const s = f.rag.scale;
+        box(f.rag.homeX - 0.8 * s, f.rag.footY - 2.4 * s, f.rag.homeX + 0.8 * s, f.rag.footY + 0.1);
+      }
+      for (const b of duel.bonuses) if (b.alive) box(b.x - 0.6, b.y - 1.25, b.x + 0.6, b.y + 0.45);
+    }
+    for (const sel of ['.hudtop', '.weapons', '.pause']) {
+      const e = this.hud.querySelector(sel);
+      if (!e) continue;
+      const r = e.getBoundingClientRect();
+      if (r.width > 0) out.push({ x0: r.left, y0: r.top, x1: r.right, y1: r.bottom });
+    }
+    return out;
   }
 
   // ───────────── HUD ─────────────
@@ -517,12 +750,16 @@ export class App {
     const s = this.session;
     if (!duel || !s) return;
     clear(this.hud);
+    this.tipShown = null;
+    this.tutEl = null;
     const bar = (side: Side, name: string) => {
       const fill = h('i');
       const num = h('span.num', {}, String(duel.fighters[side].hp));
       this.hudRefs[`hp${side}`] = fill;
       this.hudRefs[`num${side}`] = num;
-      return h(`div.hp.s${side}`, {}, h('img.mini', { src: this.portrait(duel.fighters[side]), alt: '' }), h('div.col', {}, h('span.name', {}, name), h('div.bar', {}, fill)), num);
+      const power = h('div.power', {});
+      this.hudRefs[`power${side}`] = power;
+      return h(`div.hp.s${side}`, {}, h('img.mini', { src: this.portrait(duel.fighters[side]), alt: '' }), h('div.col', {}, h('span.name', {}, name), h('div.bar', {}, fill)), num, power);
     };
     const label = s.mode === 'endless' ? t('hud.wave', { n: s.wave + 1 }) : s.mode === 'versus' ? '2P' : `${s.world}-${s.level}`;
     const wind = h('div.wind', {}, h('span.arrow'), h('span.val'));
@@ -533,6 +770,8 @@ export class App {
     this.hudRefs.weapons = weapons;
     const toast = h('div.toast', {});
     this.hudRefs.toast = toast;
+    const skip = h('div.skiphint', {}, t('hud.tapSkip'));
+    this.hudRefs.skip = skip;
     this.hud.append(
       h('div.hudtop', {},
         bar(0, s.mode === 'versus' ? t('hud.p1') : t('hud.you')),
@@ -542,6 +781,7 @@ export class App {
       h<'button'>('button.pause', { 'aria-label': t('pause.title'), id: 'pause', onclick: () => this.pause() }, h('span'), h('span')),
       toast,
       weapons,
+      skip,
     );
     this.refreshWeapons();
     this.updateHud();
@@ -582,7 +822,19 @@ export class App {
         fill.classList.toggle('low', f.hp / f.maxHp < 0.3);
       }
       if (num) num.textContent = String(f.hp);
+      const pw = this.hudRefs[`power${side}`];
+      if (pw) {
+        const kinds = [f.power, f.shield ? 'shield' : null].filter((k): k is string => !!k);
+        const key = kinds.join(',');
+        if (pw.dataset.k !== key) {
+          pw.dataset.k = key;
+          clear(pw);
+          for (const k of kinds) pw.append(h('img', { src: this.powerIcon(k), alt: t(`power.${k}` as Key) }));
+        }
+      }
     }
+    const skip = this.hudRefs.skip;
+    if (skip) skip.classList.toggle('on', !!duel.killCam);
     const wind = this.hudRefs.wind;
     if (wind) {
       const v = duel.wind;
@@ -634,10 +886,7 @@ export class App {
         snd(e.weapon.sound, { pitch: 0.9 + Math.random() * 0.2 });
         if (e.weapon.spin) snd('spin');
         if (!quiet) this.refreshWeapons();
-        if (e.side === 0 && !this.save.tutorial && !quiet) {
-          this.save.tutorial = true;
-          this.persist();
-        }
+        if (e.side === 0 && !quiet && (this.tutorialActive || !this.save.tutorial)) this.endTutorial();
         break;
       case 'hit': {
         const head = e.zone === 'head';
@@ -654,9 +903,45 @@ export class App {
         }
         if (e.weapon.look === 'snowball') fx.burst('snow', e.x, e.y, 18, { speed: 4, size: 0.07, color: '#ffffff', life: 0.8, g: 6 });
         if (e.weapon.look === 'bolt') fx.burst('magic', e.x, e.y, 16, { speed: 4, size: 0.08, color: ['#d6a8ff', '#ffffff'], life: 0.6, g: 0 });
+        if (e.fire) fx.burst('ember', e.x, e.y, 14, { speed: 3.5, size: 0.1, color: ['#ffb347', '#ff6a1f', '#ffd23d'], life: 0.7, g: -1 });
+        if (!quiet) this.updateHud();
+        if (!quiet && e.side === 1 && this.session?.mode !== 'versus') this.tip('head', t('tip.head'), head ? 1300 : 700);
+        // comic reactions (never on the K.O. itself: the kill cam takes over)
+        if (!e.ko && (head || Math.random() < 0.55)) scene.say(e.side, this.line('say.hit'));
+        {
+          const shooter = duel.other(e.side);
+          if (!quiet && head && !shooter.setup.ai && shooter.headStreak >= 2) {
+            window.setTimeout(() => this.toast(t('hud.streak', { n: shooter.headStreak }), 'p1'), 700);
+          }
+        }
+        break;
+      }
+      case 'hat':
+        // the kill cam speaks for itself on a K.O.
+        if (!duel.fighters[e.side].ko) scene.say(e.side, this.line('say.hat'), 1.8);
+        snd('whoosh', { pitch: 1.4, volume: 0.6 });
+        break;
+      case 'bonus': {
+        const col: Record<string, string[]> = { coins: ['#ffd23d', '#fff3a0'], fire: ['#ff6a1f', '#ffd23d'], triple: ['#3cc4ff', '#ffffff'], shield: ['#7be0ff', '#ffffff'], heal: ['#ff6fb5', '#ffffff'] };
+        fx.burst('star', e.x, e.y, 8, { speed: 4, size: 0.16, color: col[e.reward] ?? ['#ffd23d'], life: 0.9, g: 3 });
+        fx.burst('spark', e.x, e.y, 12, { speed: 6, size: 0.08, color: col[e.reward] ?? ['#ffffff'], life: 0.4, g: 0 });
+        fx.add({ kind: 'ring', x: e.x, y: e.y, size: 0.8, life: 0.3, color: '#ffffff' });
+        const label = e.reward === 'coins' ? t('power.coins', { n: e.coins }) : t(`power.${e.reward}` as Key);
+        fx.text(e.x, e.y - 0.5, label, (col[e.reward] ?? ['#ffd23d'])[0] as string, true);
+        snd(e.reward === 'coins' ? 'coin' : 'magic', { pitch: 1.2 });
         if (!quiet) this.updateHud();
         break;
       }
+      case 'shield':
+        fx.add({ kind: 'ring', x: e.x, y: e.y, size: 1.4, life: 0.4, color: '#7be0ff' });
+        fx.burst('spark', e.x, e.y, 14, { speed: 5, size: 0.08, color: ['#7be0ff', '#ffffff'], life: 0.4, g: 0 });
+        fx.text(e.x, e.y - 0.6, t('hud.blocked'), '#7be0ff', true);
+        snd('clink', { pitch: 1.4 });
+        if (!quiet) this.updateHud();
+        break;
+      case 'killcam':
+        if (!quiet) this.updateHud();
+        break;
       case 'blast':
         fx.blast(e.x, e.y, e.r, e.weapon.look === 'meteor');
         snd('explosion');
@@ -688,15 +973,33 @@ export class App {
         fx.burst('leaf', e.x, e.y, 5, { speed: 2, size: 0.12, color: ['#7fd14a', '#4f9e3a', '#f2b13d'], life: 1.8, g: 1.5 });
         break;
       case 'miss':
-        if (!quiet && duel.fighters[e.side] && !duel.fighters[e.side].setup.ai) this.toast(t('hud.miss'));
+        if (!quiet && duel.fighters[e.side] && !duel.fighters[e.side].setup.ai) {
+          this.toast(t('hud.miss'));
+          if (Math.random() < 0.35 && this.session?.mode !== 'versus') scene.say(1, this.line('say.miss'), 1.3);
+        }
         break;
       case 'fall': {
-        const lava = duel.level.floor.kind === 'lava';
-        fx.burst(lava ? 'ember' : 'snow', e.x, e.y, 18, { speed: 4, size: 0.1, color: lava ? ['#ffb347', '#ff6a1f'] : ['#ffffff', '#cfefff'], life: 0.8, g: 5 });
+        const kind = duel.level.floor.kind;
+        const lava = kind === 'lava';
+        const water = kind === 'lake';
+        if (lava) {
+          // a hot-foot hop: smoke puffs, embers and stars (no harm shown)
+          fx.burst('puff', e.x, e.y, 12, { speed: 3, size: 0.35, color: ['#7a6a70', '#9a8a90', '#ffffff'], life: 1.2, g: -2 });
+          fx.burst('ember', e.x, e.y, 20, { speed: 5, size: 0.1, color: ['#ffb347', '#ff6a1f'], life: 0.9, g: 3 });
+        } else if (water) {
+          fx.burst('snow', e.x, e.y, 26, { speed: 6, size: 0.12, color: ['#ffffff', '#bfe6ff', '#8fc6e6'], life: 1, g: 9, up: 3 });
+          fx.add({ kind: 'ring', x: e.x, y: e.y, size: 1.4, life: 0.5, color: '#ffffff' });
+        } else {
+          fx.burst('puff', e.x, e.y, 10, { speed: 2.5, size: 0.4, color: ['#ffffff', '#f2eee6'], life: 1.1, g: -1 });
+        }
+        fx.burst('star', e.x, e.y - 0.5, 6, { speed: 4, size: 0.2, color: ['#ffd23d'], life: 1.1, g: 2, up: 2 });
         if (e.dmg > 0) fx.text(e.x, e.y - 1, `-${e.dmg}`, '#ffffff');
-        snd('splash');
+        snd('splash', { pitch: lava ? 0.8 : 1 });
         if (!quiet) {
-          this.toast(t('hud.fall'));
+          if (e.ringOut) {
+            snd('ko');
+            this.flash(t('hud.ringout'), 'ko', 1600);
+          } else if (!e.ko) this.toast(t('hud.fall'));
           this.updateHud();
         }
         break;
@@ -713,6 +1016,11 @@ export class App {
         else if (e.side === 0) this.toast(t('hud.yourTurn'), 'p1');
         else this.toast(t('hud.enemyTurn'), 'p2');
         if (!duel.fighters[e.side].setup.ai) snd('turn');
+        if (e.side === 0 && this.tutorialActive) window.setTimeout(() => this.tutorialActive && this.showTutorial(), 350);
+        if (e.side === 0 && this.session?.mode !== 'versus') {
+          if (Math.abs(duel.wind) >= 0.3) this.tip('wind', t('tip.wind'), 900);
+          else if (duel.fighters[0].setup.weapons.length > 1) this.tip('weapons', t('tip.weapons'), 900);
+        }
         if (Math.abs(duel.wind) > 1.5 && duel.level.wind.gust > 0) snd('wind', { volume: 0.6 });
         break;
       case 'timeout':
@@ -786,14 +1094,40 @@ export class App {
 
   private async rewarded(): Promise<boolean> {
     this.tracker.stop();
-    let ok: boolean;
     try {
-      ok = await this.platform.rewarded();
+      return await this.platform.rewarded();
     } catch {
-      ok = false;
+      return false;
     }
-    if (!ok) this.flash(t('result.adFail'), 'info', 1800);
-    return ok;
+  }
+
+  /**
+   * A rewarded-ad button: disabled while the ad is requested; if no ad comes, it says so
+   * for 2.5 s, then gets its label back and can be tried again. The game never waits on it.
+   */
+  private adButton(label: string, onReward: () => void, cls: string, attrs: Record<string, string>): HTMLButtonElement {
+    const b = this.btn(label, () => {
+      if (b.disabled) return;
+      b.disabled = true;
+      b.classList.add('waiting');
+      b.setAttribute('aria-busy', 'true');
+      void this.rewarded().then((ok) => {
+        b.classList.remove('waiting');
+        b.removeAttribute('aria-busy');
+        if (ok) {
+          onReward();
+          return;
+        }
+        b.textContent = t('result.adFail');
+        b.classList.add('failed');
+        window.setTimeout(() => {
+          b.textContent = label;
+          b.classList.remove('failed');
+          b.disabled = false;
+        }, AD_FAIL_MS);
+      });
+    }, cls, attrs);
+    return b;
   }
 
   /** Natural break: a midgame ad (throttled) before continuing. */
@@ -826,6 +1160,8 @@ export class App {
     const replay = starsOf(this.save, s.world, s.level) > 0;
     const coins = coinsFor(s.world, s.level, stars, L.boss, replay);
     const res = recordLevel(this.save, s.world, s.level, stars, coins);
+    const extra = this.duelExtras(won, s.world);
+    this.trackMissions(won, stars);
     this.persist();
     if (won && L.boss) this.platform.happytime();
     audio.play(won ? 'win' : 'lose');
@@ -851,35 +1187,29 @@ export class App {
     }
     const extras = h('div.extras', {});
     if (won && coins > 0 && this.platform.adsUnavailable() === null) {
-      const dbl = this.btn(`▶ ${t('result.double')}`, () => {
+      const dbl = this.adButton(`▶ ${t('result.double')}`, () => {
         if (doubled) return;
-        void this.rewarded().then((ok) => {
-          if (!ok || doubled) return;
-          doubled = true;
-          this.save.coins += coins;
-          this.persist();
-          coinLine.lastChild!.textContent = t('result.coins', { n: coins * 2 });
-          dbl.remove();
-          audio.play('coin');
-          this.flash(t('result.doubled'), 'info');
-          this.refreshCoins();
-        });
+        doubled = true;
+        this.save.coins += coins;
+        this.persist();
+        coinLine.lastChild!.textContent = t('result.coins', { n: coins * 2 });
+        dbl.remove();
+        audio.play('coin');
+        this.flash(t('result.doubled'), 'info');
+        this.refreshCoins();
       }, 'ad', { id: 'double' });
       extras.append(dbl);
     }
     if (!won && L.boss && !s.revived && this.platform.adsUnavailable() === null) {
-      extras.append(this.btn(`▶ ${t('result.revive')}`, () => {
-        void this.rewarded().then((ok) => {
-          if (!ok) return;
-          s.revived = true;
-          this.show();
-          this.resultShown = false;
-          duel.revive(0);
-          this.hud.classList.remove('hidden');
-          this.updateHud();
-          this.refreshWeapons();
-          this.tracker.start();
-        });
+      extras.append(this.adButton(`▶ ${t('result.revive')}`, () => {
+        s.revived = true;
+        this.show();
+        this.resultShown = false;
+        duel.revive(0);
+        this.hud.classList.remove('hidden');
+        this.updateHud();
+        this.refreshWeapons();
+        this.tracker.start();
       }, 'ad', { id: 'revive' }));
     }
     this.show(
@@ -889,12 +1219,59 @@ export class App {
           starsEl,
           h('div.stats', {}, h('span', {}, t('result.hp', { n: me.hp })), h('span', {}, t('result.shots', { n: me.shots, p: L.par }))),
           coinLine,
+          extra.lines.length ? h('div.combos', {}, ...extra.lines.map((l) => h('span', {}, l))) : null,
           res.unlockedWorld ? h('div.unlocked', {}, t('result.unlocked', { w: t(`world.${worldByIndex(res.unlockedWorld).id}` as Key) })) : null,
           extras,
           buttons,
         ),
       ),
     );
+  }
+
+  /** Combo rewards (Perfect, Sharpshooter, headshot streak) and coins picked up in the duel. */
+  private duelExtras(won: boolean, world: number): { coins: number; lines: string[] } {
+    const me = this.duel?.fighters[0];
+    if (!me) return { coins: 0, lines: [] };
+    const lines: string[] = [];
+    let coins = 0;
+    if (me.coins > 0) {
+      coins += me.coins;
+      lines.push(t('result.bonusCoins', { n: me.coins }));
+    }
+    if (won && me.damageTaken === 0) {
+      const n = 20 + world * 3;
+      coins += n;
+      lines.push(t('result.perfect', { n }));
+    }
+    if (won && me.shots === 1) {
+      coins += 30;
+      lines.push(t('result.sharpshooter', { n: 30 }));
+    }
+    if (me.bestHeadStreak >= 2) {
+      const n = me.bestHeadStreak * 5;
+      coins += n;
+      lines.push(t('result.streak', { s: me.bestHeadStreak, n }));
+    }
+    this.save.coins += coins;
+    return { coins, lines };
+  }
+
+  /** Daily mission progress from a duel against the AI. */
+  private trackMissions(won: boolean, stars: number): void {
+    const duel = this.duel;
+    if (!duel) return;
+    const [me, foe] = duel.fighters;
+    refreshDaily(this.save, new Date());
+    const done = [
+      ...(won ? addProgress(this.save, 'wins') : []),
+      ...addProgress(this.save, 'headshots', me.headshots),
+      ...addProgress(this.save, 'bonuses', me.bonuses),
+      ...addProgress(this.save, 'stars', stars),
+      ...(won && me.damageTaken === 0 ? addProgress(this.save, 'flawless') : []),
+      ...(won && foe.ringedOut ? addProgress(this.save, 'ringout') : []),
+      ...(won && me.shots === 1 ? addProgress(this.save, 'sharpshooter') : []),
+    ];
+    if (done.length) window.setTimeout(() => this.flash(t('result.missionDone'), 'info', 1600), 900);
   }
 
   private refreshCoins(): void {
@@ -977,10 +1354,9 @@ export class App {
   }
 
   private endlessWave(wave: number, hp: number): void {
-    const rng = new Rng(Date.now() + wave);
-    const world = 1 + rng.int(0, furthestWorld(this.save) - 1);
-    const level = clamp(2 + Math.floor(wave * 0.8), 2, 9);
-    const L = generateLevel(world, level, { seed: rng.int(1, 1e9), forceBoss: false });
+    const L = endlessLevel(wave, furthestWorld(this.save), new Rng(Date.now() + wave));
+    const world = L.world.index;
+    const level = L.level;
     this.session = { mode: 'endless', world, level, L, tryWeapon: null, revived: false, wave, endlessHp: hp, attract: false };
     this.prepareDuel();
     this.showIntro();
@@ -994,6 +1370,8 @@ export class App {
     if (won) {
       const coins = 5 + s.wave * 2;
       this.save.coins += coins;
+      this.duelExtras(true, s.world);
+      this.trackMissions(true, 0);
       this.save.endlessBest = Math.max(this.save.endlessBest, s.wave + 1);
       this.persist();
       audio.play('win');
@@ -1013,6 +1391,7 @@ export class App {
       );
       return;
     }
+    this.trackMissions(false, 0);
     const score = s.wave;
     const best = score >= this.save.endlessBest && score > 0;
     this.save.endlessBest = Math.max(this.save.endlessBest, score);
@@ -1171,6 +1550,10 @@ export class App {
       await wait(16);
     }
     this.freeze = true;
+    // title only on covers: no speech bubbles, no floating bonuses (top-left corner stays clear)
+    scene.clearBubbles();
+    scene.fx.list = scene.fx.list.filter((p) => p.kind !== 'text');
+    duel.bonuses = [];
     hero.aim = { angle: hero.restAngle() - 0.1, power: 0.15 };
     hero.showAim = true;
     // tighter, more dramatic framing than the gameplay camera
@@ -1196,12 +1579,12 @@ export class App {
   }
 
   /** Like a player: pulls back over ~0.7 s (aim preview + power arc visible), then releases. */
-  async demoShot(head = false, weapon?: WeaponId): Promise<boolean> {
+  async demoShot(head = false, weapon?: WeaponId, target?: { x: number; y: number }): Promise<boolean> {
     const d = this.duel;
     if (!d?.humanAiming) return false;
     if (weapon) d.selectWeapon(weapon);
     this.refreshWeapons();
-    const s = d.autoShot(head);
+    const s = target ? d.autoShotAt(target) : d.autoShot(head);
     if (!s) return false;
     const f = d.current;
     const t0 = performance.now();
@@ -1229,6 +1612,10 @@ export class App {
     return d.fire();
   }
 }
+
+const CHEST_SVG = `<svg viewBox="0 0 96 80" width="96" height="80" aria-hidden="true"><g stroke="#1e1a2b" stroke-width="4" stroke-linejoin="round"><path class="lid" d="M10 34 Q10 10 48 10 Q86 10 86 34 Z" fill="#c98b4a"/><rect x="10" y="34" width="76" height="38" rx="6" fill="#a8703c"/><rect x="42" y="30" width="12" height="18" rx="3" fill="#ffd23d"/><path d="M10 50 H86" stroke-width="3"/></g><g class="sparkle" fill="#ffd23d"><circle cx="20" cy="12" r="3"/><circle cx="80" cy="8" r="2.5"/><circle cx="72" cy="24" r="2"/></g></svg>`;
+
+const HAND_SVG = `<svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><path d="M24 30V10a5 5 0 0 1 10 0v16l2-1a5 5 0 0 1 6 2l1-1a5 5 0 0 1 7 3l1 0a5 5 0 0 1 6 5v9c0 9-6 17-16 17h-6c-6 0-10-3-13-8l-8-13a5 5 0 0 1 8-6z" fill="#fff" stroke="#1e1a2b" stroke-width="4" stroke-linejoin="round"/></svg>`;
 
 /** Dashed trail linking the level nodes in order (drawn behind them). */
 function drawPath(path: HTMLElement): void {

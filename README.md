@@ -31,7 +31,19 @@ No blood or gore — sparks, stars and comic damage numbers instead (aimed at PE
   shrinks with the level — it is never perfect.
 - English + French (auto-detected, switchable in Settings). Sound + music toggles.
 - Desktop (mouse/keyboard) and mobile (touch), landscape and portrait — the camera always frames both
-  fighters. `devicePixelRatio` aware (capped at 2 for performance).
+  fighters (tighter in phone portrait). `devicePixelRatio` aware (capped at 2 for performance).
+- **First-time tutorial** on level 1: an animated hand shows the drag, the first shot follows a glowing
+  path, and short tips appear the first time something happens (a hit, wind, several weapons).
+  Skippable, shown once.
+- **"One more try" extras:** a slow-motion **kill cam** on the final hit (tap to skip), short slow-mo on
+  headshots; **floating bonuses** (balloons, crates, golden birds) that give coins or a one-shot power-up
+  (fire arrow, triple shot, shield, +20 HP) — the AI grabs them too; **ring-outs** (a heavy hit can knock a
+  weakened fighter off the platform for an instant K.O., never on levels 1–3); hats that fly off on
+  headshots, comic word bubbles, boss taunts, dizzy stars on low HP.
+- **Daily chest + 3 daily missions**, Perfect / Sharpshooter / headshot-streak bonus coins, 15 hats and
+  12 colours in the shop.
+- **Gentle start:** on levels 1–3 the AI never headshots, always misses its first shot and hits softly;
+  nothing stands near the player's line of fire.
 
 ## Controls
 
@@ -84,12 +96,23 @@ npm run test:e2e     # Playwright smoke test against the build
 npm run build:crazygames && npm run zip   # stick-duel-crazygames.zip
 ```
 
+Difficulty is tuned with an automated playtest (no build needed):
+
+- `node scripts/playtest/run.mjs` — a headless bot plays every level of every world and Endless with
+  beginner / average / good profiles, aiming only from what a player sees (the dotted no-wind preview,
+  the wind arrow, the scenery, its previous miss). Writes `docs/playtest.md` (win rate, turns, duel
+  length, shots blocked near the player, AI damage per turn). The knobs live in `TUNING` in
+  `src/game/levels.ts`; `--tune '{"skill":[0.3,0.9]}'` tries values without editing code, and
+  `--worlds 1 --levels 1,2,3 --runs 6` runs a quick subset.
+
 Tooling scripts (need a build first):
 
 - `node scripts/qa-playthrough.mjs <dir>` — plays level 1 and the boss of every world with a
   perfect-aim bot, asserts victory and saves screenshots.
 - `npm run covers` — renders the three store covers from a real duel into `submission/covers`.
-- `npm run videos` — records the two gameplay videos into `submission/videos` (needs ffmpeg).
+- `npm run videos` — records the two trailers (1920×1080 and 2:3 1080×1620) into `submission/videos` (needs ffmpeg).
+- `npm run build:crazygames && npm run submission` — `submission/stick-duel-v1.zip` (unzips to `stick-duel-v1/index.html`).
+- `npm run check:build` — single file, < 50 MB, no external links (see `docs/crazygames-checklist.md`).
 
 CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests, the build-size check and the Playwright
 smoke test on every PR; `pages.yml` deploys `dist` from `main` (Node 24).

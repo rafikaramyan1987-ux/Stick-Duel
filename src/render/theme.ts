@@ -108,4 +108,8 @@ export const HERO_COLORS: Record<string, string> = {
   pink: '#ff6fb5',
   black: '#3a3a48',
   gold: '#ffc83d',
+  teal: '#2ec4b6',
+  lime: '#a3e635',
+  navy: '#2c3e8f',
+  rainbow: '#ff4d4d',
 };

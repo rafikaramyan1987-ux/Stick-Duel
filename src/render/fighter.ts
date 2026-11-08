@@ -20,6 +20,16 @@ const shade = (hex: string, k: number): string => {
   return `rgb(${Math.min(255, r)},${Math.min(255, g)},${Math.min(255, b)})`;
 };
 
+/** The rainbow skin cycles through the hues. */
+function rainbow(): string {
+  const h = Math.round((performance.now() / 12) % 360);
+  const c = (n: number) => {
+    const k = (n + h / 30) % 12;
+    return Math.round(255 * (0.62 - 0.38 * Math.max(-1, Math.min(k - 3, 9 - k, 1))));
+  };
+  return `#${[c(0), c(8), c(4)].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 function lookOf(f: Fighter): Look {
   const s = f.setup;
   let body: string;
@@ -28,7 +38,7 @@ function lookOf(f: Fighter): Look {
   switch (s.look) {
     case 'hero':
     case 'hero2':
-      body = HERO_COLORS[s.color] ?? '#3d7bff';
+      body = s.color === 'rainbow' ? rainbow() : (HERO_COLORS[s.color] ?? '#3d7bff');
       break;
     case 'ranger':
       body = '#4c9a3c';
@@ -130,8 +140,25 @@ export function drawFighter(ctx: Ctx, f: Fighter, lw: number, time: number, phas
   ctx.rotate(head.body.getAngle());
   ctx.scale(f.facing, 1);
   drawFace(ctx, f, hr, lw, time);
-  drawHeadgear(ctx, f, hr, lw, time);
+  if (f.burnT > 0) {
+    // cartoon soot after a fire arrow
+    ctx.fillStyle = `rgba(40,30,30,${Math.min(0.45, f.burnT * 0.2)})`;
+    ctx.beginPath();
+    ctx.arc(-hr * 0.2, -hr * 0.3, hr * 0.55, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (!f.hatLost) drawHeadgear(ctx, f, hr, lw, time);
   ctx.restore();
+
+  // the knocked-off hat, flying away
+  if (f.hat) {
+    ctx.save();
+    ctx.translate(f.hat.x, f.hat.y);
+    ctx.rotate(f.hat.a);
+    ctx.scale(f.facing, 1);
+    drawHeadgear(ctx, f, hr, lw, time);
+    ctx.restore();
+  }
 
   // 4) stuck projectiles
   for (const s of f.stuck) {
@@ -144,10 +171,27 @@ export function drawFighter(ctx: Ctx, f: Fighter, lw: number, time: number, phas
   // 5) weapon in hand
   drawHeld(ctx, f, lw, time, phaseAim);
 
-  // knocked out: dizzy stars
-  if (f.ko) {
-    for (let i = 0; i < 3; i++) {
-      const a = time * 3 + (i * Math.PI * 2) / 3;
+  // shield bubble
+  if (f.shield && !f.ko) {
+    const c = r.torso.getPosition();
+    const R = 1.25 * sc;
+    const g = ctx.createRadialGradient(c.x, c.y - 0.2 * sc, R * 0.6, c.x, c.y - 0.2 * sc, R);
+    g.addColorStop(0, 'rgba(120,220,255,0.05)');
+    g.addColorStop(1, `rgba(120,220,255,${0.35 + Math.sin(time * 4) * 0.08})`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y - 0.2 * sc, R, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.lineWidth = lw;
+    ctx.stroke();
+  }
+
+  // knocked out or very low on HP: dizzy stars
+  const dizzy = !f.ko && f.hp / f.maxHp < 0.25;
+  if (f.ko || dizzy) {
+    for (let i = 0; i < (f.ko ? 3 : 2); i++) {
+      const a = time * (f.ko ? 3 : 2.2) + (i * Math.PI * 2) / (f.ko ? 3 : 2);
       ctx.fillStyle = '#ffd23d';
       star(ctx, hp.x + Math.cos(a) * hr * 1.5, hp.y - hr * 1.1 + Math.sin(a) * hr * 0.45, hr * 0.38, hr * 0.16, 5, a);
       ctx.fill();
@@ -378,6 +422,123 @@ function drawHeadgear(ctx: Ctx, f: Fighter, r: number, lw: number, time: number)
         ctx.beginPath();
         ctx.ellipse(0, -r * 1.58, Math.abs(w) + r * 0.05, r * 0.1, 0, 0, Math.PI * 2);
         outlined(ctx, '#ff4d4d', lw);
+      }
+      break;
+    case 'chef':
+      ctx.beginPath();
+      ctx.rect(-r * 0.75, -r * 1.05, r * 1.5, r * 0.5);
+      outlined(ctx, '#ffffff', lw);
+      ctx.beginPath();
+      for (const [x, y, rr] of [[-0.45, -1.35, 0.42], [0.05, -1.55, 0.5], [0.5, -1.35, 0.42]] as const) {
+        ctx.moveTo(r * (x + rr), r * y);
+        ctx.arc(r * x, r * y, r * rr, 0, Math.PI * 2);
+      }
+      outlined(ctx, '#ffffff', lw);
+      break;
+    case 'cowboy':
+      ctx.beginPath();
+      ctx.ellipse(0, -r * 0.72, r * 1.45, r * 0.22, 0, 0, Math.PI * 2);
+      outlined(ctx, '#b0703a', lw);
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.7, -r * 0.75);
+      ctx.quadraticCurveTo(-r * 0.75, -r * 1.65, -r * 0.2, -r * 1.45);
+      ctx.quadraticCurveTo(0, -r * 1.3, r * 0.2, -r * 1.45);
+      ctx.quadraticCurveTo(r * 0.75, -r * 1.65, r * 0.7, -r * 0.75);
+      ctx.closePath();
+      outlined(ctx, '#c98446', lw);
+      ctx.fillStyle = '#6b3d1f';
+      ctx.fillRect(-r * 0.7, -r * 0.98, r * 1.4, r * 0.16);
+      break;
+    case 'party':
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.6, -r * 0.7);
+      ctx.lineTo(r * 0.05, -r * 2.1);
+      ctx.lineTo(r * 0.65, -r * 0.7);
+      ctx.closePath();
+      outlined(ctx, '#ff6fb5', lw);
+      ctx.fillStyle = '#ffd23d';
+      for (const [x, y] of [[-0.25, -1.0], [0.25, -1.25], [0, -1.6]] as const) {
+        ctx.beginPath();
+        ctx.arc(r * x, r * y, r * 0.11, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.arc(r * 0.05, -r * 2.15, r * 0.18, 0, Math.PI * 2);
+      outlined(ctx, '#3cc4ff', lw);
+      break;
+    case 'beanie':
+      ctx.beginPath();
+      ctx.arc(0, -r * 0.35, r * 0.98, Math.PI, 0);
+      ctx.closePath();
+      outlined(ctx, '#3cc46a', lw);
+      ctx.beginPath();
+      ctx.rect(-r * 1.02, -r * 0.5, r * 2.04, r * 0.3);
+      outlined(ctx, '#2a9a52', lw);
+      ctx.beginPath();
+      ctx.arc(0, -r * 1.42, r * 0.25, 0, Math.PI * 2);
+      outlined(ctx, '#ffffff', lw);
+      break;
+    case 'ninja':
+      ctx.beginPath();
+      ctx.rect(-r * 1.0, -r * 0.62, r * 2.0, r * 0.32);
+      outlined(ctx, '#2b2838', lw);
+      ctx.strokeStyle = '#2b2838';
+      ctx.lineWidth = r * 0.16;
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.95, -r * 0.46);
+      ctx.quadraticCurveTo(-r * 1.5, -r * 0.3 + Math.sin(time * 9) * r * 0.2, -r * 2.0, -r * 0.55);
+      ctx.moveTo(-r * 0.95, -r * 0.46);
+      ctx.quadraticCurveTo(-r * 1.4, -r * 0.05, -r * 1.85, r * 0.05 + Math.cos(time * 8) * r * 0.15);
+      ctx.stroke();
+      ctx.fillStyle = '#ff4d5a';
+      ctx.beginPath();
+      ctx.arc(r * 0.05, -r * 0.46, r * 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    case 'astronaut':
+      ctx.fillStyle = 'rgba(190,230,255,0.35)';
+      ctx.beginPath();
+      ctx.arc(0, -r * 0.05, r * 1.32, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = OUTLINE;
+      ctx.lineWidth = lw * 1.2;
+      ctx.stroke();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = r * 0.14;
+      ctx.beginPath();
+      ctx.arc(0, -r * 0.05, r * 1.15, -2.4, -1.6);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.rect(-r * 0.9, r * 0.95, r * 1.8, r * 0.35);
+      outlined(ctx, '#e8edf5', lw);
+      ctx.beginPath();
+      ctx.moveTo(r * 0.6, -r * 1.25);
+      ctx.lineTo(r * 0.9, -r * 1.8);
+      ctx.strokeStyle = OUTLINE;
+      ctx.lineWidth = lw;
+      ctx.stroke();
+      ctx.fillStyle = '#ff4d5a';
+      ctx.beginPath();
+      ctx.arc(r * 0.9, -r * 1.85, r * 0.13, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    case 'flowercrown':
+      ctx.strokeStyle = '#3c9a46';
+      ctx.lineWidth = r * 0.13;
+      ctx.beginPath();
+      ctx.ellipse(0, -r * 0.62, r * 1.0, r * 0.25, 0, Math.PI, 0);
+      ctx.stroke();
+      for (let i = 0; i < 5; i++) {
+        const a = Math.PI + (i + 0.5) * (Math.PI / 5);
+        const x = Math.cos(a) * r * 1.0;
+        const y = -r * 0.62 + Math.sin(a) * r * 0.25;
+        ctx.fillStyle = ['#ff6fb5', '#ffd23d', '#ffffff', '#9b7bff', '#ff8a2a'][i] as string;
+        star(ctx, x, y, r * 0.24, r * 0.12, 5, time * 0.5 + i);
+        ctx.fill();
+        ctx.fillStyle = '#ffd23d';
+        ctx.beginPath();
+        ctx.arc(x, y, r * 0.07, 0, Math.PI * 2);
+        ctx.fill();
       }
       break;
     case 'ranger':

@@ -101,20 +101,12 @@ const forest: Painter = (ctx, w, h, th, rng, layer) => {
     ctx.fill();
     return;
   }
-  ctx.fillStyle = th.near;
+  // a low hedge row only: tall trees here would look like real (hittable) obstacles
+  ctx.fillStyle = vgrad(ctx, h * 0.72, h, th.nearTop, th.near);
   ctx.beginPath();
-  ridge(ctx, w, h, rng, h * 0.86, h * 0.03, 40);
+  ridge(ctx, w, h, rng, h * 0.88, h * 0.02, 40);
+  for (let x = 0; x < w + 30; x += rng.range(16, 30)) blob(ctx, x, h * 0.85 - rng.range(0, h * 0.02), rng.range(h * 0.035, h * 0.06));
   ctx.fill();
-  for (let i = 0; i < 4; i++) {
-    const x = rng.range(0, w);
-    const tw = rng.range(h * 0.03, h * 0.05);
-    ctx.fillStyle = '#244f34';
-    ctx.fillRect(x - tw / 2, h * 0.25, tw, h * 0.65);
-    ctx.fillStyle = vgrad(ctx, h * 0.05, h * 0.5, th.nearTop, th.near);
-    ctx.beginPath();
-    for (let k = 0; k < 6; k++) blob(ctx, x + rng.range(-h * 0.12, h * 0.12), h * 0.22 + rng.range(-h * 0.08, h * 0.1), rng.range(h * 0.07, h * 0.12));
-    ctx.fill();
-  }
 };
 
 const castle: Painter = (ctx, w, h, th, rng, layer) => {

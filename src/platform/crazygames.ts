@@ -31,6 +31,9 @@ interface CGSDK {
   user?: { systemInfo?: { locale?: string } };
 }
 
+/** If adStarted has not been called after this long, the request is abandoned (the game continues). */
+export const AD_START_TIMEOUT_MS = 8000;
+
 /** adError gives an error code: adsDisabled, unfilled, adblock, adCooldown, other. */
 export function adErrorCode(error: unknown): string {
   if (error && typeof error === 'object' && 'code' in error) return String((error as { code: unknown }).code);
@@ -110,36 +113,57 @@ export class CrazyGamesPlatform implements Platform {
   gameplayStop(): void { this.safe((s) => s.game.gameplayStop()); }
   happytime(): void { this.safe((s) => s.game.happytime?.()); }
 
+  /**
+   * Requests an ad and always settles exactly once:
+   * - adFinished → true (reward granted for rewarded ads)
+   * - adError, requestAd throwing, or adStarted not called within AD_START_TIMEOUT_MS → false
+   * Callbacks arriving after it settled are ignored. onAdPause(false) is called on every exit.
+   */
   private request(type: 'midgame' | 'rewarded'): Promise<boolean> {
     const sdk = this.sdk;
     if (!sdk) return Promise.resolve(type === 'midgame');
     return new Promise((resolve) => {
+      let settled = false;
       let started = false;
-      let done = false;
-      const end = (ok: boolean) => {
-        if (done) return;
-        done = true;
-        if (started) this.hooks.onAdEnd();
+      const finish = (ok: boolean, why: string) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (!ok) console.info(`[CrazyGames] ${type} ad not shown: ${why}`);
+        try {
+          this.hooks.onAdPause(false);
+        } catch (err) {
+          console.warn('[CrazyGames] onAdPause failed', err);
+        }
         resolve(ok);
       };
+      // if the ad never starts (no fill, blocked, slow network), give up and continue
+      const timer = setTimeout(() => {
+        if (!started) finish(false, 'timeout');
+      }, AD_START_TIMEOUT_MS);
       try {
         sdk.ad.requestAd(type, {
           adStarted: () => {
+            if (settled || started) return;
             started = true;
-            this.hooks.onAdStart();
+            clearTimeout(timer);
+            try {
+              this.hooks.onAdPause(true);
+            } catch (err) {
+              console.warn('[CrazyGames] onAdPause failed', err);
+            }
           },
-          adFinished: () => end(true),
+          adFinished: () => finish(true, 'finished'),
           adError: (error) => {
             const code = adErrorCode(error);
             if (code === 'adblock') this.adblock = true;
             if (code === 'adsDisabled') this.adsDisabled = true;
-            console.info('[CrazyGames] ad error', code);
-            end(false);
+            finish(false, code || 'error');
           },
         });
       } catch (err) {
-        console.warn('[CrazyGames] requestAd failed', err);
-        end(false);
+        console.warn('[CrazyGames] requestAd threw', err);
+        finish(false, 'exception');
       }
     });
   }

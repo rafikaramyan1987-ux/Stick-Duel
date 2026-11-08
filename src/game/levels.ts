@@ -1,5 +1,5 @@
-import { solveAim } from '../core/ai';
-import { beam, makeBlocker, rect, type Shape } from '../core/geometry';
+import { evaluate } from '../core/ai';
+import { beam, makeBlocker, pointInPoly, rect, type Shape } from '../core/geometry';
 import { clamp, lerp, type Vec } from '../core/math';
 import { hashSeed, Rng } from '../core/rng';
 import { WEAPONS, type WeaponId } from '../core/weapons';
@@ -53,6 +53,23 @@ export interface Deco {
 
 export type FloorKind = 'forestfloor' | 'courtyard' | 'abyss' | 'sandplain' | 'lake' | 'lava';
 
+export type BonusKind = 'balloon' | 'crate' | 'bird';
+export type Reward = 'coins' | 'fire' | 'triple' | 'shield' | 'heal';
+
+/** A floating bonus between the fighters: hit it for coins or a one-shot power-up. */
+export interface BonusDef {
+  id: number;
+  kind: BonusKind;
+  /** Rest position; balloons/crates bob up and down, birds fly back and forth. */
+  x: number;
+  y: number;
+  reward: Reward;
+  coins: number;
+  /** Horizontal flight range (birds), metres. */
+  range: number;
+  phase: number;
+}
+
 export interface LevelDef {
   key: string;
   world: WorldDef;
@@ -72,15 +89,59 @@ export interface LevelDef {
   killY: number;
   /** 0..1 — AI accuracy and decision quality. */
   skill: number;
+  /** AI behaviour: damage multiplier, whether it may headshot, whether its first shot always misses. */
+  ai: { damage: number; headshots: boolean; missFirst: boolean };
+  /** Damage multiplier for human players' hits (duel pace). */
+  playerDamage: number;
   enemy: { kind: EnemyKind; hp: number; scale: number; weapons: WeaponId[]; boss: boolean };
   playerHp: number;
   par: number;
   /** How long (seconds of flight) the dotted aim preview shows. */
   preview: number;
   friction: number;
+  /** Floating balloons / crates / birds to hit for coins or power-ups. */
+  bonuses: BonusDef[];
+  /** Falling off the platform is an instant K.O. (not on the gentle first levels). */
+  ringOut: boolean;
   /** World bounds used for "flew away" checks. */
   bounds: { minX: number; maxX: number; minY: number; maxY: number };
 }
+
+/** Difficulty knobs (see docs/playtest.md for how they were tuned). */
+type Pair = [number, number];
+export const TUNING: {
+  skill: Pair;
+  bossSkill: number;
+  damage: Pair;
+  gentleDamage: number;
+  worldDamage: number[];
+  worldSkill: number[];
+  bossDamage: number[];
+  playerDamage: number;
+  hp: [number, number, number];
+  bossHp: Pair;
+  preview: Pair;
+} = {
+  /** AI skill: base + slope × difficulty, plus a boss bonus. */
+  skill: [0.3, 0.6],
+  bossSkill: 0.25,
+  /** AI damage multiplier from the first to the last level, and on the gentle levels. */
+  damage: [1.5, 1.85],
+  gentleDamage: 0.5,
+  /** Per-world AI damage offset (each world's enemy weapons hit differently: bombs splash, boomerangs rarely hit). */
+  worldDamage: [0, 0.05, -0.1, 0.2, -0.45, -0.4],
+  /** Per-world AI skill offset. */
+  worldSkill: [0.08, 0.06, -0.08, 0, -0.14, -0.16],
+  /** Extra AI damage for each world's boss. */
+  bossDamage: [-0.4, 0.1, 0.05, 0.95, -0.45, -0.2],
+  /** Player (human) damage multiplier: sets the pace of the duels. */
+  playerDamage: 1.5,
+  /** Enemy HP: base + difficulty slope + within-world slope; bosses: base + per world. */
+  hp: [42, 26, 8],
+  bossHp: [60, 10],
+  /** Aim preview length (s of flight) from the first to the last level. */
+  preview: [1.4, 0.8],
+};
 
 /** Overall difficulty 0..1 across all 60 levels. */
 export const difficulty = (world: number, level: number): number => clamp(((world - 1) * LEVELS_PER_WORLD + (level - 1)) / 59, 0, 1);
@@ -166,10 +227,13 @@ function forest(b: Builder, L: Layout): void {
   } else {
     hill(L.enemy.x, L.enemy.y, L.boss ? 2.6 : 1.9);
   }
-  const trees = L.level === 1 ? 0 : clamp(Math.round(L.local * 1.6 + b.rng.range(0.3, 1.1)), 1, 2);
-  for (const x of gapSpots(b, 0, L.enemy.x, trees, 3.4)) {
+  // gentle start: no tree on 1-1; on 1-2/1-3 a single small tree well away from the player
+  const gentle = L.level <= 3;
+  const trees = L.level === 1 ? 0 : gentle ? 1 : clamp(Math.round(L.local * 1.6 + b.rng.range(0.3, 1.1)), 1, 2);
+  const spots = gentle ? [lerp(Math.max(5.5, L.enemy.x * 0.6), L.enemy.x - 3.2, 0.5)] : gapSpots(b, 0, L.enemy.x, trees, 3.4);
+  for (const x of spots.slice(0, trees)) {
     b.group();
-    const top = Math.min(0, L.enemy.y) - b.rng.range(1.8, 3) - L.local * 1.4;
+    const top = Math.min(0, L.enemy.y) - (gentle ? b.rng.range(1.2, 1.8) : b.rng.range(1.6, 2.6) + L.local * 0.5);
     const w = b.rng.range(0.32, 0.45);
     b.add(poly([
       { x: x - w * 0.7, y: top },
@@ -199,7 +263,7 @@ function castle(b: Builder, L: Layout): void {
     b.add(poly(rect(cx - half, top, cx + half, floor + 2)), 'stone', 'platform', false);
     // battlements: the inner merlon is cover against low shots
     const mw = 0.5;
-    const mh = boss ? 0.8 : 0.62;
+    const mh = 0.62;
     const inner = cx + facing * (half - mw / 2);
     const outer = cx - facing * (half - mw / 2);
     b.add(poly(rect(inner - mw / 2, top - mh, inner + mw / 2, top)), 'stone', 'cover', false);
@@ -353,7 +417,7 @@ function volcano(b: Builder, L: Layout): void {
   L.floor = { y: floor, kind: 'lava' };
   const column = (cx: number, top: number, half: number) => {
     // centre chunk holds the fighter; the edges can crumble into the lava
-    const c = 1.25;
+    const c = 1.6;
     b.add(poly([
       { x: cx - c, y: top },
       { x: cx + c, y: top },
@@ -390,6 +454,30 @@ function volcano(b: Builder, L: Layout): void {
   for (let i = 0; i < 3; i++) b.deco('vent', b.rng.range(-3, L.enemy.x + 3), floor, b.rng.range(0.7, 1.2));
 }
 
+/** Nothing but a fighter's own platform within this distance (m) of it: shots never start blocked. */
+export const CLEARANCE = 3;
+
+/** Leaf clumps sitting on a branch (they go when the branch goes). */
+function branchDecos(decos: Deco[], branch: Solid): Deco[] {
+  if (branch.shape.kind !== 'poly') return [];
+  const pts = branch.shape.pts;
+  return decos.filter((d) => d.kind === 'canopy' && d.group === branch.group && pts.some((q) => Math.hypot(q.x - d.x, q.y - d.y) < 0.9));
+}
+
+/** Removes branches near a fighter, and whole obstacles (trees, walls…) that crowd one. */
+function clearAroundFighters(b: Builder, spots: Vec[]): void {
+  const near = (s: Solid) =>
+    spots.some((p) => (s.shape.kind === 'circle' ? Math.abs(s.shape.c.x - p.x) - s.shape.r : Math.min(...s.shape.pts.map((q) => Math.abs(q.x - p.x)))) < CLEARANCE);
+  for (const br of b.solids.filter((s) => s.role === 'branch' && near(s))) {
+    const gone = branchDecos(b.decos, br);
+    b.decos = b.decos.filter((d) => !gone.includes(d));
+  }
+  b.solids = b.solids.filter((s) => !(s.role === 'branch' && near(s)));
+  const crowded = new Set(b.solids.filter((s) => s.group > 0 && near(s)).map((s) => s.group));
+  b.solids = b.solids.filter((s) => !crowded.has(s.group));
+  b.decos = b.decos.filter((d) => !crowded.has(d.group));
+}
+
 interface Layout {
   level: number;
   local: number;
@@ -406,41 +494,80 @@ export interface LevelOptions {
   forceBoss?: boolean;
 }
 
-/** Can both fighters hit each other with a bow (some lane through the obstacles)? */
-export function playable(L: LevelDef): boolean {
+/** Minimum width (radians) of launch angles that hit, for each side: "more than one good angle". */
+export const MIN_LANE = 0.65;
+
+/**
+ * Width of the lane for one shooter: the total range of launch angles (bow, no wind)
+ * for which some power hits the opponent's body without touching the scenery.
+ */
+export function laneWidth(L: LevelDef, side: 0 | 1): number {
   const blocked = makeBlocker(L.solids.map((s) => s.shape));
-  const sides: Array<{ from: Vec; to: Vec; s1: number; s2: number; dir: number }> = [
-    { from: L.playerSpot, to: L.enemySpot, s1: 1, s2: L.enemy.scale, dir: 1 },
-    { from: L.enemySpot, to: L.playerSpot, s1: L.enemy.scale, s2: 1, dir: -1 },
-  ];
-  return sides.every(({ from, to, s1, s2, dir }) => {
-    const sol = solveAim({
-      from: { x: from.x + dir * 0.4 * s1, y: from.y - 1.75 * s1 },
-      target: { x: to.x, y: to.y - 1.2 * s2 },
-      weapon: WEAPONS.bow,
-      wind: 0,
-      blocked,
-    });
-    return sol.miss < 0.2;
-  });
+  const me = side === 0 ? L.playerSpot : L.enemySpot;
+  const foe = side === 0 ? L.enemySpot : L.playerSpot;
+  const s1 = side === 0 ? 1 : L.enemy.scale;
+  const s2 = side === 0 ? L.enemy.scale : 1;
+  const dir = side === 0 ? 1 : -1;
+  const from = { x: me.x + dir * 0.4 * s1, y: me.y - 1.75 * s1 };
+  const target = { x: foe.x, y: foe.y - 1.2 * s2 };
+  const step = 0.04;
+  let width = 0;
+  for (let up = -0.3; up <= 1.32; up += step) {
+    const angle = dir > 0 ? -up : Math.PI + up;
+    let best = Infinity;
+    for (let j = 0; j <= 32 && best > 0.3; j++) {
+      const speed = WEAPONS.bow.speedMin + ((WEAPONS.bow.speedMax - WEAPONS.bow.speedMin) * j) / 32;
+      best = Math.min(best, evaluate({ from, target, weapon: WEAPONS.bow, wind: 0, blocked }, angle, speed));
+    }
+    if (best <= 0.3) width += step;
+  }
+  return width;
+}
+
+/** Both fighters have a comfortable lane (several good angles) through the scenery. */
+export function playable(L: LevelDef): boolean {
+  return laneWidth(L, 0) >= MIN_LANE && laneWidth(L, 1) >= MIN_LANE;
 }
 
 export function generateLevel(worldIndex: number, level: number, opt: LevelOptions = {}): LevelDef {
   const base = opt.seed ?? hashSeed(worldIndex, level, 7);
-  let L = buildLevel(worldIndex, level, base, opt.forceBoss);
-  for (let attempt = 1; attempt < 6 && !playable(L); attempt++) L = buildLevel(worldIndex, level, hashSeed(base, attempt), opt.forceBoss);
-  // still blocked: remove obstacles until a lane opens
-  while (!playable(L)) {
-    // first prune branches, then whole obstacles
-    const br = L.solids.findIndex((s) => s.role === 'branch');
-    if (br >= 0) {
-      L.solids.splice(br, 1);
-      continue;
+  const lane = (L: LevelDef) => Math.min(laneWidth(L, 0), laneWidth(L, 1));
+  // try a few layouts, keep the first with a comfortable lane (or the best one)
+  let best: LevelDef | null = null;
+  let bestLane = -1;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const L = buildLevel(worldIndex, level, attempt === 0 ? base : hashSeed(base, attempt), opt.forceBoss);
+    const w = lane(L);
+    if (w >= MIN_LANE) return L;
+    if (w > bestLane) {
+      best = L;
+      bestLane = w;
     }
-    const g = L.solids.find((s) => s.group > 0)?.group;
-    if (g === undefined) break;
-    L.solids = L.solids.filter((s) => s.group !== g);
-    L.decos = L.decos.filter((d) => d.group !== g);
+  }
+  let L = best as LevelDef;
+  // still too tight: remove the branch or obstacle whose removal opens the lane most
+  while (bestLane < MIN_LANE) {
+    const options: LevelDef[] = [];
+    L.solids.forEach((s, i) => {
+      if (s.role !== 'branch') return;
+      const gone = branchDecos(L.decos, s);
+      options.push({ ...L, solids: L.solids.filter((_, j) => j !== i), decos: L.decos.filter((d) => !gone.includes(d)) });
+    });
+    for (const g of new Set(L.solids.filter((s) => s.group > 0).map((s) => s.group))) {
+      options.push({ ...L, solids: L.solids.filter((s) => s.group !== g), decos: L.decos.filter((d) => d.group !== g) });
+    }
+    if (!options.length) break;
+    let pick = options[0] as LevelDef;
+    let pickLane = -1;
+    for (const o of options) {
+      const w = lane(o);
+      if (w > pickLane + 0.01) {
+        pick = o;
+        pickLane = w;
+      }
+    }
+    L = pick;
+    bestLane = pickLane;
   }
   return L;
 }
@@ -465,12 +592,22 @@ function buildLevel(worldIndex: number, level: number, seed: number, forceBoss?:
   const b = builder(seed ^ 0x51ed);
   const L: Layout = { level, local, boss, enemy, floor: { y: 3, kind: 'forestfloor' } };
   LAYOUTS[world.id](b, L);
+  clearAroundFighters(b, [{ x: 0, y: 0 }, enemy]);
 
   let windMag = lerp(world.wind.from, world.wind.to, local) * rng.range(0.8, 1.1);
   if (windMag < 0.25) windMag = 0;
   const base = Math.round(windMag * (rng.chance(0.5) ? 1 : -1) * 10) / 10;
-  const skill = clamp(0.06 + T * 0.58 + (boss ? 0.04 : 0), 0, 0.75);
-  const enemyHp = boss ? 115 + world.index * 15 : Math.round(45 + T * 50 + local * 10);
+  // the first three forest levels are a gentle introduction
+  const gentle = world.index === 1 && level <= 3;
+  // difficulty knobs, tuned with the playtest bot (scripts/playtest, docs/playtest.md)
+  const skill = gentle ? 0 : clamp(TUNING.skill[0] + T * TUNING.skill[1] + (TUNING.worldSkill[world.index - 1] ?? 0) + (boss ? TUNING.bossSkill : 0), 0, 0.85);
+  const wi = world.index - 1;
+  const aiDamage = gentle
+    ? TUNING.gentleDamage
+    : lerp(TUNING.damage[0], TUNING.damage[1], T) + (TUNING.worldDamage[wi] ?? 0) + (boss ? (TUNING.bossDamage[wi] ?? 0) : 0);
+  const enemyHp = boss
+    ? TUNING.bossHp[0] + world.index * TUNING.bossHp[1]
+    : Math.round(TUNING.hp[0] + T * TUNING.hp[1] + local * TUNING.hp[2]);
   const weapons: WeaponId[] = boss ? [world.boss.weapon] : world.enemyWeapons.slice(0, 1 + Math.floor(local * world.enemyWeapons.length));
   const minX = -8;
   const maxX = distance + 8;
@@ -489,11 +626,57 @@ function buildLevel(worldIndex: number, level: number, seed: number, forceBoss?:
     wind: { base, gust: world.wind.gust * (0.4 + 0.6 * local) },
     killY: L.floor.y + (L.floor.kind === 'lava' || L.floor.kind === 'lake' || L.floor.kind === 'abyss' ? 0 : 0.5),
     skill,
+    ai: { damage: aiDamage, headshots: !gentle, missFirst: gentle },
+    playerDamage: TUNING.playerDamage,
     enemy: { kind: world.enemy, hp: enemyHp, scale: boss ? world.boss.scale : 1, weapons, boss },
     playerHp: 100 + (world.index - 1) * 10,
-    par: Math.ceil(enemyHp / 24) + 1,
-    preview: lerp(0.75, 0.45, T),
+    // shots for the third star: the hits a bow needs, plus a couple of misses
+    par: Math.ceil(enemyHp / (WEAPONS.bow.damage * TUNING.playerDamage)) + 2,
+    preview: lerp(TUNING.preview[0], TUNING.preview[1], T),
     friction: world.friction,
+    bonuses: makeBonuses(world, level, seed, enemy, b.solids, gentle),
+    ringOut: !gentle,
     bounds: { minX: minX - 30, maxX: maxX + 30, minY: -60, maxY: L.floor.y + 4 },
   };
+}
+
+const BONUS_KIND: Record<WorldDef['id'], BonusKind[]> = {
+  forest: ['bird', 'balloon'],
+  castle: ['crate', 'balloon'],
+  mountains: ['bird', 'balloon'],
+  desert: ['balloon', 'crate'],
+  snow: ['balloon', 'bird'],
+  volcano: ['crate', 'balloon'],
+};
+
+/** Some levels get 1–2 floating bonuses in the open air between the fighters. */
+function makeBonuses(world: WorldDef, level: number, seed: number, enemy: Vec, solids: Solid[], gentle: boolean): BonusDef[] {
+  // own random stream: adding bonuses never changes a level's layout
+  const rng = new Rng(seed ^ 0xb0b);
+  if (world.index === 1 && level <= 2) return [];
+  const n = gentle ? 1 : rng.chance(0.65) ? (rng.chance(0.35) ? 2 : 1) : 0;
+  const out: BonusDef[] = [];
+  const top = Math.min(0, enemy.y);
+  for (let i = 0; i < n * 6 && out.length < n; i++) {
+    const kind = gentle ? 'balloon' : rng.pick(BONUS_KIND[world.id]);
+    const x = lerp(enemy.x * 0.3, enemy.x * 0.7, rng.next());
+    const y = top - rng.range(2.4, 5.2);
+    // keep clear of scenery and of the other bonus
+    const clear = solids.every((s) => {
+      if (s.shape.kind === 'circle') return Math.hypot(s.shape.c.x - x, s.shape.c.y - y) > s.shape.r + 1.2;
+      return !s.shape.pts.some((q) => Math.hypot(q.x - x, q.y - y) < 1.4) && !pointInPoly(x, y, s.shape.pts);
+    });
+    if (!clear || out.some((o) => Math.abs(o.x - x) < 2.5)) continue;
+    const r = rng.next();
+    const reward: Reward = gentle ? 'coins' : r < 0.36 ? 'coins' : r < 0.52 ? 'fire' : r < 0.68 ? 'triple' : r < 0.84 ? 'shield' : 'heal';
+    out.push({ id: out.length, kind, x, y, reward, coins: reward === 'coins' ? 5 + Math.round(world.index * 3 + rng.range(0, 6)) : 0, range: kind === 'bird' ? rng.range(1.2, 2.2) : 0, phase: rng.range(0, 6.28) });
+  }
+  return out;
+}
+
+/** Endless mode: a random unlocked world, levels getting harder with each wave. */
+export function endlessLevel(wave: number, furthestWorld: number, rng: Rng): LevelDef {
+  const world = 1 + rng.int(0, Math.max(1, furthestWorld) - 1);
+  const level = clamp(2 + Math.floor(wave * 0.8), 2, 9);
+  return generateLevel(world, level, { seed: rng.int(1, 1e9), forceBoss: false });
 }

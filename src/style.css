@@ -1131,3 +1131,295 @@ body {
   -webkit-text-stroke-width: 0.12em;
   text-shadow: 0 0.07em 0 var(--ink);
 }
+
+/* ───────────── tutorial & tips ───────────── */
+
+.tutorial {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.tutbubble,
+.tipbubble {
+  position: absolute;
+  left: 50%;
+  top: calc(96px + var(--safe-t));
+  transform: translateX(-50%);
+  background: var(--card);
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  box-shadow: 0 5px 0 var(--ink);
+  padding: 8px 16px;
+  text-align: center;
+  width: max-content;
+  max-width: min(92vw, 460px);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-weight: 600;
+  animation: pop 0.3s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+.tutbubble b {
+  font-size: 20px;
+}
+.tutbubble span {
+  font-size: 14px;
+  color: #6a6480;
+}
+/* tips pick the first free spot (see App.placeTip): low above the weapon bar, under the HUD, or the corner */
+.tipbubble {
+  top: auto;
+  bottom: calc(80px + var(--safe-b));
+  max-width: min(calc(100vw - 24px), 440px);
+  font-size: clamp(14px, 3.8vw, 17px);
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: break-word;
+  pointer-events: auto;
+  background: #fff7d1;
+  z-index: 2;
+}
+.app.is-portrait .tutbubble {
+  top: calc(118px + var(--safe-t));
+}
+.tutbubble {
+  max-width: min(calc(100vw - 24px), 460px);
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+.hand {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  margin: -6px 0 0 -22px;
+  filter: drop-shadow(0 4px 0 rgba(30, 26, 43, 0.5));
+  animation: handdrag 2.4s ease-in-out infinite;
+}
+.handtrail {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: rgba(255, 210, 61, 0.7);
+  animation: handdot 2.4s ease-in-out infinite;
+}
+@keyframes handdrag {
+  0% {
+    transform: translate(0, 0) scale(1.1);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(0, 0) scale(1.1);
+    opacity: 1;
+  }
+  22% {
+    transform: translate(0, 0) scale(0.92);
+  }
+  62% {
+    transform: translate(var(--dx), var(--dy)) scale(0.92);
+    opacity: 1;
+  }
+  72% {
+    transform: translate(var(--dx), var(--dy)) scale(1.1);
+    opacity: 1;
+  }
+  90%,
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(1.1);
+    opacity: 0;
+  }
+}
+@keyframes handdot {
+  0%,
+  20% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  24% {
+    opacity: 1;
+  }
+  62% {
+    transform: translate(var(--dx), var(--dy));
+    opacity: 1;
+  }
+  70%,
+  100% {
+    transform: translate(var(--dx), var(--dy));
+    opacity: 0;
+  }
+}
+.skip {
+  position: absolute;
+  right: 12px;
+  bottom: calc(14px + var(--safe-b));
+  pointer-events: auto;
+}
+
+/* ───────────── daily rewards, combos, power badges, kill cam ───────────── */
+
+.btn.daily {
+  position: relative;
+}
+.dot {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ff3d4d;
+  border: 3px solid var(--ink);
+  animation: blink 1.2s infinite;
+}
+.dailycard {
+  max-width: 460px;
+}
+.chestrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: left;
+}
+.chestrow > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.chest.ready {
+  animation: chestbob 1.2s ease-in-out infinite;
+}
+.chest.ready .sparkle {
+  animation: blink 0.8s infinite;
+}
+.chest.open .lid {
+  transform: translateY(-8px) rotate(-8deg);
+  transform-origin: 10px 34px;
+}
+.chest.open .sparkle {
+  display: none;
+}
+@keyframes chestbob {
+  50% {
+    transform: translateY(-5px) rotate(-3deg);
+  }
+}
+.missions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mission {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  background: #fff;
+  padding: 8px 10px;
+  text-align: left;
+}
+.mission.done {
+  opacity: 0.6;
+}
+.mtext {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 15px;
+}
+.mbar {
+  height: 10px;
+  border-radius: 6px;
+  border: 2px solid var(--ink);
+  background: #e8e3f0;
+  overflow: hidden;
+}
+.mbar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(#ffe46b, #ffb627);
+}
+.combos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-weight: 700;
+  color: #2f8a43;
+}
+.hp .power {
+  display: flex;
+  gap: 2px;
+}
+.hp .power img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: #fff;
+  animation: pop 0.3s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+.skiphint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(18px + var(--safe-b));
+  transform: translateX(-50%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  -webkit-text-stroke: 4px var(--ink);
+  paint-order: stroke fill;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.skiphint.on {
+  opacity: 0.9;
+  animation: blink 1.2s infinite;
+}
+
+/* rewarded-ad buttons: waiting / no ad */
+.btn.ad:disabled {
+  cursor: default;
+  transform: none;
+}
+.btn.ad.waiting {
+  opacity: 0.7;
+}
+.btn.ad.waiting::after {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 8px;
+  vertical-align: -2px;
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+  border-right-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+.btn.ad.failed {
+  background: linear-gradient(#f2eee6, #d8d3e0);
+  font-size: 15px;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tipbubble.pos-top {
+  top: var(--hud-h, 96px);
+  bottom: auto;
+}
+.tipbubble.pos-corner {
+  left: auto;
+  right: 10px;
+  bottom: calc(10px + var(--safe-b));
+  transform: none;
+  max-width: min(46vw, 340px);
+  font-size: 14px;
+}

@@ -1,17 +1,38 @@
 import { PLAYER_WEAPONS, WEAPONS, type WeaponId } from '../core/weapons';
+import { newDaily, sanitizeDaily, type DailyState } from './daily';
 import { LEVELS_PER_WORLD, WORLDS } from './worlds';
 
 export const SAVE_KEY = 'stick-duel.save.v1';
 
-export const HATS = ['none', 'cap', 'headband', 'tophat', 'pirate', 'wizard', 'viking', 'crown', 'propeller'] as const;
+export const HATS = ['none', 'cap', 'headband', 'beanie', 'party', 'chef', 'tophat', 'cowboy', 'pirate', 'ninja', 'flowercrown', 'wizard', 'viking', 'propeller', 'astronaut', 'crown'] as const;
 export type HatId = (typeof HATS)[number];
-export const HAT_PRICE: Record<HatId, number> = { none: 0, cap: 40, headband: 60, tophat: 120, pirate: 160, wizard: 220, viking: 260, crown: 400, propeller: 320 };
+export const HAT_PRICE: Record<HatId, number> = {
+  none: 0,
+  cap: 40,
+  headband: 60,
+  beanie: 70,
+  party: 90,
+  chef: 110,
+  tophat: 120,
+  cowboy: 140,
+  pirate: 160,
+  ninja: 180,
+  flowercrown: 200,
+  wizard: 220,
+  viking: 260,
+  propeller: 320,
+  astronaut: 380,
+  crown: 400,
+};
 
-export const COLORS = ['blue', 'red', 'green', 'purple', 'orange', 'pink', 'black', 'gold'] as const;
+export const COLORS = ['blue', 'red', 'green', 'purple', 'orange', 'pink', 'teal', 'lime', 'navy', 'black', 'gold', 'rainbow'] as const;
 export type ColorId = (typeof COLORS)[number];
-export const COLOR_PRICE: Record<ColorId, number> = { blue: 0, red: 30, green: 30, purple: 60, orange: 60, pink: 80, black: 120, gold: 350 };
+export const COLOR_PRICE: Record<ColorId, number> = { blue: 0, red: 30, green: 30, purple: 60, orange: 60, pink: 80, teal: 80, lime: 90, navy: 100, black: 120, gold: 350, rainbow: 500 };
 
 export type Lang = 'auto' | 'en' | 'fr';
+
+export const TIPS = ['none', 'head', 'wind', 'weapons', 'bonus'] as const;
+export type TipId = (typeof TIPS)[number];
 
 export interface SaveData {
   version: 1;
@@ -26,7 +47,11 @@ export interface SaveData {
   endlessBest: number;
   /** The last world shown on the map. */
   lastWorld: number;
+  /** First-time tutorial (level 1-1) done or skipped. */
   tutorial: boolean;
+  /** One-time tips already shown. */
+  tips: TipId[];
+  daily: DailyState;
 }
 
 export function newSave(): SaveData {
@@ -42,6 +67,8 @@ export function newSave(): SaveData {
     endlessBest: 0,
     lastWorld: 1,
     tutorial: false,
+    tips: [],
+    daily: newDaily(),
   };
 }
 
@@ -92,6 +119,8 @@ export function sanitize(raw: unknown): SaveData {
     endlessBest: int(d.endlessBest, 0, 0, 1e6),
     lastWorld: int(d.lastWorld, 1, 1, WORLDS.length),
     tutorial: d.tutorial === true,
+    tips: list(d.tips, TIPS, 'none').filter((x) => x !== 'none'),
+    daily: sanitizeDaily(d.daily),
   };
 }
 

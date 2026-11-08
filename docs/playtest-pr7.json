@@ -1,0 +1,2238 @@
+{
+ "results": [
+  {
+   "world": 1,
+   "level": 1,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 1,
+     "turns": 3.5,
+     "seconds": 21.97443909685832,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 1.05,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0,
+     "hitRate": 0.7777777777777778
+    },
+    "average": {
+     "win": 1,
+     "turns": 3,
+     "seconds": 16.158919063202735,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 0.375,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0,
+     "hitRate": 0.90625
+    },
+    "good": {
+     "win": 1,
+     "turns": 2.625,
+     "seconds": 12.186100678797814,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 1.2307692307692308,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0,
+     "hitRate": 0.9655172413793104
+    }
+   }
+  },
+  {
+   "world": 1,
+   "level": 2,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 1,
+     "turns": 5.75,
+     "seconds": 36.19684418758425,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 1.763157894736842,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0,
+     "hitRate": 0.4444444444444444
+    },
+    "average": {
+     "win": 1,
+     "turns": 4,
+     "seconds": 21.809890676371257,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 0.5416666666666666,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0,
+     "hitRate": 0.675
+    },
+    "good": {
+     "win": 1,
+     "turns": 2.25,
+     "seconds": 11.325777148987012,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 0,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0,
+     "hitRate": 0.7692307692307693
+    }
+   }
+  },
+  {
+   "world": 1,
+   "level": 3,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 1,
+     "turns": 6,
+     "seconds": 35.48996610624004,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 0.875,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0,
+     "hitRate": 0.44642857142857145
+    },
+    "average": {
+     "win": 1,
+     "turns": 7.625,
+     "seconds": 40.17943627659661,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 2.1320754716981134,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0,
+     "hitRate": 0.42028985507246375
+    },
+    "good": {
+     "win": 1,
+     "turns": 4.75,
+     "seconds": 22.110876363263586,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 1,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0,
+     "hitRate": 0.6521739130434783
+    }
+   }
+  },
+  {
+   "world": 1,
+   "level": 4,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.875,
+     "turns": 8.625,
+     "seconds": 54.69896529281145,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 8.290322580645162,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.0625,
+     "hitRate": 0.3684210526315789
+    },
+    "average": {
+     "win": 0.9375,
+     "turns": 4.8125,
+     "seconds": 28.39956795236776,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 13.03225806451613,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.5869565217391305
+    },
+    "good": {
+     "win": 1,
+     "turns": 3.75,
+     "seconds": 19.810826904974725,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 6.318181818181818,
+     "aiHeadshots": 1,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.7631578947368421
+    }
+   }
+  },
+  {
+   "world": 1,
+   "level": 5,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.9375,
+     "turns": 11.5625,
+     "seconds": 75.50227250852534,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 7.964705882352941,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.26
+    },
+    "average": {
+     "win": 0.9375,
+     "turns": 8.5625,
+     "seconds": 49.54720145716909,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 5.573770491803279,
+     "aiHeadshots": 4,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.39473684210526316
+    },
+    "good": {
+     "win": 1,
+     "turns": 4.375,
+     "seconds": 23.98313733752967,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 6.962962962962963,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.6976744186046512
+    }
+   }
+  },
+  {
+   "world": 1,
+   "level": 6,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 1,
+     "turns": 17.625,
+     "seconds": 115.64878425067086,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 5.2706766917293235,
+     "aiHeadshots": 7,
+     "aiFirstHit": 0.0625,
+     "hitRate": 0.21476510067114093
+    },
+    "average": {
+     "win": 0.9375,
+     "turns": 10.8125,
+     "seconds": 62.283903255250685,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 7.468354430379747,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.3404255319148936
+    },
+    "good": {
+     "win": 1,
+     "turns": 5.375,
+     "seconds": 28.053414185290787,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 5,
+     "aiHeadshots": 1,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.6470588235294118
+    }
+   }
+  },
+  {
+   "world": 1,
+   "level": 7,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.875,
+     "turns": 13.75,
+     "seconds": 90.99779316241478,
+     "blockedNear": 0.017094017094017096,
+     "aiDmgPerTurn": 8.067961165048544,
+     "aiHeadshots": 10,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.26495726495726496
+    },
+    "average": {
+     "win": 0.75,
+     "turns": 11.625,
+     "seconds": 69.74674656815544,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 9.172413793103448,
+     "aiHeadshots": 10,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.25252525252525254
+    },
+    "good": {
+     "win": 1,
+     "turns": 9.25,
+     "seconds": 48.470981399857926,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 6.666666666666667,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.4024390243902439
+    }
+   }
+  },
+  {
+   "world": 1,
+   "level": 8,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.75,
+     "turns": 19.25,
+     "seconds": 125.0697402016468,
+     "blockedNear": 0.1,
+     "aiDmgPerTurn": 7.4391891891891895,
+     "aiHeadshots": 13,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.18125
+    },
+    "average": {
+     "win": 0.75,
+     "turns": 11.5625,
+     "seconds": 65.42630832952277,
+     "blockedNear": 0.02040816326530612,
+     "aiDmgPerTurn": 8.816091954022989,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.2857142857142857
+    },
+    "good": {
+     "win": 1,
+     "turns": 5.875,
+     "seconds": 29.98116906494047,
+     "blockedNear": 0.01818181818181818,
+     "aiDmgPerTurn": 9.435897435897436,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.6363636363636364
+    }
+   }
+  },
+  {
+   "world": 1,
+   "level": 9,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.8125,
+     "turns": 10.1875,
+     "seconds": 64.36026747018258,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 9.093333333333334,
+     "aiHeadshots": 7,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.3409090909090909
+    },
+    "average": {
+     "win": 1,
+     "turns": 8.25,
+     "seconds": 46.97851935663847,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 6.431034482758621,
+     "aiHeadshots": 3,
+     "aiFirstHit": 0.0625,
+     "hitRate": 0.4864864864864865
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 4.8125,
+     "seconds": 24.61685593335809,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 7.064516129032258,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.6956521739130435
+    }
+   }
+  },
+  {
+   "world": 1,
+   "level": 10,
+   "boss": true,
+   "rows": {
+    "beginner": {
+     "win": 0.0625,
+     "turns": 12.3125,
+     "seconds": 82.37121552908664,
+     "blockedNear": 0.020202020202020204,
+     "aiDmgPerTurn": 20.142857142857142,
+     "aiHeadshots": 28,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.13131313131313133
+    },
+    "average": {
+     "win": 0.6875,
+     "turns": 8.1875,
+     "seconds": 46.98840734163106,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 16.25,
+     "aiHeadshots": 12,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.5070422535211268
+    },
+    "good": {
+     "win": 0.5,
+     "turns": 7.5,
+     "seconds": 40.672988776885646,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 25.053571428571427,
+     "aiHeadshots": 22,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.609375
+    }
+   }
+  },
+  {
+   "world": 2,
+   "level": 1,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 1,
+     "turns": 3.625,
+     "seconds": 24.68096986385066,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 19.238095238095237,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.6486486486486487
+    },
+    "average": {
+     "win": 0.9375,
+     "turns": 2.8125,
+     "seconds": 16.328224038262874,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 31.933333333333334,
+     "aiHeadshots": 4,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.7666666666666667
+    },
+    "good": {
+     "win": 1,
+     "turns": 2.125,
+     "seconds": 10.615296101504198,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 16.77777777777778,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.25,
+     "hitRate": 1
+    }
+   }
+  },
+  {
+   "world": 2,
+   "level": 2,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.75,
+     "turns": 10.5,
+     "seconds": 65.40550423149176,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 11.705128205128204,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.34444444444444444
+    },
+    "average": {
+     "win": 1,
+     "turns": 6,
+     "seconds": 33.44719044389574,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 13.15,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.5535714285714286
+    },
+    "good": {
+     "win": 1,
+     "turns": 3.75,
+     "seconds": 19.08835764341825,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 7.909090909090909,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.7631578947368421
+    }
+   }
+  },
+  {
+   "world": 2,
+   "level": 3,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.75,
+     "turns": 10.375,
+     "seconds": 64.12346062366771,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 10.922077922077921,
+     "aiHeadshots": 9,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.33707865168539325
+    },
+    "average": {
+     "win": 0.9375,
+     "turns": 6.0625,
+     "seconds": 34.104749716356416,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 11.024390243902438,
+     "aiHeadshots": 3,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.5357142857142857
+    },
+    "good": {
+     "win": 1,
+     "turns": 4.375,
+     "seconds": 22.010190515542227,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 8.74074074074074,
+     "aiHeadshots": 3,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.7674418604651163
+    }
+   }
+  },
+  {
+   "world": 2,
+   "level": 4,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.9375,
+     "turns": 5.3125,
+     "seconds": 33.5828796722421,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 16.114285714285714,
+     "aiHeadshots": 3,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.48
+    },
+    "average": {
+     "win": 1,
+     "turns": 3,
+     "seconds": 17.127075653744487,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 9.375,
+     "aiHeadshots": 1,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.8125
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 5.4375,
+     "seconds": 27.914323034742885,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 18.666666666666668,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.6862745098039216
+    }
+   }
+  },
+  {
+   "world": 2,
+   "level": 5,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.875,
+     "turns": 4.875,
+     "seconds": 30.958450199582003,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 19.875,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.5434782608695652
+    },
+    "average": {
+     "win": 0.9375,
+     "turns": 3.3125,
+     "seconds": 18.641989646774388,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 19.736842105263158,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.6764705882352942
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 6,
+     "seconds": 30.29035494847902,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 13.75609756097561,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.5454545454545454
+    }
+   }
+  },
+  {
+   "world": 2,
+   "level": 6,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.875,
+     "turns": 13.625,
+     "seconds": 86.3124183613717,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 8.970588235294118,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.2672413793103448
+    },
+    "average": {
+     "win": 0.75,
+     "turns": 8,
+     "seconds": 44.14632853436028,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 13.224137931034482,
+     "aiHeadshots": 10,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.4142857142857143
+    },
+    "good": {
+     "win": 0.8125,
+     "turns": 7.9375,
+     "seconds": 41.85333951674753,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 11.526315789473685,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.4857142857142857
+    }
+   }
+  },
+  {
+   "world": 2,
+   "level": 7,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.6875,
+     "turns": 6.0625,
+     "seconds": 39.18851669290214,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 15.720930232558139,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.35185185185185186
+    },
+    "average": {
+     "win": 0.9375,
+     "turns": 8.4375,
+     "seconds": 47.705387666677325,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 10.35,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.4666666666666667
+    },
+    "good": {
+     "win": 1,
+     "turns": 3.75,
+     "seconds": 19.03010568852375,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 3.590909090909091,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.6842105263157895
+    }
+   }
+  },
+  {
+   "world": 2,
+   "level": 8,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.75,
+     "turns": 11.75,
+     "seconds": 78.31704215857008,
+     "blockedNear": 0.07,
+     "aiDmgPerTurn": 9.715909090909092,
+     "aiHeadshots": 11,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.29
+    },
+    "average": {
+     "win": 0.875,
+     "turns": 9.125,
+     "seconds": 54.28111885827508,
+     "blockedNear": 0.0125,
+     "aiDmgPerTurn": 9.272727272727273,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.45
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 5.625,
+     "seconds": 28.671352465858266,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 13.842105263157896,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.5769230769230769
+    }
+   }
+  },
+  {
+   "world": 2,
+   "level": 9,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.4375,
+     "turns": 10.5625,
+     "seconds": 69.93663622894778,
+     "blockedNear": 0.045454545454545456,
+     "aiDmgPerTurn": 19.395061728395063,
+     "aiHeadshots": 17,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.17045454545454544
+    },
+    "average": {
+     "win": 0.8125,
+     "turns": 8.6875,
+     "seconds": 50.623862219962284,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 14.507936507936508,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.4868421052631579
+    },
+    "good": {
+     "win": 0.8125,
+     "turns": 6.9375,
+     "seconds": 36.24581239245971,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 13.73469387755102,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.5806451612903226
+    }
+   }
+  },
+  {
+   "world": 2,
+   "level": 10,
+   "boss": true,
+   "rows": {
+    "beginner": {
+     "win": 0.25,
+     "turns": 9.75,
+     "seconds": 62.48469998961021,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 22.486842105263158,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.2875
+    },
+    "average": {
+     "win": 0.4375,
+     "turns": 7.8125,
+     "seconds": 45.20515806192574,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 25.16949152542373,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.75,
+     "hitRate": 0.4090909090909091
+    },
+    "good": {
+     "win": 0.8125,
+     "turns": 6.25,
+     "seconds": 33.526939299574465,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 20.13953488372093,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.7368421052631579
+    }
+   }
+  },
+  {
+   "world": 3,
+   "level": 1,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.6875,
+     "turns": 9.875,
+     "seconds": 63.96298762232672,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 17.472972972972972,
+     "aiHeadshots": 12,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.25
+    },
+    "average": {
+     "win": 0.75,
+     "turns": 9.625,
+     "seconds": 54.236398726798114,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 14.71830985915493,
+     "aiHeadshots": 9,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.39759036144578314
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 6.0625,
+     "seconds": 31.96728032528189,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 16.902439024390244,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.625
+    }
+   }
+  },
+  {
+   "world": 3,
+   "level": 2,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.6875,
+     "turns": 7.6875,
+     "seconds": 49.13134727098466,
+     "blockedNear": 0.014925373134328358,
+     "aiDmgPerTurn": 14.946428571428571,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.29850746268656714
+    },
+    "average": {
+     "win": 0.8125,
+     "turns": 11.0625,
+     "seconds": 64.48962276149445,
+     "blockedNear": 0.021052631578947368,
+     "aiDmgPerTurn": 15.414634146341463,
+     "aiHeadshots": 10,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.30526315789473685
+    },
+    "good": {
+     "win": 0.8125,
+     "turns": 7.6875,
+     "seconds": 42.009357820823396,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 17.745454545454546,
+     "aiHeadshots": 9,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.4117647058823529
+    }
+   }
+  },
+  {
+   "world": 3,
+   "level": 3,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.875,
+     "turns": 8.6875,
+     "seconds": 57.275030221223005,
+     "blockedNear": 0.013157894736842105,
+     "aiDmgPerTurn": 9.873015873015873,
+     "aiHeadshots": 4,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.42105263157894735
+    },
+    "average": {
+     "win": 0.9375,
+     "turns": 7.5625,
+     "seconds": 43.883961504026054,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 12.547169811320755,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.5
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 6.125,
+     "seconds": 32.631054741120764,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 23.333333333333332,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.6428571428571429
+    }
+   }
+  },
+  {
+   "world": 3,
+   "level": 4,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.6875,
+     "turns": 9.1875,
+     "seconds": 58.24051435448875,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 18.823529411764707,
+     "aiHeadshots": 13,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.4177215189873418
+    },
+    "average": {
+     "win": 1,
+     "turns": 5.625,
+     "seconds": 31.33199361313187,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 8.432432432432432,
+     "aiHeadshots": 3,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.5849056603773585
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 6.9375,
+     "seconds": 34.355407148692656,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 15.5625,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.5714285714285714
+    }
+   }
+  },
+  {
+   "world": 3,
+   "level": 5,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.25,
+     "turns": 14.75,
+     "seconds": 96.00471078989243,
+     "blockedNear": 0.025,
+     "aiDmgPerTurn": 19.051724137931036,
+     "aiHeadshots": 20,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.2
+    },
+    "average": {
+     "win": 0.6875,
+     "turns": 11.1875,
+     "seconds": 65.29815455860131,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 18.154761904761905,
+     "aiHeadshots": 13,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.3684210526315789
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 6.125,
+     "seconds": 32.67624989318799,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 16.404761904761905,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.5535714285714286
+    }
+   }
+  },
+  {
+   "world": 3,
+   "level": 6,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.75,
+     "turns": 8.625,
+     "seconds": 56.13954978578205,
+     "blockedNear": 0.013333333333333334,
+     "aiDmgPerTurn": 14.222222222222221,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.36
+    },
+    "average": {
+     "win": 1,
+     "turns": 5.75,
+     "seconds": 32.346850871441944,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 7.157894736842105,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.5
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 4.8125,
+     "seconds": 24.527050380412543,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 12.935483870967742,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.6739130434782609
+    }
+   }
+  },
+  {
+   "world": 3,
+   "level": 7,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.8125,
+     "turns": 11.0625,
+     "seconds": 73.60635440667673,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 10.75609756097561,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.0625,
+     "hitRate": 0.3157894736842105
+    },
+    "average": {
+     "win": 0.875,
+     "turns": 6.375,
+     "seconds": 35.510422527921584,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 15.25,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.41379310344827586
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 4.3125,
+     "seconds": 23.50283867568934,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 12.074074074074074,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.7619047619047619
+    }
+   }
+  },
+  {
+   "world": 3,
+   "level": 8,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.9375,
+     "turns": 3.9375,
+     "seconds": 26.264951747050468,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 13.291666666666666,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.5641025641025641
+    },
+    "average": {
+     "win": 1,
+     "turns": 6.25,
+     "seconds": 38.012791218270884,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 6.119047619047619,
+     "aiHeadshots": 1,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.5172413793103449
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 3.375,
+     "seconds": 18.123710710469858,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 19.3,
+     "aiHeadshots": 4,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.6764705882352942
+    }
+   }
+  },
+  {
+   "world": 3,
+   "level": 9,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.9375,
+     "turns": 6.8125,
+     "seconds": 45.63577139515325,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 10.297872340425531,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.5161290322580645
+    },
+    "average": {
+     "win": 0.875,
+     "turns": 4.75,
+     "seconds": 27.24448229238609,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 17.806451612903224,
+     "aiHeadshots": 3,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.6888888888888889
+    },
+    "good": {
+     "win": 1,
+     "turns": 3.8125,
+     "seconds": 19.800404079976307,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 19.347826086956523,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.8157894736842105
+    }
+   }
+  },
+  {
+   "world": 3,
+   "level": 10,
+   "boss": true,
+   "rows": {
+    "beginner": {
+     "win": 0.625,
+     "turns": 7.5,
+     "seconds": 50.44834228956188,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 27.618181818181817,
+     "aiHeadshots": 9,
+     "aiFirstHit": 0.625,
+     "hitRate": 0.5846153846153846
+    },
+    "average": {
+     "win": 0.4375,
+     "turns": 6.6875,
+     "seconds": 39.35938835562339,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 33.28,
+     "aiHeadshots": 15,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.5789473684210527
+    },
+    "good": {
+     "win": 0.625,
+     "turns": 5.5,
+     "seconds": 29.639342127755828,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 34.666666666666664,
+     "aiHeadshots": 11,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.6938775510204082
+    }
+   }
+  },
+  {
+   "world": 4,
+   "level": 1,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.875,
+     "turns": 8,
+     "seconds": 52.90277424918741,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 14.508771929824562,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.4507042253521127
+    },
+    "average": {
+     "win": 1,
+     "turns": 3.125,
+     "seconds": 17.14045565048393,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 11.176470588235293,
+     "aiHeadshots": 1,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.9090909090909091
+    },
+    "good": {
+     "win": 1,
+     "turns": 5.1875,
+     "seconds": 26.75554469403974,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 10.647058823529411,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.7551020408163265
+    }
+   }
+  },
+  {
+   "world": 4,
+   "level": 2,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.6875,
+     "turns": 7.5,
+     "seconds": 48.09911926868722,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 22.381818181818183,
+     "aiHeadshots": 12,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.4153846153846154
+    },
+    "average": {
+     "win": 1,
+     "turns": 6.625,
+     "seconds": 37.94155446079864,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 15.933333333333334,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.5901639344262295
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 4.8125,
+     "seconds": 25.731356740513892,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 24.870967741935484,
+     "aiHeadshots": 7,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.7391304347826086
+    }
+   }
+  },
+  {
+   "world": 4,
+   "level": 3,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 1,
+     "turns": 7.75,
+     "seconds": 49.84017797473314,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 14.12962962962963,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.5285714285714286
+    },
+    "average": {
+     "win": 1,
+     "turns": 7.125,
+     "seconds": 40.2504062732019,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 11.040816326530612,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.5692307692307692
+    },
+    "good": {
+     "win": 1,
+     "turns": 6.5,
+     "seconds": 33.46359328060623,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 12.704545454545455,
+     "aiHeadshots": 4,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.6833333333333333
+    }
+   }
+  },
+  {
+   "world": 4,
+   "level": 4,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.75,
+     "turns": 8.875,
+     "seconds": 56.33739842335886,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 24.415384615384614,
+     "aiHeadshots": 10,
+     "aiFirstHit": 0.75,
+     "hitRate": 0.3246753246753247
+    },
+    "average": {
+     "win": 0.875,
+     "turns": 3.625,
+     "seconds": 19.89912330697994,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 30.045454545454547,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.7777777777777778
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 2.8125,
+     "seconds": 13.43521594115305,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 21.133333333333333,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.8
+    }
+   }
+  },
+  {
+   "world": 4,
+   "level": 5,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.75,
+     "turns": 8.6875,
+     "seconds": 55.867977503201686,
+     "blockedNear": 0.013333333333333334,
+     "aiDmgPerTurn": 19.8125,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.4266666666666667
+    },
+    "average": {
+     "win": 0.75,
+     "turns": 6,
+     "seconds": 34.533856535815445,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 31.11904761904762,
+     "aiHeadshots": 10,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.6851851851851852
+    },
+    "good": {
+     "win": 0.8125,
+     "turns": 5.1875,
+     "seconds": 26.400768621739076,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 23.142857142857142,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.5208333333333334
+    }
+   }
+  },
+  {
+   "world": 4,
+   "level": 6,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.375,
+     "turns": 9.5,
+     "seconds": 62.9812633376212,
+     "blockedNear": 0.012658227848101266,
+     "aiDmgPerTurn": 22.63013698630137,
+     "aiHeadshots": 10,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.3037974683544304
+    },
+    "average": {
+     "win": 0.75,
+     "turns": 5.375,
+     "seconds": 31.687147939123516,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 21.81081081081081,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.5714285714285714
+    },
+    "good": {
+     "win": 1,
+     "turns": 3.75,
+     "seconds": 20.055475470093796,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 18.863636363636363,
+     "aiHeadshots": 1,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.8157894736842105
+    }
+   }
+  },
+  {
+   "world": 4,
+   "level": 7,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.4375,
+     "turns": 8.0625,
+     "seconds": 51.87678806620699,
+     "blockedNear": 0.014705882352941176,
+     "aiDmgPerTurn": 27.262295081967213,
+     "aiHeadshots": 10,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.3235294117647059
+    },
+    "average": {
+     "win": 0.875,
+     "turns": 6.25,
+     "seconds": 35.898559625140095,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 22.069767441860463,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.5964912280701754
+    },
+    "good": {
+     "win": 0.75,
+     "turns": 5.625,
+     "seconds": 28.818784915325892,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 26.435897435897434,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.6274509803921569
+    }
+   }
+  },
+  {
+   "world": 4,
+   "level": 8,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.5625,
+     "turns": 6.5625,
+     "seconds": 43.105326785162525,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 27.729166666666668,
+     "aiHeadshots": 9,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.45614035087719296
+    },
+    "average": {
+     "win": 0.8125,
+     "turns": 6.5625,
+     "seconds": 38.29002196061551,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 18.695652173913043,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.559322033898305
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 7.5,
+     "seconds": 40.73127375248549,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 19.735849056603772,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.5373134328358209
+    }
+   }
+  },
+  {
+   "world": 4,
+   "level": 9,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.75,
+     "turns": 4.625,
+     "seconds": 30.478664138230165,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 25.93548387096774,
+     "aiHeadshots": 7,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.6046511627906976
+    },
+    "average": {
+     "win": 0.875,
+     "turns": 6,
+     "seconds": 35.23399868049489,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 19.390243902439025,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.6545454545454545
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 5.125,
+     "seconds": 26.59986988938946,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 16.823529411764707,
+     "aiHeadshots": 4,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.7083333333333334
+    }
+   }
+  },
+  {
+   "world": 4,
+   "level": 10,
+   "boss": true,
+   "rows": {
+    "beginner": {
+     "win": 0.5625,
+     "turns": 6.6875,
+     "seconds": 46.29415842616376,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 31.591836734693878,
+     "aiHeadshots": 16,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.5517241379310345
+    },
+    "average": {
+     "win": 0.625,
+     "turns": 5.375,
+     "seconds": 32.64563854164056,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 37.71052631578947,
+     "aiHeadshots": 14,
+     "aiFirstHit": 0.625,
+     "hitRate": 0.75
+    },
+    "good": {
+     "win": 0.625,
+     "turns": 5.75,
+     "seconds": 32.27220832650779,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 29.902439024390244,
+     "aiHeadshots": 10,
+     "aiFirstHit": 0.625,
+     "hitRate": 0.803921568627451
+    }
+   }
+  },
+  {
+   "world": 5,
+   "level": 1,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.875,
+     "turns": 6.125,
+     "seconds": 37.059202626425005,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 20.5,
+     "aiHeadshots": 7,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.44642857142857145
+    },
+    "average": {
+     "win": 0.9375,
+     "turns": 3.3125,
+     "seconds": 17.42326355674698,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 18.105263157894736,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.7352941176470589
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 4.9375,
+     "seconds": 24.285469684773027,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 18.03125,
+     "aiHeadshots": 3,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.723404255319149
+    }
+   }
+  },
+  {
+   "world": 5,
+   "level": 2,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.6875,
+     "turns": 15.6875,
+     "seconds": 97.37078583006495,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 10.65,
+     "aiHeadshots": 10,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.22137404580152673
+    },
+    "average": {
+     "win": 0.6875,
+     "turns": 12.3125,
+     "seconds": 69.60569695832959,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 14.376344086021506,
+     "aiHeadshots": 14,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.27884615384615385
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 5.5625,
+     "seconds": 28.571430839159525,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 12.162162162162161,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.0625,
+     "hitRate": 0.5769230769230769
+    }
+   }
+  },
+  {
+   "world": 5,
+   "level": 3,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 1,
+     "turns": 7,
+     "seconds": 44.10328194750845,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 16.5,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.53125
+    },
+    "average": {
+     "win": 1,
+     "turns": 5.875,
+     "seconds": 32.346559645111306,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 20.102564102564102,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.6545454545454545
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 5.875,
+     "seconds": 29.532667244174988,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 21.225,
+     "aiHeadshots": 7,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.5185185185185185
+    }
+   }
+  },
+  {
+   "world": 5,
+   "level": 4,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.5625,
+     "turns": 15.1875,
+     "seconds": 96.04004193711481,
+     "blockedNear": 0.007936507936507936,
+     "aiDmgPerTurn": 12.384615384615385,
+     "aiHeadshots": 13,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.21428571428571427
+    },
+    "average": {
+     "win": 0.75,
+     "turns": 14.875,
+     "seconds": 83.67663426506564,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 12.84070796460177,
+     "aiHeadshots": 13,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.24
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 8.5,
+     "seconds": 43.80644863184185,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 14.573770491803279,
+     "aiHeadshots": 9,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.49333333333333335
+    }
+   }
+  },
+  {
+   "world": 5,
+   "level": 5,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.75,
+     "turns": 8,
+     "seconds": 50.49999835808574,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 20.379310344827587,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.5428571428571428
+    },
+    "average": {
+     "win": 1,
+     "turns": 5.75,
+     "seconds": 32.13614270639365,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 12.789473684210526,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.5925925925925926
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 4.3125,
+     "seconds": 21.439540277813403,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 19.48148148148148,
+     "aiHeadshots": 4,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.8571428571428571
+    }
+   }
+  },
+  {
+   "world": 5,
+   "level": 6,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.375,
+     "turns": 21.625,
+     "seconds": 139.26561306228908,
+     "blockedNear": 0.005681818181818182,
+     "aiDmgPerTurn": 12.7,
+     "aiHeadshots": 22,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.14204545454545456
+    },
+    "average": {
+     "win": 0.8125,
+     "turns": 12.8125,
+     "seconds": 75.47591596286377,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 13.84375,
+     "aiHeadshots": 13,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.29357798165137616
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 8.375,
+     "seconds": 46.38398143456961,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 14.416666666666666,
+     "aiHeadshots": 10,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.43243243243243246
+    }
+   }
+  },
+  {
+   "world": 5,
+   "level": 7,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.125,
+     "turns": 19.75,
+     "seconds": 128.4191580046503,
+     "blockedNear": 0.025157232704402517,
+     "aiDmgPerTurn": 14.94267515923567,
+     "aiHeadshots": 13,
+     "aiFirstHit": 0.25,
+     "hitRate": 0.08176100628930817
+    },
+    "average": {
+     "win": 0.5,
+     "turns": 16.75,
+     "seconds": 96.65647328842458,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 15.176923076923076,
+     "aiHeadshots": 12,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.2028985507246377
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 8.4375,
+     "seconds": 44.84348791416216,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 13.383333333333333,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.1875,
+     "hitRate": 0.49333333333333335
+    }
+   }
+  },
+  {
+   "world": 5,
+   "level": 8,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.5625,
+     "turns": 9.6875,
+     "seconds": 62.6530105392365,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 22.17808219178082,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.36585365853658536
+    },
+    "average": {
+     "win": 0.8125,
+     "turns": 9.0625,
+     "seconds": 53.10054047276439,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 17.666666666666668,
+     "aiHeadshots": 4,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.4050632911392405
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 7,
+     "seconds": 37.520029992555635,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 18.6734693877551,
+     "aiHeadshots": 3,
+     "aiFirstHit": 0.4375,
+     "hitRate": 0.5555555555555556
+    }
+   }
+  },
+  {
+   "world": 5,
+   "level": 9,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.4375,
+     "turns": 11.4375,
+     "seconds": 74.41106080148896,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 20.363636363636363,
+     "aiHeadshots": 7,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.29473684210526313
+    },
+    "average": {
+     "win": 0.75,
+     "turns": 7.625,
+     "seconds": 43.935521601504895,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 22.09090909090909,
+     "aiHeadshots": 3,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.5373134328358209
+    },
+    "good": {
+     "win": 1,
+     "turns": 5.125,
+     "seconds": 26.774399449936194,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 18.242424242424242,
+     "aiHeadshots": 1,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.8163265306122449
+    }
+   }
+  },
+  {
+   "world": 5,
+   "level": 10,
+   "boss": true,
+   "rows": {
+    "beginner": {
+     "win": 0.3125,
+     "turns": 16.1875,
+     "seconds": 105.20681745975945,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 17.46456692913386,
+     "aiHeadshots": 32,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.2727272727272727
+    },
+    "average": {
+     "win": 0.5,
+     "turns": 12.25,
+     "seconds": 73.46402781098801,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 21.085106382978722,
+     "aiHeadshots": 29,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.43137254901960786
+    },
+    "good": {
+     "win": 0.75,
+     "turns": 10.875,
+     "seconds": 57.638552485646144,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 17.82716049382716,
+     "aiHeadshots": 20,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.6559139784946236
+    }
+   }
+  },
+  {
+   "world": 6,
+   "level": 1,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.5,
+     "turns": 13.875,
+     "seconds": 90.66560682703512,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 17.50467289719626,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.1826086956521739
+    },
+    "average": {
+     "win": 0.6875,
+     "turns": 10,
+     "seconds": 59.64667732033327,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 21.28,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.36470588235294116
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 3.625,
+     "seconds": 19.742693525498428,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 18.095238095238095,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.7837837837837838
+    }
+   }
+  },
+  {
+   "world": 6,
+   "level": 2,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.6875,
+     "turns": 9.5625,
+     "seconds": 63.75488662789513,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 20.859154929577464,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.6875,
+     "hitRate": 0.34146341463414637
+    },
+    "average": {
+     "win": 0.625,
+     "turns": 11,
+     "seconds": 64.39415627883969,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 21.457831325301203,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.6875,
+     "hitRate": 0.3118279569892473
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 3.5625,
+     "seconds": 18.933119243406615,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 22.571428571428573,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.7222222222222222
+    }
+   }
+  },
+  {
+   "world": 6,
+   "level": 3,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.75,
+     "turns": 9.8125,
+     "seconds": 65.94957764721013,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 23.833333333333332,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.6875,
+     "hitRate": 0.38823529411764707
+    },
+    "average": {
+     "win": 0.8125,
+     "turns": 5.9375,
+     "seconds": 35.60251382580387,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 26.170731707317074,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.5185185185185185
+    },
+    "good": {
+     "win": 0.9375,
+     "turns": 5.4375,
+     "seconds": 29.085065053670927,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 22.416666666666668,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.6862745098039216
+    }
+   }
+  },
+  {
+   "world": 6,
+   "level": 4,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.625,
+     "turns": 10.375,
+     "seconds": 68.19451961110961,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 22.128205128205128,
+     "aiHeadshots": 4,
+     "aiFirstHit": 0.6875,
+     "hitRate": 0.3977272727272727
+    },
+    "average": {
+     "win": 0.875,
+     "turns": 5.125,
+     "seconds": 28.799493704542115,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 30.147058823529413,
+     "aiHeadshots": 4,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.625
+    },
+    "good": {
+     "win": 1,
+     "turns": 3.625,
+     "seconds": 18.686188603611658,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 21.714285714285715,
+     "aiHeadshots": 1,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.8648648648648649
+    }
+   }
+  },
+  {
+   "world": 6,
+   "level": 5,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.1875,
+     "turns": 17.1875,
+     "seconds": 113.76137268694366,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 18.264705882352942,
+     "aiHeadshots": 9,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.17266187050359713
+    },
+    "average": {
+     "win": 0.875,
+     "turns": 11.875,
+     "seconds": 70.05109350019562,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 14.045454545454545,
+     "aiHeadshots": 1,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.3431372549019608
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 8.375,
+     "seconds": 46.66113775321614,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 17.9,
+     "aiHeadshots": 3,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.4864864864864865
+    }
+   }
+  },
+  {
+   "world": 6,
+   "level": 6,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.4375,
+     "turns": 20.6875,
+     "seconds": 138.08923852971375,
+     "blockedNear": 0.011834319526627219,
+     "aiDmgPerTurn": 12.5,
+     "aiHeadshots": 6,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.15976331360946747
+    },
+    "average": {
+     "win": 0.4375,
+     "turns": 15.4375,
+     "seconds": 91.28882365563813,
+     "blockedNear": 0.007874015748031496,
+     "aiDmgPerTurn": 17.075,
+     "aiHeadshots": 8,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.2125984251968504
+    },
+    "good": {
+     "win": 0.75,
+     "turns": 7.5,
+     "seconds": 40.55108596259532,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 19.74074074074074,
+     "aiHeadshots": 3,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.5151515151515151
+    }
+   }
+  },
+  {
+   "world": 6,
+   "level": 7,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.375,
+     "turns": 12.625,
+     "seconds": 83.9795000498868,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 22.153061224489797,
+     "aiHeadshots": 9,
+     "aiFirstHit": 0.6875,
+     "hitRate": 0.15384615384615385
+    },
+    "average": {
+     "win": 0.5625,
+     "turns": 8.8125,
+     "seconds": 54.137963986170924,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 25.242424242424242,
+     "aiHeadshots": 5,
+     "aiFirstHit": 0.6875,
+     "hitRate": 0.38666666666666666
+    },
+    "good": {
+     "win": 0.875,
+     "turns": 7.25,
+     "seconds": 40.556747503477446,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 19.50980392156863,
+     "aiHeadshots": 3,
+     "aiFirstHit": 0.75,
+     "hitRate": 0.5076923076923077
+    }
+   }
+  },
+  {
+   "world": 6,
+   "level": 8,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.375,
+     "turns": 17.875,
+     "seconds": 119.29364734440415,
+     "blockedNear": 0.0136986301369863,
+     "aiDmgPerTurn": 15.15,
+     "aiHeadshots": 7,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.136986301369863
+    },
+    "average": {
+     "win": 0.5625,
+     "turns": 17.6875,
+     "seconds": 105.82637159966939,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 14.824817518248175,
+     "aiHeadshots": 7,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.2465753424657534
+    },
+    "good": {
+     "win": 1,
+     "turns": 7.875,
+     "seconds": 43.35550181732153,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 12.218181818181819,
+     "aiHeadshots": 1,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.5633802816901409
+    }
+   }
+  },
+  {
+   "world": 6,
+   "level": 9,
+   "boss": false,
+   "rows": {
+    "beginner": {
+     "win": 0.375,
+     "turns": 19.125,
+     "seconds": 129.70873231414572,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 14.873333333333333,
+     "aiHeadshots": 12,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.1858974358974359
+    },
+    "average": {
+     "win": 0.625,
+     "turns": 17.625,
+     "seconds": 106.13528665811582,
+     "blockedNear": 0.00684931506849315,
+     "aiDmgPerTurn": 13.095588235294118,
+     "aiHeadshots": 7,
+     "aiFirstHit": 0.3125,
+     "hitRate": 0.2534246575342466
+    },
+    "good": {
+     "win": 0.75,
+     "turns": 10.125,
+     "seconds": 55.49029269822939,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 13.32,
+     "aiHeadshots": 2,
+     "aiFirstHit": 0.375,
+     "hitRate": 0.3563218390804598
+    }
+   }
+  },
+  {
+   "world": 6,
+   "level": 10,
+   "boss": true,
+   "rows": {
+    "beginner": {
+     "win": 0.1875,
+     "turns": 18.0625,
+     "seconds": 116.23783853464379,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 16.690140845070424,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.125,
+     "hitRate": 0.2108843537414966
+    },
+    "average": {
+     "win": 0.5,
+     "turns": 16.875,
+     "seconds": 98.00489717905663,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 16.412213740458014,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.5625,
+     "hitRate": 0.381294964028777
+    },
+    "good": {
+     "win": 0.75,
+     "turns": 11.25,
+     "seconds": 60.355096212451414,
+     "blockedNear": 0,
+     "aiDmgPerTurn": 15.94047619047619,
+     "aiHeadshots": 0,
+     "aiFirstHit": 0.5,
+     "hitRate": 0.6041666666666666
+    }
+   }
+  }
+ ],
+ "endless": {
+  "beginner": {
+   "waves": 2.375,
+   "seconds": 38.40400639898184
+  },
+  "average": {
+   "waves": 4.625,
+   "seconds": 34.11871342586268
+  },
+  "good": {
+   "waves": 4.5,
+   "seconds": 25.70173405945911
+  }
+ }
+}

@@ -23,12 +23,12 @@ export interface AimSolution {
 
 const BLOCK_PENALTY = 50;
 
-/** Simulates one candidate shot and measures how close it passes to the target. */
-export function evaluate(p: AimProblem, angle: number, speed: number): number {
+/** Simulates a shot; returns how close it gets to the target and whether scenery stopped it. */
+export function trace(p: AimProblem, angle: number, speed: number): { best: number; blocked: boolean } {
   const f = launch(p.from, angle, speed);
   const dir = Math.sign(p.target.x - p.from.x) || 1;
   let best = Infinity;
-  let blockedAt: Vec | null = null;
+  let blocked = false;
   const boomerang = p.weapon.boomerang > 0;
   simulate(f, p.weapon, { wind: p.wind }, {
     maxTime: boomerang ? 4.5 : 5,
@@ -38,15 +38,21 @@ export function evaluate(p: AimProblem, angle: number, speed: number): number {
       const d = Math.hypot(bx - p.target.x, by - p.target.y);
       if (d < best) best = d;
       if (p.blocked?.(ax, ay, bx, by)) {
-        blockedAt = { x: bx, y: by };
+        blocked = true;
         return true;
       }
       if (!boomerang && (bx - p.target.x) * dir > 1.5) return true;
       return by > p.target.y + 8;
     },
   });
+  return { best, blocked };
+}
+
+/** Score of a candidate shot: closest distance to the target, heavily penalised if scenery stops it first. */
+export function evaluate(p: AimProblem, angle: number, speed: number): number {
+  const { best, blocked } = trace(p, angle, speed);
   // blocked only counts if the flight had not already reached the target
-  return blockedAt && best > 0.3 ? BLOCK_PENALTY + best : best;
+  return blocked && best > 0.3 ? BLOCK_PENALTY + best : best;
 }
 
 /**

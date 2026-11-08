@@ -132,3 +132,13 @@ describe('save/load', () => {
     expect(loadSave().coins).toBe(7);
   });
 });
+
+describe('shop content', () => {
+  it('at least 12 hats including the classics, and new colours', async () => {
+    const { HATS, COLORS } = await import('../../src/game/progress');
+    const hats = HATS.filter((h) => h !== 'none');
+    expect(hats.length).toBeGreaterThanOrEqual(12);
+    for (const h of ['crown', 'pirate', 'chef', 'viking', 'cowboy', 'party', 'beanie', 'tophat', 'ninja', 'astronaut', 'wizard', 'flowercrown']) expect(hats).toContain(h);
+    expect(COLORS.length).toBeGreaterThanOrEqual(12);
+  });
+});

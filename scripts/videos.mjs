@@ -1,6 +1,6 @@
 // Records the CrazyGames gameplay videos by playing the real game in Chromium.
-// 15–20 s (about 18 s), no sound, 1080p landscape (1920×1080) and portrait (1080×1920), first
-// frame = the cover. Several worlds, a headshot, explosions and a boss K.O.
+// 15–20 s (about 18 s), no sound, 1080p landscape (1920×1080) and 2:3 portrait (1080×1620), first
+// frame = the cover. Several worlds, a headshot, a bonus balloon, a bomb and a boss K.O. (kill cam).
 //
 // Frames come from the DevTools screencast with their real timestamps (nothing is
 // sped up), each clip starts once the camera has settled, and ffmpeg opens on the
@@ -22,15 +22,15 @@ const FADE_S = 0.35;
 const TOTAL_S = 19.5;
 
 const FORMATS = [
-  { name: 'stick-duel-landscape-1920x1080', w: 960, h: 540, dsf: 2, cover: 'landscape' },
-  { name: 'stick-duel-portrait-1080x1920', w: 540, h: 960, dsf: 2, cover: 'portrait' },
+  { name: 'trailer-1920x1080', w: 960, h: 540, dsf: 2, cover: 'landscape' },
+  { name: 'trailer-1080x1620', w: 540, h: 810, dsf: 2, cover: 'portrait' }, // 2:3 portrait
 ];
 
 /** world, level, what happens, how long to keep recording after the shot (s). */
 const CLIPS = [
   { world: 2, level: 4, head: true, weapon: 'bow', hold: 2.3 },
   { world: 3, level: 6, head: false, weapon: 'axe', hold: 2.3 },
-  { world: 4, level: 5, head: false, weapon: 'spear', hold: 1.9 },
+  { world: 4, level: 5, head: false, weapon: 'bow', hold: 1.9, bonus: true },
   { world: 5, level: 7, head: false, weapon: 'bomb', hold: 2.4 },
   { world: 6, level: 10, head: true, weapon: 'bow', hold: 3.4, finish: true },
 ];
@@ -44,7 +44,11 @@ async function recordClip(page, cdp, clip) {
     app.save.settings.music = false;
     app.intro(world, level);
     app.fight();
-    if (finish) app.duel.fighters[1].hp = 20;
+    if (finish) {
+      app.duel.fighters[1].hp = 20;
+      // keep the line of fire clear for the finishing blow (and its kill cam)
+      app.duel.bonuses = [];
+    }
   }, clip);
   await page.waitForTimeout(900); // camera settles, "your turn" toast pops
   const frames = [];
@@ -59,14 +63,17 @@ async function recordClip(page, cdp, clip) {
   cdp.on('Page.screencastFrame', onFrame);
   await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 92, everyNthFrame: 1 });
   await page.waitForTimeout(250);
-  await page.evaluate(async ({ head, weapon }) => {
+  await page.evaluate(async ({ head, weapon, bonus }) => {
     const app = window.__stickDuel;
-    window.__clip = { headshot: false, hits: 0 };
+    window.__clip = { headshot: false, hits: 0, bonus: null, killcam: false };
     app.duel.on((e) => {
       if (e.type === 'hit') window.__clip.hits++;
+      if (e.type === 'bonus') window.__clip.bonus = e.reward;
+      if (e.type === 'killcam') window.__clip.killcam = true;
       if (e.type === 'hit' && e.zone === 'head') window.__clip.headshot = true;
     });
-    await app.demoShot(head, weapon);
+    const b = bonus ? app.duel.bonuses.find((x) => x.alive) : null;
+    await app.demoShot(head, weapon, b ? { x: b.x, y: b.y } : undefined);
   }, clip);
   await page.waitForTimeout(clip.hold * 1000);
   const result = await page.evaluate(() => ({ ...window.__clip, enemyHp: window.__stickDuel.duel.fighters[1].hp }));

@@ -11,7 +11,7 @@ import { App } from './ui/app';
 async function boot(): Promise<void> {
   const root = document.getElementById('app') as HTMLElement;
   let app: App | null = null;
-  const hooks = { onAdStart: () => app?.onAdStart(), onAdEnd: () => app?.onAdEnd() };
+  const hooks = { onAdPause: (paused: boolean) => app?.onAdPause(paused) };
   const platform: Platform = window.CrazyGames?.SDK ? new CrazyGamesPlatform(hooks) : new NoopPlatform();
   await platform.init();
   platform.loadingStart();
