@@ -37,10 +37,11 @@ export interface StorageLike {
 }
 
 export interface AdHooks {
-  /** Called right before an ad starts (mute audio, pause). */
-  onAdStart(): void;
-  /** Called when the ad is over (finished, skipped or errored). */
-  onAdEnd(): void;
+  /**
+   * true right before an ad plays (mute audio, pause the game); false on every exit
+   * (finished, error, requestAd threw, or the ad never started) — always called once at the end.
+   */
+  onAdPause(paused: boolean): void;
 }
 
 export class NoopPlatform implements Platform {

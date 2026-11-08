@@ -110,7 +110,9 @@ Tooling scripts (need a build first):
 - `node scripts/qa-playthrough.mjs <dir>` — plays level 1 and the boss of every world with a
   perfect-aim bot, asserts victory and saves screenshots.
 - `npm run covers` — renders the three store covers from a real duel into `submission/covers`.
-- `npm run videos` — records the two gameplay videos into `submission/videos` (needs ffmpeg).
+- `npm run videos` — records the two trailers (1920×1080 and 2:3 1080×1620) into `submission/videos` (needs ffmpeg).
+- `npm run build:crazygames && npm run submission` — `submission/stick-duel-v1.zip` (unzips to `stick-duel-v1/index.html`).
+- `npm run check:build` — single file, < 50 MB, no external links (see `docs/crazygames-checklist.md`).
 
 CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests, the build-size check and the Playwright
 smoke test on every PR; `pages.yml` deploys `dist` from `main` (Node 24).

@@ -53,6 +53,8 @@ interface Session {
 }
 
 const MAX_DPR = 2;
+/** How long a rewarded button shows "no ad available" before it can be tried again. */
+export const AD_FAIL_MS = 2500;
 
 export class App {
   private canvas: HTMLCanvasElement;
@@ -84,6 +86,8 @@ export class App {
   /** First-time tutorial running (level 1-1). */
   private tutorialActive = false;
   private tutEl: HTMLElement | null = null;
+  private tipQueue: string[] = [];
+  private tipShown: HTMLElement | null = null;
 
   constructor(
     private readonly root: HTMLElement,
@@ -127,13 +131,11 @@ export class App {
     audio.setMuted(this.adPlaying || this.platform.platformMuted());
   }
 
-  onAdStart(): void {
-    this.adPlaying = true;
+  /** Called by the platform: true while an ad plays (audio muted, game paused), false after. */
+  onAdPause(paused: boolean): void {
+    this.adPlaying = paused;
     this.applyAudio();
-  }
-  onAdEnd(): void {
-    this.adPlaying = false;
-    this.applyAudio();
+    if (!paused) this.last = performance.now();
   }
 
   private persist(): void {
@@ -528,13 +530,10 @@ export class App {
     const locked = PLAYER_WEAPONS.find((id) => !this.save.weapons.includes(id) && id !== s.tryWeapon);
     let tryBtn: HTMLElement | null = null;
     if (s.mode === 'adventure' && locked && !s.tryWeapon && this.platform.adsUnavailable() === null) {
-      tryBtn = this.btn(`▶ ${t('intro.try', { w: t(`weapon.${locked}` as Key) })}`, () => {
-        void this.rewarded().then((ok) => {
-          if (!ok) return;
-          s.tryWeapon = locked;
-          this.prepareDuel();
-          this.showIntro();
-        });
+      tryBtn = this.adButton(`▶ ${t('intro.try', { w: t(`weapon.${locked}` as Key) })}`, () => {
+        s.tryWeapon = locked;
+        this.prepareDuel();
+        this.showIntro();
       }, 'ad small', { id: 'try-weapon' });
     }
     const bossIntro = L.boss ? h('p.bossline', {}, `“${t(`boss.${W.boss.id}.intro` as Key)}”`) : null;
@@ -657,16 +656,91 @@ export class App {
     }
   }
 
-  /** A short tip, shown only the first time (saved). */
+  /** A short tip, shown only the first time (saved). One at a time: later tips wait their turn. */
   private tip(id: TipId, text: string, delay = 0): void {
     if (this.save.tips.includes(id) || this.session?.attract) return;
     this.save.tips.push(id);
     this.persist();
     window.setTimeout(() => {
-      const el = h('div.tipbubble', { onclick: () => el.remove(), role: 'status' }, text);
-      this.hud.append(el);
-      window.setTimeout(() => el.remove(), 4800);
+      this.tipQueue.push(text);
+      this.nextTip();
     }, delay);
+  }
+
+  private nextTip(): void {
+    if (this.tipShown) return;
+    const text = this.tipQueue.shift();
+    if (!text) return;
+    const el = h('div.tipbubble', { role: 'status' }, text);
+    let done = false;
+    const close = () => {
+      if (done) return;
+      done = true;
+      el.remove();
+      this.tipShown = null;
+      window.setTimeout(() => this.nextTip(), 250);
+    };
+    el.addEventListener('click', close);
+    this.tipShown = el;
+    this.hud.append(el);
+    this.placeTip(el);
+    window.setTimeout(close, 4800);
+  }
+
+  /** Puts a tip where it covers no fighter, floating bonus or HUD element (tries a few spots). */
+  private placeTip(el: HTMLElement): void {
+    const avoid = this.screenObstacles();
+    const hudBottom = this.hud.querySelector('.hudtop')?.getBoundingClientRect().bottom ?? 90;
+    el.style.setProperty('--hud-h', `${Math.round(hudBottom + 8)}px`);
+    const spots = ['pos-bottom', 'pos-top', 'pos-corner'];
+    let best = spots[0] as string;
+    let bestArea = Infinity;
+    for (const spot of spots) {
+      el.classList.remove(...spots);
+      el.classList.add(spot);
+      const r = el.getBoundingClientRect();
+      let area = 0;
+      for (const o of avoid) {
+        const w = Math.min(r.right, o.x1) - Math.max(r.left, o.x0);
+        const hh = Math.min(r.bottom, o.y1) - Math.max(r.top, o.y0);
+        if (w > 0 && hh > 0) area += w * hh;
+      }
+      if (r.left < 0 || r.top < 0 || r.right > window.innerWidth || r.bottom > window.innerHeight) area += 1e9;
+      if (area < bestArea) {
+        best = spot;
+        bestArea = area;
+      }
+      if (area === 0) break;
+    }
+    el.classList.remove(...spots);
+    el.classList.add(best);
+  }
+
+  /** Screen rectangles (CSS px) of the fighters, floating bonuses and HUD widgets. */
+  private screenObstacles(): Array<{ x0: number; y0: number; x1: number; y1: number }> {
+    const out: Array<{ x0: number; y0: number; x1: number; y1: number }> = [];
+    const duel = this.duel;
+    const scene = this.scene;
+    const v = this.view;
+    if (duel && scene) {
+      const box = (x0: number, y0: number, x1: number, y1: number) => {
+        const [a, b] = scene.toScreen(x0, y0, v);
+        const [c, d] = scene.toScreen(x1, y1, v);
+        out.push({ x0: a / v.dpr, y0: b / v.dpr, x1: c / v.dpr, y1: d / v.dpr });
+      };
+      for (const f of duel.fighters) {
+        const s = f.rag.scale;
+        box(f.rag.homeX - 0.8 * s, f.rag.footY - 2.4 * s, f.rag.homeX + 0.8 * s, f.rag.footY + 0.1);
+      }
+      for (const b of duel.bonuses) if (b.alive) box(b.x - 0.6, b.y - 1.25, b.x + 0.6, b.y + 0.45);
+    }
+    for (const sel of ['.hudtop', '.weapons', '.pause']) {
+      const e = this.hud.querySelector(sel);
+      if (!e) continue;
+      const r = e.getBoundingClientRect();
+      if (r.width > 0) out.push({ x0: r.left, y0: r.top, x1: r.right, y1: r.bottom });
+    }
+    return out;
   }
 
   // ───────────── HUD ─────────────
@@ -676,6 +750,8 @@ export class App {
     const s = this.session;
     if (!duel || !s) return;
     clear(this.hud);
+    this.tipShown = null;
+    this.tutEl = null;
     const bar = (side: Side, name: string) => {
       const fill = h('i');
       const num = h('span.num', {}, String(duel.fighters[side].hp));
@@ -1018,14 +1094,40 @@ export class App {
 
   private async rewarded(): Promise<boolean> {
     this.tracker.stop();
-    let ok: boolean;
     try {
-      ok = await this.platform.rewarded();
+      return await this.platform.rewarded();
     } catch {
-      ok = false;
+      return false;
     }
-    if (!ok) this.flash(t('result.adFail'), 'info', 1800);
-    return ok;
+  }
+
+  /**
+   * A rewarded-ad button: disabled while the ad is requested; if no ad comes, it says so
+   * for 2.5 s, then gets its label back and can be tried again. The game never waits on it.
+   */
+  private adButton(label: string, onReward: () => void, cls: string, attrs: Record<string, string>): HTMLButtonElement {
+    const b = this.btn(label, () => {
+      if (b.disabled) return;
+      b.disabled = true;
+      b.classList.add('waiting');
+      b.setAttribute('aria-busy', 'true');
+      void this.rewarded().then((ok) => {
+        b.classList.remove('waiting');
+        b.removeAttribute('aria-busy');
+        if (ok) {
+          onReward();
+          return;
+        }
+        b.textContent = t('result.adFail');
+        b.classList.add('failed');
+        window.setTimeout(() => {
+          b.textContent = label;
+          b.classList.remove('failed');
+          b.disabled = false;
+        }, AD_FAIL_MS);
+      });
+    }, cls, attrs);
+    return b;
   }
 
   /** Natural break: a midgame ad (throttled) before continuing. */
@@ -1085,35 +1187,29 @@ export class App {
     }
     const extras = h('div.extras', {});
     if (won && coins > 0 && this.platform.adsUnavailable() === null) {
-      const dbl = this.btn(`▶ ${t('result.double')}`, () => {
+      const dbl = this.adButton(`▶ ${t('result.double')}`, () => {
         if (doubled) return;
-        void this.rewarded().then((ok) => {
-          if (!ok || doubled) return;
-          doubled = true;
-          this.save.coins += coins;
-          this.persist();
-          coinLine.lastChild!.textContent = t('result.coins', { n: coins * 2 });
-          dbl.remove();
-          audio.play('coin');
-          this.flash(t('result.doubled'), 'info');
-          this.refreshCoins();
-        });
+        doubled = true;
+        this.save.coins += coins;
+        this.persist();
+        coinLine.lastChild!.textContent = t('result.coins', { n: coins * 2 });
+        dbl.remove();
+        audio.play('coin');
+        this.flash(t('result.doubled'), 'info');
+        this.refreshCoins();
       }, 'ad', { id: 'double' });
       extras.append(dbl);
     }
     if (!won && L.boss && !s.revived && this.platform.adsUnavailable() === null) {
-      extras.append(this.btn(`▶ ${t('result.revive')}`, () => {
-        void this.rewarded().then((ok) => {
-          if (!ok) return;
-          s.revived = true;
-          this.show();
-          this.resultShown = false;
-          duel.revive(0);
-          this.hud.classList.remove('hidden');
-          this.updateHud();
-          this.refreshWeapons();
-          this.tracker.start();
-        });
+      extras.append(this.adButton(`▶ ${t('result.revive')}`, () => {
+        s.revived = true;
+        this.show();
+        this.resultShown = false;
+        duel.revive(0);
+        this.hud.classList.remove('hidden');
+        this.updateHud();
+        this.refreshWeapons();
+        this.tracker.start();
       }, 'ad', { id: 'revive' }));
     }
     this.show(
@@ -1454,6 +1550,10 @@ export class App {
       await wait(16);
     }
     this.freeze = true;
+    // title only on covers: no speech bubbles, no floating bonuses (top-left corner stays clear)
+    scene.clearBubbles();
+    scene.fx.list = scene.fx.list.filter((p) => p.kind !== 'text');
+    duel.bonuses = [];
     hero.aim = { angle: hero.restAngle() - 0.1, power: 0.15 };
     hero.showAim = true;
     // tighter, more dramatic framing than the gameplay camera

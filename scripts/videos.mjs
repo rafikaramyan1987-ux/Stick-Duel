@@ -1,5 +1,5 @@
 // Records the CrazyGames gameplay videos by playing the real game in Chromium.
-// 15–20 s (about 18 s), no sound, 1080p landscape (1920×1080) and portrait (1080×1920), first
+// 15–20 s (about 18 s), no sound, 1080p landscape (1920×1080) and 2:3 portrait (1080×1620), first
 // frame = the cover. Several worlds, a headshot, a bonus balloon, a bomb and a boss K.O. (kill cam).
 //
 // Frames come from the DevTools screencast with their real timestamps (nothing is
@@ -22,8 +22,8 @@ const FADE_S = 0.35;
 const TOTAL_S = 19.5;
 
 const FORMATS = [
-  { name: 'stick-duel-landscape-1920x1080', w: 960, h: 540, dsf: 2, cover: 'landscape' },
-  { name: 'stick-duel-portrait-1080x1920', w: 540, h: 960, dsf: 2, cover: 'portrait' },
+  { name: 'trailer-1920x1080', w: 960, h: 540, dsf: 2, cover: 'landscape' },
+  { name: 'trailer-1080x1620', w: 540, h: 810, dsf: 2, cover: 'portrait' }, // 2:3 portrait
 ];
 
 /** world, level, what happens, how long to keep recording after the shot (s). */

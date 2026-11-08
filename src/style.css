@@ -1166,15 +1166,26 @@ body {
   font-size: 14px;
   color: #6a6480;
 }
+/* tips pick the first free spot (see App.placeTip): low above the weapon bar, under the HUD, or the corner */
 .tipbubble {
-  top: calc(104px + var(--safe-t));
-  font-size: 17px;
+  top: auto;
+  bottom: calc(80px + var(--safe-b));
+  max-width: min(calc(100vw - 24px), 440px);
+  font-size: clamp(14px, 3.8vw, 17px);
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: break-word;
   pointer-events: auto;
   background: #fff7d1;
+  z-index: 2;
 }
-.app.is-portrait .tutbubble,
-.app.is-portrait .tipbubble {
+.app.is-portrait .tutbubble {
   top: calc(118px + var(--safe-t));
+}
+.tutbubble {
+  max-width: min(calc(100vw - 24px), 460px);
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 .hand {
   position: absolute;
@@ -1368,4 +1379,47 @@ body {
 .skiphint.on {
   opacity: 0.9;
   animation: blink 1.2s infinite;
+}
+
+/* rewarded-ad buttons: waiting / no ad */
+.btn.ad:disabled {
+  cursor: default;
+  transform: none;
+}
+.btn.ad.waiting {
+  opacity: 0.7;
+}
+.btn.ad.waiting::after {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 8px;
+  vertical-align: -2px;
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+  border-right-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+.btn.ad.failed {
+  background: linear-gradient(#f2eee6, #d8d3e0);
+  font-size: 15px;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tipbubble.pos-top {
+  top: var(--hud-h, 96px);
+  bottom: auto;
+}
+.tipbubble.pos-corner {
+  left: auto;
+  right: 10px;
+  bottom: calc(10px + var(--safe-b));
+  transform: none;
+  max-width: min(46vw, 340px);
+  font-size: 14px;
 }

@@ -23,11 +23,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - name: Single-file build under 5 MB
-        run: |
-          ls dist
-          test "$(ls dist | wc -l)" -eq 1
-          test "$(stat -c %s dist/index.html)" -lt 5242880
+      - name: Build self-check (single file, size, no external links)
+        run: node scripts/check-build.mjs
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Playwright smoke test (desktop + phone portrait)
@@ -41,6 +38,7 @@ jobs:
       - name: Build CrazyGames zip
         run: |
           npm run build:crazygames
+          node scripts/check-build.mjs
           npm run zip
       - uses: actions/upload-artifact@v4
         with:

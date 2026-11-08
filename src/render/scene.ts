@@ -40,6 +40,11 @@ export class Camera {
     // show the lava / icy lake / ground when it is close below the fighters
     const floor = duel.level.floor;
     if (floor.kind !== 'abyss' && floor.kind !== 'courtyard' && floor.y - maxY < 6) maxY = Math.max(maxY, floor.y + 0.9);
+    // keep floating bonuses (crate + balloons) in view, below the HUD
+    for (const b of duel.bonuses) {
+      if (!b.alive) continue;
+      minY = Math.min(minY, b.y - 1.5);
+    }
     for (const p of duel.projectiles) {
       minX = Math.min(minX, p.f.x - (portrait ? 0.6 : 1.5));
       maxX = Math.max(maxX, p.f.x + (portrait ? 0.6 : 1.5));
@@ -123,6 +128,11 @@ export class SceneRenderer {
   fullPreview = false;
   /** Comic speech bubbles above the fighters. */
   private bubbles: Array<{ side: 0 | 1; text: string; t: number; life: number }> = [];
+
+  /** Removes all speech bubbles (cover renders: title only). */
+  clearBubbles(): void {
+    this.bubbles = [];
+  }
 
   /** A short comic word bubble above a fighter. */
   say(side: 0 | 1, text: string, life = 1.6): void {

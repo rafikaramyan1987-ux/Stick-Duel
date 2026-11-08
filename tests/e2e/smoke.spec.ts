@@ -109,3 +109,47 @@ test('daily rewards: open the chest once, 3 missions', async ({ page }) => {
   await page.locator('.topbar .btn').first().click();
   await expect(page.locator('#daily .dot')).toHaveCount(0);
 });
+
+test('tip boxes are fully readable and never cover a floating bonus or a fighter (desktop, 375 px portrait and landscape)', async ({ page }) => {
+  for (const vp of [{ width: 1280, height: 720 }, { width: 375, height: 667 }, { width: 667, height: 375 }]) {
+    await page.setViewportSize(vp);
+    await page.goto('/');
+    await page.evaluate(`(() => { const a = window.__stickDuel; a.save.tutorial = true; a.save.tips = []; a.intro(2, 5); a.fight(); })()`);
+    const tip = page.locator('.tipbubble');
+    for (let n = 0; n < 2; n++) {
+      await expect(tip).toBeVisible({ timeout: 6_000 });
+      const box = await tip.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return { x: r.x, y: r.y, w: r.width, h: r.height, clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 };
+      });
+      expect(box.clipped, `${vp.width}x${vp.height} text clipped`).toBe(false);
+      expect(box.x, `${vp.width}x${vp.height}`).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.w).toBeLessThanOrEqual(vp.width);
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      expect(box.y + box.h).toBeLessThanOrEqual(vp.height);
+      // screen rectangles of the floating bonuses (crate + its balloons)
+      const bonuses = (await page.evaluate(`(() => {
+        const a = window.__stickDuel, d = a.duel, s = a.scene, v = a.view;
+        const box = (ax, ay, bx, by) => {
+          const [x0, y0] = s.toScreen(ax, ay, v);
+          const [x1, y1] = s.toScreen(bx, by, v);
+          return { x0: x0 / v.dpr, y0: y0 / v.dpr, x1: x1 / v.dpr, y1: y1 / v.dpr };
+        };
+        // the bonuses (crate + balloons) and the two fighters' bodies
+        return [
+          ...d.bonuses.filter((b) => b.alive).map((b) => box(b.x - 0.6, b.y - 1.25, b.x + 0.6, b.y + 0.45)),
+          ...d.fighters.map((f) => box(f.rag.homeX - 0.4, f.rag.footY - 2.0 * f.rag.scale, f.rag.homeX + 0.4, f.rag.footY)),
+        ];
+      })()`)) as Array<{ x0: number; y0: number; x1: number; y1: number }>;
+      expect(bonuses.length).toBeGreaterThan(0);
+      for (const b of bonuses) {
+        const overlap = box.x < b.x1 && box.x + box.w > b.x0 && box.y < b.y1 && box.y + box.h > b.y0;
+        expect(overlap, `${vp.width}x${vp.height} tip over a bonus or a fighter`).toBe(false);
+      }
+      // dismiss it: the next tip (if any) takes its place
+      await tip.click();
+      await page.waitForTimeout(400);
+      if (!(await tip.count())) break;
+    }
+  }
+});

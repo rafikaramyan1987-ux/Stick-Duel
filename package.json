@@ -18,7 +18,9 @@
     "check": "npm run lint && npm run typecheck && npm run test",
     "covers": "node scripts/covers.mjs",
     "videos": "node scripts/videos.mjs",
-    "qa": "node scripts/qa-shots.mjs"
+    "qa": "node scripts/qa-shots.mjs",
+    "check:build": "node scripts/check-build.mjs",
+    "submission": "node scripts/submission.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
