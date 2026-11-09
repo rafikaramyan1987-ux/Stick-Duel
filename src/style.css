@@ -572,6 +572,27 @@ body {
   background: var(--gold);
   transform: translateY(-3px);
 }
+/* The intro card never grows past the screen: its content scrolls inside it and the Back / Fight
+   row stays pinned (always visible) at the bottom. On tall screens nothing changes (it fits). */
+.card.intro {
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  flex-shrink: 0;
+  /* focus / scrollIntoView never leave an element under the pinned row */
+  scroll-padding-bottom: 84px;
+}
+.card.intro > .row:last-child {
+  position: sticky;
+  bottom: -22px;
+  z-index: 1;
+  margin: 0 -22px -22px;
+  padding: 8px 22px 22px;
+  background: var(--card);
+}
+.card.intro.isboss > .row:last-child {
+  background: #ffe2d6;
+}
 
 /* ───────────── HUD ───────────── */
 
@@ -1063,6 +1084,36 @@ body {
   .screen.title {
     justify-content: center;
     padding-top: 10px;
+  }
+  /* short (landscape phone) screens: compact intro card, centred, using the full height */
+  .screen.introscreen {
+    justify-content: center;
+    padding-top: calc(8px + var(--safe-t));
+    padding-bottom: calc(8px + var(--safe-b));
+  }
+  .card.intro {
+    gap: 6px;
+  }
+  .card.intro > .row:last-child {
+    bottom: -16px;
+    margin: 0 -16px -16px;
+    padding: 6px 16px 16px;
+    box-shadow: 0 -10px 10px -10px rgba(30, 26, 43, 0.35);
+  }
+  .card.intro h2 {
+    font-size: 24px;
+  }
+  .card.intro .vstext {
+    font-size: 28px;
+  }
+  .card.intro .btn.big {
+    font-size: 20px;
+    padding: 8px 28px;
+    min-height: 42px;
+  }
+  .card.intro .wbtn {
+    width: 50px;
+    height: 50px;
   }
   .node {
     max-width: 58px;
