@@ -68,21 +68,22 @@ src/core      pure maths: trajectory, damage/stars/coins, AI aiming, geometry, R
 src/game      levels (procedural, seeded), duel runtime, ragdoll, progress/save, worlds
 src/render    backgrounds, scenery, fighters, weapons, particles, camera
 src/ui        DOM screens + HUD, input, game flow
-src/platform  CrazyGames SDK v3 and GameDistribution SDK adapters, storage
+src/platform  CrazyGames SDK v3, GameDistribution and GamePix SDK v3 adapters, storage
 ```
 
 ## Builds per platform
 
-A build-time flag picks the platform: `VITE_PLATFORM=crazygames | gd | web` (or `vite build --mode
-crazygames|gd`). Each build only bundles its own SDK adapter; the other portal's code and SDK are dropped.
+A build-time flag picks the platform: `VITE_PLATFORM=crazygames | gd | gamepix | web` (or `vite build --mode
+crazygames|gd|gamepix`). Each build only bundles its own SDK adapter; the other portal's code and SDK are dropped.
 
 | Build | Command | Output | SDK |
 |---|---|---|---|
 | Web (GitHub Pages) | `npm run build` | `dist/index.html` | none, no external request |
 | CrazyGames | `npm run build:crazygames` | `dist-crazygames/index.html` | CrazyGames SDK v3 (`<head>` script) |
 | GameDistribution | `npm run build:gd` | `dist-gd/index.html` | GD HTML5 SDK (injected while booting) |
+| GamePix | `npm run build:gamepix` | `dist-gamepix/index.html` | GamePix SDK v3 (`<head>` script, manual lifecycle) |
 
-`node scripts/check-build.mjs <web|crazygames|gd>` checks a build: single file, size, no external links,
+`node scripts/check-build.mjs <web|crazygames|gd|gamepix>` checks a build: single file, size, no external links,
 no other portal's SDK or branding.
 
 ## GameDistribution integration
@@ -92,6 +93,18 @@ no other portal's SDK or branding.
 (pre-roll) and result-screen buttons (mid-roll); rewarded ads grant only after `SDK_REWARDED_WATCH_COMPLETE`,
 and every request settles once (completion, error/cancel, or an 8 s start timeout). Saves use localStorage.
 If the SDK cannot load, the game plays without ads. Submission files: `submission-gd/` (see its README).
+
+## GamePix integration (SDK v3)
+
+`index.html` loads `gamepix.sdk.js` (with `GamePixConfig = { lifecycle: 'manual' }`) only in the `gamepix`
+build; `src/platform/gamepix.ts` drives it: `lifecycle.loading` during boot, `await lifecycle.loaded()` before
+the menu, `lifecycle.gameStart()` once on the first duel. The SDK `pause`/`resume` events and a hidden tab
+pause the game, block input and mute all audio (window blur does not). Interstitials (`ads.interstitial()`)
+only at the same natural breaks as the other portals (no pre-roll); rewarded ads (`ads.reward()`) grant only
+on `{ success: true }`. `happyMoment` / `sadMoment` on level complete, boss defeated, high score, level
+failed and game over; the locale comes from `GamePix.lang()`. Saves use plain localStorage (synced by the
+SDK). Submission files: `submission-gamepix/` (see its README); `node scripts/check-gamepix-zip.mjs` checks
+the upload zip (CI).
 
 ## CrazyGames integration (SDK v3)
 
@@ -118,6 +131,8 @@ npm run build:crazygames && npm run build:gd
 npm run test:e2e     # Playwright e2e against the web, CrazyGames and GD builds
 npm run build:crazygames && npm run zip   # stick-duel-crazygames.zip
 npm run build:gd && npm run thumbnails:gd && npm run submission:gd   # submission-gd/
+npm run build:gamepix && npm run submission:gamepix && node scripts/check-gamepix-zip.mjs   # submission-gamepix/
+npm run test:e2e:gamepix   # Playwright e2e against the GamePix build (mock SDK)
 ```
 
 Difficulty is tuned with an automated playtest (no build needed):

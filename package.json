@@ -10,12 +10,14 @@
     "build": "tsc --noEmit && vite build",
     "build:crazygames": "tsc --noEmit && vite build --mode crazygames",
     "build:gd": "tsc --noEmit && vite build --mode gd",
+    "build:gamepix": "tsc --noEmit && vite build --mode gamepix",
     "zip": "node scripts/zip-dist.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:gamepix": "playwright test -c playwright.gamepix.config.ts",
     "check": "npm run lint && npm run typecheck && npm run test",
     "covers": "node scripts/covers.mjs",
     "videos": "node scripts/videos.mjs",
@@ -23,6 +25,7 @@
     "check:build": "node scripts/check-build.mjs",
     "submission": "node scripts/submission.mjs",
     "submission:gd": "node scripts/submission-gd.mjs",
+    "submission:gamepix": "node scripts/submission-gamepix.mjs",
     "thumbnails:gd": "node scripts/thumbnails-gd.mjs"
   },
   "devDependencies": {
