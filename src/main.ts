@@ -6,6 +6,7 @@ import { loadSave } from './game/save';
 import { NoopPlatform, type AdHooks, type Platform } from './platform/ads';
 import { CrazyGamesPlatform } from './platform/crazygames';
 import { GameDistributionPlatform } from './platform/gamedistribution';
+import { GamePixPlatform } from './platform/gamepix';
 import { setStorageBackend } from './platform/storage';
 import { App } from './ui/app';
 
@@ -15,6 +16,7 @@ import { App } from './ui/app';
  */
 function createPlatform(hooks: AdHooks): Platform {
   if (import.meta.env.VITE_PLATFORM === 'gd') return new GameDistributionPlatform(hooks);
+  if (import.meta.env.VITE_PLATFORM === 'gamepix') return new GamePixPlatform(hooks);
   if (import.meta.env.VITE_PLATFORM === 'crazygames') return window.CrazyGames?.SDK ? new CrazyGamesPlatform(hooks) : new NoopPlatform();
   return new NoopPlatform();
 }
@@ -26,15 +28,23 @@ async function boot(): Promise<void> {
   const platform = createPlatform(hooks);
   await platform.init();
   platform.loadingStart();
+  if (import.meta.env.VITE_PLATFORM === 'gamepix') platform.loadingProgress?.(10);
   setStorageBackend(platform.storage());
   const save = loadSave();
+  if (import.meta.env.VITE_PLATFORM === 'gamepix') platform.loadingProgress?.(40);
   try {
     await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1500))]);
     await Promise.all([document.fonts.load('700 20px Fredoka'), document.fonts.load('600 20px Fredoka')]);
   } catch {
     /* fonts are optional */
   }
+  if (import.meta.env.VITE_PLATFORM === 'gamepix') {
+    // GamePix: 100 %, then wait for lifecycle.loaded() before the menu is shown
+    platform.loadingProgress?.(90);
+    await platform.loaded?.();
+  }
   app = new App(root, save, platform);
+  if (import.meta.env.VITE_PLATFORM === 'gamepix' && platform instanceof GamePixPlatform) platform.syncPause();
   app.title();
   platform.loadingStop();
 }

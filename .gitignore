@@ -4,6 +4,7 @@ dist-*/
 *.zip
 test-results/
 playwright-report/
+playwright-report-gamepix/
 .vite/
 coverage/
 .DS_Store
@@ -13,3 +14,4 @@ coverage/
 !.env.example
 !submission/*.zip
 !submission-gd/*.zip
+!submission-gamepix/*.zip

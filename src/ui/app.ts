@@ -136,6 +136,11 @@ export class App {
   /** Called by the platform: true while an ad plays (audio muted, game paused), false after. */
   onAdPause(paused: boolean): void {
     this.adPlaying = paused;
+    if (import.meta.env.VITE_PLATFORM === 'gamepix' && paused) {
+      // GamePix pause (ad, player menu, hidden tab): drop the aim in progress, input stays blocked
+      this.drag = null;
+      this.duel?.cancelAim();
+    }
     this.applyAudio();
     if (!paused) this.last = performance.now();
   }
@@ -224,6 +229,7 @@ export class App {
   private bindInput(): void {
     const cv = this.canvas;
     cv.addEventListener('pointerdown', (e) => {
+      if (import.meta.env.VITE_PLATFORM === 'gamepix' && this.adPlaying) return;
       audio.unlock();
       // tap to skip the kill cam
       if (this.duel?.killCam && !this.session?.attract) {
@@ -263,6 +269,7 @@ export class App {
       }
     });
     window.addEventListener('keydown', (e) => {
+      if (import.meta.env.VITE_PLATFORM === 'gamepix' && this.adPlaying) return;
       audio.unlock();
       const duel = this.duel;
       if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
@@ -1184,6 +1191,10 @@ export class App {
     this.trackMissions(won, stars);
     this.persist();
     if (won && L.boss) this.platform.happytime();
+    if (import.meta.env.VITE_PLATFORM === 'gamepix') {
+      if (won && !L.boss) this.platform.happyMoment?.('level_complete');
+      if (!won) this.platform.sadMoment?.('level_failed');
+    }
     audio.play(won ? 'win' : 'lose');
     const starsEl = h('div.bigstars', {}, ...[1, 2, 3].map((i) => h(`i${i <= stars ? '.on' : ''}`, { style: `animation-delay:${0.25 + i * 0.3}s` })));
     if (won) for (let i = 0; i < stars; i++) window.setTimeout(() => audio.play('star', { index: i }), 550 + i * 300);
@@ -1394,6 +1405,7 @@ export class App {
       this.trackMissions(true, 0);
       this.save.endlessBest = Math.max(this.save.endlessBest, s.wave + 1);
       this.persist();
+      if (import.meta.env.VITE_PLATFORM === 'gamepix') this.platform.happyMoment?.('level_complete');
       audio.play('win');
       const hp = Math.min(me.maxHp, me.hp + 25);
       this.show(
@@ -1416,6 +1428,10 @@ export class App {
     const best = score >= this.save.endlessBest && score > 0;
     this.save.endlessBest = Math.max(this.save.endlessBest, score);
     this.persist();
+    if (import.meta.env.VITE_PLATFORM === 'gamepix') {
+      if (best) this.platform.happyMoment?.('high_score');
+      this.platform.sadMoment?.('game_over');
+    }
     audio.play('lose');
     this.show(
       h('div.screen.dim', {},

@@ -27,6 +27,15 @@ export interface Platform {
   /** Platform audio setting (CrazyGames muteAudio); it wins over the in-game toggle. */
   platformMuted(): boolean;
   onPlatformMuteChange(cb: (muted: boolean) => void): void;
+  /**
+   * GamePix only (optional: the other portals do not implement these, and every call site is behind
+   * `import.meta.env.VITE_PLATFORM === 'gamepix'`, so it is compiled out of the other builds):
+   * loading progress 0..100, a promise that settles when the game can be shown, and moment signals.
+   */
+  loadingProgress?(percent: number): void;
+  loaded?(): Promise<void>;
+  happyMoment?(name: 'level_complete' | 'high_score' | 'boss_defeated'): void;
+  sadMoment?(name: 'game_over' | 'level_failed'): void;
 }
 
 export type AdsUnavailable = 'adblock' | 'disabled' | null;

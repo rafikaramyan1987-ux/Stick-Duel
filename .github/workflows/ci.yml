@@ -56,3 +56,36 @@ jobs:
           name: stick-duel-gd
           path: stick-duel-gd.zip
           retention-days: 30
+
+  gamepix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build GamePix
+        run: npm run build:gamepix
+      - name: Build self-check (single file, size, GamePix SDK only)
+        run: node scripts/check-build.mjs gamepix
+      - name: Pack and check the GamePix zip (index.html at the root, gamepix.sdk.js, no other portal, no other URL)
+        run: |
+          node scripts/submission-gamepix.mjs
+          node scripts/check-gamepix-zip.mjs submission-gamepix/stick-duel-gamepix-v1.zip
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Playwright e2e (GamePix build, mock SDK; desktop + phone portrait)
+        run: npm run test:e2e:gamepix
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-gamepix
+          path: playwright-report-gamepix/
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stick-duel-gamepix
+          path: submission-gamepix/stick-duel-gamepix-v1.zip
+          retention-days: 30
