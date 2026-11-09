@@ -68,6 +68,8 @@ export class App {
   private session: Session | null = null;
   private tracker: GameplayTracker;
   private throttle = new MidgameThrottle();
+  /** An interstitial (pre-roll / midgame) is being requested from a button. */
+  private adBreak = false;
   private paused = false;
   private adPlaying = false;
   private last = performance.now();
@@ -403,10 +405,10 @@ export class App {
         logo,
         h('p.tagline', {}, t('title.tagline')),
         h('div.menu', {},
-          this.btn(t('menu.play'), () => this.map(), 'primary big', { id: 'play' }),
+          this.btn(t('menu.play'), () => this.prerollThen(() => this.map()), 'primary big', { id: 'play' }),
           h('div.row', {},
-            this.btn(t('menu.versus'), () => this.versusSetup(), '', { id: 'versus' }),
-            this.btn(t('menu.endless'), () => this.endlessSetup(), '', { id: 'endless' }),
+            this.btn(t('menu.versus'), () => this.prerollThen(() => this.versusSetup()), '', { id: 'versus' }),
+            this.btn(t('menu.endless'), () => this.prerollThen(() => this.endlessSetup()), '', { id: 'endless' }),
           ),
           h('div.row', {},
             this.btn(t('menu.shop'), () => this.shop('weapon'), '', { id: 'shop' }),
@@ -1132,14 +1134,32 @@ export class App {
 
   /** Natural break: a midgame ad (throttled) before continuing. */
   private async breakThen(next: () => void): Promise<void> {
+    if (this.adBreak) return; // a second click while the ad is requested
     this.tracker.stop();
     if (this.throttle.canShow()) {
       this.throttle.markShown();
+      this.adBreak = true;
       try {
         await this.platform.midgame();
       } catch {
         /* the game always continues */
+      } finally {
+        this.adBreak = false;
       }
+    }
+    next();
+  }
+
+  /** Leaving the title for a game (Play / Versus / Endless): the platform's pre-roll, if any. */
+  private async prerollThen(next: () => void): Promise<void> {
+    if (this.adBreak) return;
+    this.adBreak = true;
+    try {
+      await this.platform.preroll();
+    } catch {
+      /* the game always continues */
+    } finally {
+      this.adBreak = false;
     }
     next();
   }

@@ -7,9 +7,9 @@ import { unzipSync, zipSync } from 'fflate';
 
 const NAME = 'stick-duel-v1';
 const OUT = `submission/${NAME}.zip`;
-const html = readFileSync('dist/index.html');
+const html = readFileSync('dist-crazygames/index.html');
 if (!html.includes('sdk.crazygames.com/crazygames-sdk-v3.js')) {
-  console.error('dist/index.html is not the CrazyGames build — run `npm run build:crazygames` first.');
+  console.error('dist-crazygames/index.html is not the CrazyGames build — run `npm run build:crazygames` first.');
   process.exit(1);
 }
 mkdirSync('submission', { recursive: true });

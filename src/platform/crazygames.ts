@@ -168,6 +168,9 @@ export class CrazyGamesPlatform implements Platform {
     });
   }
 
+  /** CrazyGames runs its own pre-roll: none from the game. */
+  async preroll(): Promise<void> {}
+
   async midgame(): Promise<void> {
     await this.request('midgame');
   }

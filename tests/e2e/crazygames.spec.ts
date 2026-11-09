@@ -1,9 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * CrazyGames SDK v3 checklist, end to end, with a fake SDK injected before the game boots
- * (the Pages build has no SDK script; the adapter picks up window.CrazyGames.SDK).
+ * CrazyGames SDK v3 checklist, end to end, on the real CrazyGames build (dist-crazygames/),
+ * with a fake SDK injected before the game boots. The real SDK script is intercepted.
  */
+const CG_SDK = 'https://sdk.crazygames.com/crazygames-sdk-v3.js';
+test.use({ baseURL: 'http://localhost:4174' });
+test.beforeEach(async ({ page }) => {
+  await page.route(CG_SDK, (r) => r.fulfill({ contentType: 'text/javascript', body: '/* fake SDK already installed */' }));
+});
 type AdMode = 'finish' | 'error' | 'never';
 
 async function fakeSdk(page: Page, opts: { ad?: AdMode; muted?: boolean } = {}) {
@@ -50,7 +55,9 @@ const app = 'window.__stickDuel';
 
 test('SDK lifecycle: loading, gameplay only during real play, happytime on a boss win, Data Module saves', async ({ page }) => {
   const external: string[] = [];
+  let sdkLoaded = false;
   page.on('request', (r) => {
+    if (r.url() === CG_SDK) return void (sdkLoaded = true);
     if (!r.url().startsWith('http://localhost') && !r.url().startsWith('data:') && !r.url().startsWith('blob:')) external.push(r.url());
   });
   await fakeSdk(page);
@@ -87,6 +94,7 @@ test('SDK lifecycle: loading, gameplay only during real play, happytime on a bos
   expect(saved).toContain('"1-10"');
   expect(await page.evaluate(() => localStorage.getItem('stick-duel.save.v1'))).toBeNull();
   expect(external).toEqual([]);
+  expect(sdkLoaded).toBe(true);
 });
 
 test('respects the SDK mute setting', async ({ page }) => {
