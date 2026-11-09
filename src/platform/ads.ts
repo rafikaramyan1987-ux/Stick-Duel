@@ -1,7 +1,7 @@
 /**
- * Platform adapter. The game only talks to this interface; the CrazyGames
- * implementation lives in crazygames.ts and NoopPlatform is used everywhere else
- * (GitHub Pages, local dev): no network, no ads.
+ * Platform adapter. The game only talks to this interface. The build-time flag
+ * VITE_PLATFORM picks the implementation (see main.ts): crazygames.ts, gamedistribution.ts,
+ * or NoopPlatform for the web build (GitHub Pages, local dev): no network, no ads.
  */
 export interface Platform {
   readonly name: string;
@@ -10,6 +10,8 @@ export interface Platform {
   loadingStop(): void;
   gameplayStart(): void;
   gameplayStop(): void;
+  /** Pre-roll ad on the first Play click (GameDistribution); resolves when the game can continue. */
+  preroll(): Promise<void>;
   /** Shows a midgame ad; resolves when the game can continue (always resolves). */
   midgame(): Promise<void>;
   /** Shows a rewarded ad; resolves true if the reward must be granted. */
@@ -51,6 +53,7 @@ export class NoopPlatform implements Platform {
   loadingStop(): void {}
   gameplayStart(): void {}
   gameplayStop(): void {}
+  async preroll(): Promise<void> {}
   async midgame(): Promise<void> {}
   /** No ads outside CrazyGames: the reward is granted directly so the feature can be tested. */
   async rewarded(): Promise<boolean> {

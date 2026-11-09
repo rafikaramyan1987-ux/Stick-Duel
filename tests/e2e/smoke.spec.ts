@@ -114,6 +114,7 @@ test('tip boxes are fully readable and never cover a floating bonus or a fighter
   for (const vp of [{ width: 1280, height: 720 }, { width: 375, height: 667 }, { width: 667, height: 375 }]) {
     await page.setViewportSize(vp);
     await page.goto('/');
+    await expect(page.locator('#play')).toBeVisible(); // the app exists once the title is shown
     await page.evaluate(`(() => { const a = window.__stickDuel; a.save.tutorial = true; a.save.tips = []; a.intro(2, 5); a.fight(); })()`);
     const tip = page.locator('.tipbubble');
     for (let n = 0; n < 2; n++) {

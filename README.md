@@ -68,8 +68,30 @@ src/core      pure maths: trajectory, damage/stars/coins, AI aiming, geometry, R
 src/game      levels (procedural, seeded), duel runtime, ragdoll, progress/save, worlds
 src/render    backgrounds, scenery, fighters, weapons, particles, camera
 src/ui        DOM screens + HUD, input, game flow
-src/platform  CrazyGames SDK v3 adapter, storage
+src/platform  CrazyGames SDK v3 and GameDistribution SDK adapters, storage
 ```
+
+## Builds per platform
+
+A build-time flag picks the platform: `VITE_PLATFORM=crazygames | gd | web` (or `vite build --mode
+crazygames|gd`). Each build only bundles its own SDK adapter; the other portal's code and SDK are dropped.
+
+| Build | Command | Output | SDK |
+|---|---|---|---|
+| Web (GitHub Pages) | `npm run build` | `dist/index.html` | none, no external request |
+| CrazyGames | `npm run build:crazygames` | `dist-crazygames/index.html` | CrazyGames SDK v3 (`<head>` script) |
+| GameDistribution | `npm run build:gd` | `dist-gd/index.html` | GD HTML5 SDK (injected while booting) |
+
+`node scripts/check-build.mjs <web|crazygames|gd>` checks a build: single file, size, no external links,
+no other portal's SDK or branding.
+
+## GameDistribution integration
+
+`src/platform/gamedistribution.ts` sets `window.GD_OPTIONS` and loads `main.min.js` once while booting.
+`SDK_GAME_PAUSE`/`SDK_GAME_START` pause/mute and resume the game; interstitials only on the first Play click
+(pre-roll) and result-screen buttons (mid-roll); rewarded ads grant only after `SDK_REWARDED_WATCH_COMPLETE`,
+and every request settles once (completion, error/cancel, or an 8 s start timeout). Saves use localStorage.
+If the SDK cannot load, the game plays without ads. Submission files: `submission-gd/` (see its README).
 
 ## CrazyGames integration (SDK v3)
 
@@ -92,8 +114,10 @@ npm install
 npm run dev          # local dev server
 npm run check        # lint + typecheck + unit tests
 npm run build        # dist/index.html (single file)
-npm run test:e2e     # Playwright smoke test against the build
+npm run build:crazygames && npm run build:gd
+npm run test:e2e     # Playwright e2e against the web, CrazyGames and GD builds
 npm run build:crazygames && npm run zip   # stick-duel-crazygames.zip
+npm run build:gd && npm run thumbnails:gd && npm run submission:gd   # submission-gd/
 ```
 
 Difficulty is tuned with an automated playtest (no build needed):

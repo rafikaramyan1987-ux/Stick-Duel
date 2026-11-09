@@ -22,12 +22,19 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
-      - run: npm run build
-      - name: Build self-check (single file, size, no external links)
-        run: node scripts/check-build.mjs
+      - name: Build web, CrazyGames and GameDistribution
+        run: |
+          npm run build
+          npm run build:crazygames
+          npm run build:gd
+      - name: Build self-check (single file, size, no external links, no other portal's SDK)
+        run: |
+          node scripts/check-build.mjs web
+          node scripts/check-build.mjs crazygames
+          node scripts/check-build.mjs gd
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
-      - name: Playwright smoke test (desktop + phone portrait)
+      - name: Playwright e2e (web, CrazyGames, GameDistribution builds; desktop + phone portrait)
         run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()
@@ -35,13 +42,17 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
-      - name: Build CrazyGames zip
+      - name: Build CrazyGames and GameDistribution zips
         run: |
-          npm run build:crazygames
-          node scripts/check-build.mjs
           npm run zip
+          node scripts/zip-dist.mjs dist-gd stick-duel-gd.zip
       - uses: actions/upload-artifact@v4
         with:
           name: stick-duel-crazygames
           path: stick-duel-crazygames.zip
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stick-duel-gd
+          path: stick-duel-gd.zip
           retention-days: 30
