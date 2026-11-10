@@ -113,3 +113,26 @@ jobs:
         with:
           name: web-zip-checks
           path: ci-web/
+
+  playgama:
+    # Playgama: the build with Playgama Bridge 2.4.1 (vendor/playgama-bridge/) as a zip with index.html at the root
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Playgama build
+        run: npm run build:playgama
+      - name: Playgama zip checks (index.html at the root, Bridge script referenced first in <head>, pinned Bridge build, no crazygames / gamedistribution / gamepix, Playgama's precheck)
+        run: node scripts/playgama/zip.mjs ci-playgama/stick-duel-playgama.zip && node scripts/playgama/check.mjs ci-playgama/stick-duel-playgama.zip
+      - name: Committed zip (submission-playgama/stick-duel-playgama-v1.zip) passes the same checks
+        run: node scripts/playgama/check.mjs submission-playgama/stick-duel-playgama-v1.zip
+      - name: Bridge test (mock platform + stubbed Playgama SDK; interstitial, rewarded completed / cancelled, muted during ads)
+        run: node scripts/playgama/test.mjs ci-playgama/stick-duel-playgama.zip
+      - name: Vendored Bridge = official v2.4.1 standalone playgama build (rebuilt from the tag)
+        run: bash scripts/playgama/build-bridge.sh

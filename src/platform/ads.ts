@@ -36,6 +36,12 @@ export interface Platform {
   loaded?(): Promise<void>;
   happyMoment?(name: 'level_complete' | 'high_score' | 'boss_defeated'): void;
   sadMoment?(name: 'game_over' | 'level_failed'): void;
+  /**
+   * Playgama only (optional; every call site is behind `import.meta.env.VITE_PLATFORM === 'playgama'`): the game is
+   * ready for input (Bridge `game_ready`), and a level ended (won → `level_completed`, else `level_failed`).
+   */
+  gameReady?(): void;
+  levelEnd?(won: boolean): void;
 }
 
 export type AdsUnavailable = 'adblock' | 'disabled' | null;
