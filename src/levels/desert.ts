@@ -1,4 +1,4 @@
-import { box, cover, drop, gallows, level, ledge, parts, pendulum, playerCrates, playerDrop, playerTnt, rock, sand, shield, stoneWall, swinger, tnt, woodWall, crate, type Part } from './kit';
+import { board, box, cover, drop, gallows, level, ledge, parts, pendulum, playerCrates, playerDrop, playerTnt, rock, sand, shield, stoneWall, swinger, tnt, woodWall, crate, type Part } from './kit';
 import type { LevelDef } from './types';
 
 /**
@@ -35,13 +35,13 @@ const d6 = level('desert', 6, {
   rivalAmmo: ['fire'],
 });
 
-const d7 = level('desert', 7, { wind: -2.4, ammo: { fire: 1, heavy: 2 }, ...parts(drop('rope', 11.6, 1.5, rock('rock', 0.9, 0.8), 13.4), cover(tnt(13, 0, 'tnt'), woodWall(10.2, 1.7)), playerCrates(), pCrate), rivalTargets: ['pRope'] });
+const d7 = level('desert', 7, { wind: -2.4, ammo: { fire: 1, heavy: 2 }, ...parts(drop('rope', 11.6, 1.5, rock('rock', 0.9, 0.8), 13.4), cover(tnt(13, 0, 'tnt'), woodWall(10.2, 1.7), board(10.95, -5.1, 1.3, 'ropeBoard')), playerCrates(), pCrate), rivalTargets: ['pRope'] });
 
 // tricky: a stone slab shields the hanging barrel's rope; strong wind
 const d8 = level('desert', 8, {
   wind: 3,
   ammo: { fire: 1, heavy: 2, bomb: 1 },
-  ...parts(hangingTnt(11.6, 1.6), cover(box(10.9, -5.4, 0.4, 1.3, 'stone', 'stoneBlock', { id: 'slab', fixed: true, hp: 110, depth: 1 })), sandWall(10.1, 2, 's'), playerCrates(), playerTnt()),
+  ...parts(hangingTnt(11.6, 1.6), cover(box(10.9, -5.4, 0.4, 1.3, 'stone', 'stoneBlock', { id: 'slab', fixed: true, hp: 110, depth: 1 })), sandWall(10.1, 3, 's'), playerCrates(), playerTnt()),
   rivalTargets: ['pTnt'],
   rivalAmmo: ['fire'],
 });

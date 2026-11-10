@@ -1,4 +1,4 @@
-import { box, chandelier, cover, crate, crateStack, drop, level, parts, pendulum, playerCrates, playerDrop, playerTnt, rock, shield, stoneWall, swinger, tower, woodWall, type Part } from './kit';
+import { board, box, chandelier, cover, crate, crateStack, drop, level, parts, pendulum, playerCrates, playerDrop, playerTnt, rock, shield, stoneWall, swinger, tower, woodWall, type Part } from './kit';
 import type { LevelDef, ObjDef } from './types';
 
 /**
@@ -30,7 +30,7 @@ const c1 = level('castle', 1, { ammo: { heavy: 2 }, ...parts(cover(...stoneWall(
 const c2 = level('castle', 2, { ammo: { heavy: 2 }, ...parts(cover(...shield(10.3), woodWall(9.7, 1.5)), chand('chandelier', 11.6, -7.2, 2.5), playerCrates(), pCrate), rivalTargets: ['pRope'] });
 
 // a tall wall: break it with heavy bolts, or lob over it
-const c3 = level('castle', 3, { ammo: { heavy: 3 }, ...parts(cover(...stoneWall(10.1, 3)), chand('chandelier', 11.6, -7.6, 2.6), playerCrates(), pCrate), rivalTargets: ['pRope'] });
+const c3 = level('castle', 3, { ammo: { heavy: 3 }, ...parts(cover(...stoneWall(10.1, 3), board(10.9, -6.4, 1.6, 'chainBoard')), chand('chandelier', 11.6, -7.6, 2.6), playerCrates(), pCrate), rivalTargets: ['pRope'] });
 
 // tricky: the chain hides behind a shield up on the beam; a barrel by the player
 const c4 = level('castle', 4, {
