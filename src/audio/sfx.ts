@@ -1,8 +1,38 @@
 /**
- * Stick Duel audio: every sound is synthesised with the Web Audio API.
- * No audio files, no network. Safe to import and call in environments
+ * Topple Duel audio. Impacts, breaking and the menus use Kenney CC0 samples (Impact Sounds,
+ * Interface Sounds; src/assets/sfx, inlined into the build); explosions, whooshes, jingles and the
+ * looping music are synthesised with the Web Audio API. Safe to import and call in environments
  * without an AudioContext (all methods become silent no-ops).
  */
+const SAMPLE_URLS = (typeof import.meta.glob === 'function'
+  ? import.meta.glob('../assets/sfx/*.mp3', { query: '?url', import: 'default', eager: true })
+  : {}) as Record<string, string>;
+
+/** Sample groups: a random variant of the group is played (wood_heavy_0, wood_heavy_1 …). */
+export type SampleGroup =
+  | 'wood_heavy'
+  | 'wood_med'
+  | 'wood_light'
+  | 'plank'
+  | 'stone'
+  | 'plate_heavy'
+  | 'metal_heavy'
+  | 'metal_light'
+  | 'punch_med'
+  | 'punch_heavy'
+  | 'soft_heavy'
+  | 'soft_med'
+  | 'glass'
+  | 'ui_click'
+  | 'ui_select'
+  | 'ui_confirm'
+  | 'ui_open'
+  | 'ui_close'
+  | 'ui_error'
+  | 'ui_switch'
+  | 'ui_star'
+  | 'ui_pluck'
+  | 'ui_toggle';
 
 export type SfxName =
   | 'twang'
@@ -434,6 +464,52 @@ export class Audio {
   private nextTime = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
 
+  private samples = new Map<string, AudioBuffer[]>();
+  private samplesLoading = false;
+
+  private loadSamples(ctx: AudioContext): void {
+    if (this.samplesLoading) return;
+    this.samplesLoading = true;
+    for (const [path, url] of Object.entries(SAMPLE_URLS)) {
+      const file = path.split('/').pop()!.replace('.mp3', '');
+      const group = /_\d+$/.test(file) ? file.replace(/_\d+$/, '') : file;
+      fetch(url)
+        .then((r) => r.arrayBuffer())
+        .then((b) => ctx.decodeAudioData(b))
+        .then((buf) => {
+          const list = this.samples.get(group) ?? [];
+          list.push(buf);
+          this.samples.set(group, list);
+        })
+        .catch(() => undefined);
+    }
+  }
+
+  /** Plays a Kenney sample (random variant of the group). */
+  sample(group: SampleGroup, opts?: PlayOptions): void {
+    try {
+      const ctx = this.ctx;
+      if (!ctx || !this.sfxBus || !this.sfxEnabled || this.muted || ctx.state !== 'running') return;
+      const list = this.samples.get(group);
+      if (!list || list.length === 0) return;
+      const buf = list[Math.floor(Math.random() * list.length)]!;
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.playbackRate.value = clamp((opts?.pitch ?? 1) * (0.94 + Math.random() * 0.12), 0.4, 3);
+      const g = ctx.createGain();
+      g.gain.value = clamp(opts?.volume ?? 1, 0, 1) * 0.9;
+      src.connect(g);
+      g.connect(this.sfxBus);
+      src.onended = () => {
+        src.disconnect();
+        g.disconnect();
+      };
+      src.start();
+    } catch {
+      /* never throw */
+    }
+  }
+
   unlock(): void {
     try {
       if (!this.ctx) {
@@ -441,6 +517,7 @@ export class Audio {
         if (!Ctor) return;
         this.ctx = new Ctor();
         this.buildGraph(this.ctx);
+        this.loadSamples(this.ctx);
       }
       const ctx = this.ctx;
       if (ctx.state === 'suspended') {

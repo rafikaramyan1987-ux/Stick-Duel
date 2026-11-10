@@ -1,9 +1,9 @@
 {
-  "name": "stick-duel",
+  "name": "topple-duel",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Stick Duel \u2014 a juicy turn-based 2D physics duel with stick-figure ragdolls, six worlds and six bosses.",
+  "description": "Topple Duel — a turn-based 2.5D physics duel: cut ropes, topple towers and set off barrels to knock out your rival.",
   "license": "UNLICENSED",
   "scripts": {
     "dev": "vite",
@@ -19,20 +19,19 @@
     "test:e2e": "playwright test",
     "test:e2e:gamepix": "playwright test -c playwright.gamepix.config.ts",
     "check": "npm run lint && npm run typecheck && npm run test",
-    "covers": "node scripts/covers.mjs",
-    "videos": "node scripts/videos.mjs",
-    "qa": "node scripts/qa-shots.mjs",
     "check:build": "node scripts/check-build.mjs",
     "submission": "node scripts/submission.mjs",
     "submission:gd": "node scripts/submission-gd.mjs",
     "submission:gamepix": "node scripts/submission-gamepix.mjs",
-    "thumbnails:gd": "node scripts/thumbnails-gd.mjs"
+    "assets": "node scripts/pack-assets.mjs",
+    "preview:media": "node scripts/preview.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@fontsource/fredoka": "5.3.0",
     "@playwright/test": "1.63.0",
     "@types/node": "^22.20.5",
+    "@types/three": "^0.170.0",
     "eslint": "^10.14.0",
     "fflate": "^0.8.3",
     "globals": "^17.14.0",
@@ -43,6 +42,7 @@
     "vitest": "^5.1.0"
   },
   "dependencies": {
-    "planck": "^1.5.1"
+    "planck": "^1.5.1",
+    "three": "^0.170.0"
   }
 }

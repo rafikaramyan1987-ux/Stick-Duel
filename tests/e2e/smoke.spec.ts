@@ -1,156 +1,108 @@
 import { expect, test } from '@playwright/test';
+import { APP, RETURNING, SAVE_KEY, finishDuel, trackExternal, winCurrentLevel } from './helpers';
 
-interface Hook {
-  duel: { phase: string; turn: number; turnNumber: number; fighters: Array<{ shots: number; hp: number }>; projectiles: unknown[] } | null;
-}
-const state = () => {
-  const app = (window as unknown as { __stickDuel: Hook }).__stickDuel;
-  const d = app.duel;
-  return d ? { phase: d.phase, turn: d.turn, turns: d.turnNumber, shots: d.fighters[0]!.shots, enemyHp: d.fighters[1]!.hp, flying: d.projectiles.length } : null;
-};
-
-test('loads, starts level 1 and fires a shot by dragging', async ({ page }) => {
+test('first visit: in level 1 within 5 s, tutorial hand on the rope, drag back and release to shoot', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-  page.on('request', (r) => {
-    const url = r.url();
-    if (!url.startsWith('http://localhost') && !url.startsWith('data:')) errors.push(`external request: ${url}`);
-  });
-
+  const external = trackExternal(page);
+  const t0 = Date.now();
   await page.goto('/');
-  await expect(page.locator('#play')).toBeVisible();
-  await expect(page.locator('.logo')).toContainText('Stick');
-  await page.locator('#play').click();
-  await page.locator('.node[data-level="1"]').click();
-  await expect(page.locator('#fight')).toBeVisible();
-  await page.locator('#fight').click();
-  await expect(page.locator('.hud')).toBeVisible();
-  await page.waitForFunction(() => {
-    const d = (window as unknown as { __stickDuel: Hook }).__stickDuel.duel;
-    return d?.phase === 'aim' && d.turn === 0;
-  });
-  // first time on level 1: the tutorial hand shows the drag
+  await expect(page.locator('.hud')).toBeVisible({ timeout: 5_000 });
+  expect(Date.now() - t0).toBeLessThan(5_000);
   await expect(page.locator('.tutorial .hand')).toBeVisible();
+  await expect(page.locator('.tutorial .tip b')).toHaveText('Aim at the rope!');
+  await expect(page.locator('.hp.p1 .val')).toHaveText('80');
+  await expect(page.locator('.shots .sv')).toHaveText('5');
 
   // drag back (down-left) and release: shoots up and to the right
   const vp = page.viewportSize()!;
   const x0 = vp.width * 0.5;
-  const y0 = vp.height * 0.55;
+  const y0 = vp.height * 0.5;
   await page.mouse.move(x0, y0);
   await page.mouse.down();
-  for (let i = 1; i <= 10; i++) await page.mouse.move(x0 - i * 12, y0 + i * 9);
+  for (let i = 1; i <= 10; i++) await page.mouse.move(x0 - i * 14, y0 + i * 8);
   await page.mouse.up();
-
-  await page.waitForFunction(() => {
-    const d = (window as unknown as { __stickDuel: Hook }).__stickDuel.duel;
-    return !!d && d.fighters[0]!.shots === 1;
-  });
-  const s1 = await page.evaluate(state);
-  expect(s1?.shots).toBe(1);
-  // the guided first shot ends the tutorial, and it is saved
-  await expect(page.locator('.tutorial')).toHaveCount(0);
-  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('stick-duel.save.v1') ?? '{}').tutorial)).toBe(true);
-  // the shot resolves and the turn passes to the enemy (or the enemy is hit)
-  await page.waitForFunction(() => {
-    const d = (window as unknown as { __stickDuel: Hook }).__stickDuel.duel;
-    return !!d && (d.turn === 1 || d.phase === 'over');
-  }, null, { timeout: 15_000 });
+  await page.waitForFunction(`${APP}.duel.shotsUsed === 1`);
+  await expect(page.locator('.shots .sv')).toHaveText('4');
+  // the first shot ends the tutorial for good
+  await expect(page.locator('.tutorial .tip b')).toHaveText('Gravity does the rest…');
+  expect(await page.evaluate((k) => JSON.parse(localStorage.getItem(k) ?? '{}').tutorial, SAVE_KEY)).toBe(true);
+  await finishDuel(page);
+  expect(external).toEqual([]);
   expect(errors).toEqual([]);
 });
 
-test('every screen opens: map, shop, settings, 2 players, endless', async ({ page }) => {
+test('winning a level: slow-motion replay, stars, next level; progress is saved', async ({ page }) => {
+  await page.addInitScript(([k, v]) => localStorage.setItem(k!, v!), [SAVE_KEY, RETURNING]);
   await page.goto('/');
-  await page.locator('#shop').click();
-  await expect(page.locator('.shopgrid .item')).toHaveCount(6);
-  await page.locator('.topbar .btn').first().click();
+  await page.locator('#play').click();
+  await expect(page.locator('.hud')).toBeVisible();
+  // the replay starts on its own after the K.O. (checked in the unit tests); here: the result
+  await winCurrentLevel(page);
+  await expect(page.locator('.star.on')).toHaveCount(3);
+  await expect(page.locator('#next')).toBeVisible();
+  const save = await page.evaluate((k) => JSON.parse(localStorage.getItem(k) ?? '{}'), SAVE_KEY);
+  expect(save.levels['forest-1'].stars).toEqual([true, true, true]);
+  expect(save.coins).toBe(25);
+  await page.locator('#next').click();
+  await expect(page.locator('.lvname')).toContainText('Grand Hall');
+});
+
+test('main menu, worlds, settings (language, reset with confirmation), pause menu, keyboard', async ({ page }) => {
+  await page.addInitScript(([k, v]) => localStorage.setItem(k!, v!), [SAVE_KEY, RETURNING]);
+  await page.goto('/');
+  await expect(page.locator('.logo')).toContainText('TOPPLE');
+  for (const id of ['#play', '#worlds', '#versus', '#endless', '#settings']) await expect(page.locator(id)).toBeVisible();
+
+  await page.locator('#worlds').click();
+  await expect(page.locator('.lvl')).toHaveCount(3);
+  await expect(page.locator('.lvl.locked')).toHaveCount(2);
+  await page.locator('#back').click();
+
   await page.locator('#settings').click();
   await page.locator('[data-lang="fr"]').click();
   await expect(page.locator('.settings h2')).toHaveText('Réglages');
   await page.locator('[data-lang="en"]').click();
-  await page.locator('.topbar .btn').first().click();
-  await page.locator('#versus').click();
-  await page.locator('[data-world="3"]').click();
-  await page.locator('#versus-start').click();
-  await page.locator('#fight').click();
-  await expect(page.locator('.hud .hp.s1 .name')).toHaveText('P2');
+  await page.locator('#music').click();
+  await expect(page.locator('#music')).not.toHaveClass(/on/);
+  await page.locator('#reset').click();
+  await expect(page.locator('.confirm p')).toContainText('Reset all progress?');
+  await page.locator('#reset-no').click();
+  await page.locator('#settings-back').click();
+
+  await page.locator('#play').click();
+  await expect(page.locator('.hud')).toBeVisible();
+  // keyboard: digits pick ammo, arrows aim, P pauses (KeyboardEvent.code, layout independent)
+  await page.waitForFunction(`${APP}.duel.phase === 'aim'`);
+  const a0 = (await page.evaluate(`${APP}.duel.aim.angle`)) as number;
+  await page.keyboard.press('ArrowUp');
+  expect((await page.evaluate(`${APP}.duel.aim.angle`)) as number).toBeLessThan(a0);
+  await page.keyboard.press('KeyP');
+  await expect(page.locator('.pausecard')).toBeVisible();
+  await page.locator('#resume').click();
+  await expect(page.locator('.pausecard')).toHaveCount(0);
   await page.locator('#pause').click();
-  await page.locator('.pausecard .btn').last().click();
-  await page.locator('#endless').click();
-  await page.locator('#endless-start').click();
-  await expect(page.locator('#fight')).toBeVisible();
-});
-
-test('the tutorial can be skipped and is shown only once', async ({ page }) => {
-  await page.goto('/');
+  await page.locator('#pause-menu').click();
+  await expect(page.locator('#play')).toBeVisible();
+  // the web build has no ads at all
   await page.locator('#play').click();
-  await page.locator('.node[data-level="1"]').click();
-  await page.locator('#fight').click();
-  await page.locator('#skip-tutorial').click();
-  await expect(page.locator('.tutorial')).toHaveCount(0);
-  await page.reload();
-  await page.locator('#play').click();
-  await page.locator('.node[data-level="1"]').click();
-  await page.locator('#fight').click();
-  await page.waitForTimeout(800);
-  await expect(page.locator('.tutorial')).toHaveCount(0);
+  await expect(page.locator('#ad-fire')).toHaveCount(0);
 });
 
-test('daily rewards: open the chest once, 3 missions', async ({ page }) => {
+test('all HUD and menu buttons are on screen without scrolling', async ({ page }) => {
+  await page.addInitScript(([k, v]) => localStorage.setItem(k!, v!), [SAVE_KEY, RETURNING]);
   await page.goto('/');
-  await expect(page.locator('#daily .dot')).toBeVisible();
-  await page.locator('#daily').click();
-  await expect(page.locator('.mission')).toHaveCount(3);
-  const before = Number(await page.locator('.coins').first().textContent());
-  await page.locator('#open-chest').click();
-  await expect(page.locator('#open-chest')).toHaveCount(0);
-  const after = Number(await page.locator('.coins').first().textContent());
-  expect(after).toBeGreaterThan(before);
-  await page.locator('.topbar .btn').first().click();
-  await expect(page.locator('#daily .dot')).toHaveCount(0);
-});
-
-test('tip boxes are fully readable and never cover a floating bonus or a fighter (desktop, 375 px portrait and landscape)', async ({ page }) => {
-  for (const vp of [{ width: 1280, height: 720 }, { width: 375, height: 667 }, { width: 667, height: 375 }]) {
-    await page.setViewportSize(vp);
-    await page.goto('/');
-    await expect(page.locator('#play')).toBeVisible(); // the app exists once the title is shown
-    await page.evaluate(`(() => { const a = window.__stickDuel; a.save.tutorial = true; a.save.tips = []; a.intro(2, 5); a.fight(); })()`);
-    const tip = page.locator('.tipbubble');
-    for (let n = 0; n < 2; n++) {
-      await expect(tip).toBeVisible({ timeout: 6_000 });
-      const box = await tip.evaluate((el) => {
-        const r = el.getBoundingClientRect();
-        return { x: r.x, y: r.y, w: r.width, h: r.height, clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 };
-      });
-      expect(box.clipped, `${vp.width}x${vp.height} text clipped`).toBe(false);
-      expect(box.x, `${vp.width}x${vp.height}`).toBeGreaterThanOrEqual(0);
-      expect(box.x + box.w).toBeLessThanOrEqual(vp.width);
-      expect(box.y).toBeGreaterThanOrEqual(0);
-      expect(box.y + box.h).toBeLessThanOrEqual(vp.height);
-      // screen rectangles of the floating bonuses (crate + its balloons)
-      const bonuses = (await page.evaluate(`(() => {
-        const a = window.__stickDuel, d = a.duel, s = a.scene, v = a.view;
-        const box = (ax, ay, bx, by) => {
-          const [x0, y0] = s.toScreen(ax, ay, v);
-          const [x1, y1] = s.toScreen(bx, by, v);
-          return { x0: x0 / v.dpr, y0: y0 / v.dpr, x1: x1 / v.dpr, y1: y1 / v.dpr };
-        };
-        // the bonuses (crate + balloons) and the two fighters' bodies
-        return [
-          ...d.bonuses.filter((b) => b.alive).map((b) => box(b.x - 0.6, b.y - 1.25, b.x + 0.6, b.y + 0.45)),
-          ...d.fighters.map((f) => box(f.rag.homeX - 0.4, f.rag.footY - 2.0 * f.rag.scale, f.rag.homeX + 0.4, f.rag.footY)),
-        ];
-      })()`)) as Array<{ x0: number; y0: number; x1: number; y1: number }>;
-      expect(bonuses.length).toBeGreaterThan(0);
-      for (const b of bonuses) {
-        const overlap = box.x < b.x1 && box.x + box.w > b.x0 && box.y < b.y1 && box.y + box.h > b.y0;
-        expect(overlap, `${vp.width}x${vp.height} tip over a bonus or a fighter`).toBe(false);
-      }
-      // dismiss it: the next tip (if any) takes its place
-      await tip.click();
-      await page.waitForTimeout(400);
-      if (!(await tip.count())) break;
-    }
-  }
+  const vp = page.viewportSize()!;
+  const inside = async (sel: string) => {
+    const b = await page.locator(sel).first().boundingBox();
+    expect(b, sel).not.toBeNull();
+    expect(b!.x).toBeGreaterThanOrEqual(0);
+    expect(b!.y).toBeGreaterThanOrEqual(0);
+    expect(b!.x + b!.width).toBeLessThanOrEqual(vp.width + 1);
+    expect(b!.y + b!.height).toBeLessThanOrEqual(vp.height + 1);
+  };
+  for (const id of ['#play', '#worlds', '#versus', '#endless', '#settings']) await inside(id);
+  await page.locator('#play').click();
+  for (const sel of ['#pause', '.hp.p0', '.hp.p1', '.shots', '.ab']) await inside(sel);
 });

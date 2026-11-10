@@ -1,125 +1,85 @@
 import { describe, expect, it } from 'vitest';
-import { segShape } from '../../src/core/geometry';
-import { difficulty, generateLevel, laneWidth, MIN_LANE, playable } from '../../src/game/levels';
-import { LEVELS_PER_WORLD, WORLDS } from '../../src/game/worlds';
+import { Duel } from '../../src/game/duel';
+import { LEVELS } from '../../src/levels';
+import type { AmmoId } from '../../src/levels/types';
+import { aimsAt } from '../../src/physics/aim';
+import { AMMO, Sim } from '../../src/physics/sim';
 
-const all = WORLDS.flatMap((w) => Array.from({ length: LEVELS_PER_WORLD }, (_, i) => generateLevel(w.index, i + 1)));
+/**
+ * Phase A level checks (the full search bot and docs/levels-report.md come with the level checker):
+ * every level has an environmental one-shot win within par, found by aiming at its ropes and bodies
+ * with the real physics, and from level 3 on, direct hits alone can never win.
+ */
+function targets(s: Sim): Array<{ x: number; y: number }> {
+  const out: Array<{ x: number; y: number }> = [];
+  for (const r of s.ropes) {
+    const [a, b] = s.ropeEnds(r);
+    out.push({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  }
+  for (const e of s.ents) if (e.name) out.push({ x: e.body.getPosition().x, y: e.body.getPosition().y });
+  return out;
+}
 
 describe('levels', () => {
-  it('60 levels, the 10th of each world is a boss', () => {
-    expect(all).toHaveLength(60);
-    for (const L of all) expect(L.boss).toBe(L.level === 10);
-    for (const L of all.filter((l) => l.boss)) {
-      const lvl9 = all.find((l) => l.world.index === L.world.index && l.level === 9)!;
-      expect(L.enemy.hp).toBeGreaterThan(lvl9.enemy.hp);
-      expect(L.enemy.scale).toBeGreaterThan(1.2);
-      expect(L.enemy.weapons).toEqual([L.world.boss.weapon]);
+  it('there are 3 preview levels: forest rope + log, castle chandelier, desert barrels', () => {
+    expect(LEVELS.map((l) => l.id)).toEqual(['forest-1', 'castle-1', 'desert-1']);
+    for (const l of LEVELS) {
+      expect(l.par).toBeGreaterThanOrEqual(1);
+      expect(Object.values(l.ammo).reduce((a, b) => a + (b ?? 0), 0)).toBe(l.shots);
     }
   });
 
-  it('is deterministic', () => {
-    expect(JSON.stringify(generateLevel(3, 4))).toBe(JSON.stringify(generateLevel(3, 4)));
-  });
-
-  it('both fighters stand on solid ground', () => {
-    for (const L of all) {
-      for (const spot of [L.playerSpot, L.enemySpot]) {
-        const under = L.solids.some((s) => s.role === 'platform' && segShape(spot.x, spot.y - 0.2, spot.x, spot.y + 0.3, s.shape));
-        expect(under, `${L.key} ${JSON.stringify(spot)}`).toBe(true);
-      }
-    }
-  });
-
-  // heavy: runs the aim solver for both sides of all 60 levels
-  it('every level has a clear shot lane for both sides', { timeout: 30_000 }, () => {
-    for (const L of all) expect(playable(L), L.key).toBe(true);
-  });
-
-  it('lanes are comfortable: a range of good angles for both sides', { timeout: 60_000 }, () => {
-    for (const L of all) {
-      expect(laneWidth(L, 0), `${L.key} player`).toBeGreaterThanOrEqual(MIN_LANE);
-      expect(laneWidth(L, 1), `${L.key} enemy`).toBeGreaterThanOrEqual(MIN_LANE);
-    }
-  });
-
-  it('shots start above the lip: flat and rising shots clear the scenery near the shooter', () => {
-    for (const L of all) {
-      for (const [spot, dir, sc] of [[L.playerSpot, 1, 1], [L.enemySpot, -1, L.enemy.scale]] as const) {
-        // launch point as in the game (shoulder + 0.55 m along the aim)
-        for (const up of [-0.12, 0, 0.3, 0.6, 0.9]) {
-          const a = dir > 0 ? -up : Math.PI + up;
-          const x0 = spot.x + Math.cos(a) * 0.55 * sc;
-          const y0 = spot.y - 1.43 * sc + Math.sin(a) * 0.55 * sc;
-          const x1 = x0 + Math.cos(a) * 2.5;
-          const y1 = y0 + Math.sin(a) * 2.5;
-          const hit = L.solids.find((s) => segShape(x0, y0, x1, y1, s.shape));
-          expect(hit, `${L.key} ${dir > 0 ? 'player' : 'enemy'} angle ${up}`).toBeUndefined();
+  for (const [i, lv] of LEVELS.entries()) {
+    it(`${lv.id}: an environmental win exists within par`, () => {
+      const probe = new Sim(lv, 1);
+      probe.warmUp();
+      let win: string | null = null;
+      search: for (const t of targets(probe)) {
+        for (const ammo of Object.keys(lv.ammo) as AmmoId[]) {
+          for (const aim of aimsAt(probe, 0, t, [12, 16, 21])) {
+            const s = new Sim(lv, 1);
+            s.warmUp();
+            s.fire(0, aim.angle, aim.power, ammo);
+            for (let k = 0; k < 60 * 9 && s.fighters[1].alive; k++) s.step();
+            if (!s.fighters[1].alive && s.fighters[0].alive && s.stats!.direct === 0) {
+              win = `${ammo} ${aim.angle.toFixed(3)} ${aim.power.toFixed(3)}`;
+              break search;
+            }
+          }
         }
       }
-    }
+      expect(win, `no environmental win in ${lv.id}`).not.toBeNull();
+    }, 60_000);
+
+    it(`${lv.id}: direct hits alone ${i >= 2 ? 'can never' : 'are not meant to'} win`, () => {
+      // best case: every shot is a head hit with the strongest direct ammo the level gives
+      let best = 0;
+      for (const [a, n] of Object.entries(lv.ammo) as Array<[AmmoId, number]>) best += AMMO[a].direct * 1.5 * n;
+      if (i >= 2) expect(best).toBeLessThan(lv.rival.hp);
+    });
+  }
+
+  it('the duel gives 3 stars for a one-shot environmental win, with a replay first', () => {
+    const lv = LEVELS[1]!;
+    const d = new Duel(lv, 1);
+    const rope = d.sim.rope('chain')!;
+    const [a, b] = d.sim.ropeEnds(rope);
+    const aim = aimsAt(d.sim, 0, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }).find((x) => x.angle > -0.9)!;
+    d.setAim(aim.angle, aim.power);
+    const phases: string[] = [];
+    d.listeners.phase = (p) => phases.push(p);
+    expect(d.fire()).toBe(true);
+    for (let k = 0; k < 60 * 30 && d.phase !== 'over'; k++) d.update(1 / 60);
+    expect(phases).toContain('replay');
+    expect(d.result).toMatchObject({ win: true, stars: [true, true, true], shotsUsed: 1, noDirect: true });
   });
 
-  it('world 1 levels 1–3 are a gentle introduction', () => {
-    for (const L of all.filter((l) => l.world.index === 1 && l.level <= 3)) {
-      expect(L.ai).toMatchObject({ headshots: false, missFirst: true });
-      // nothing but the player's own hill within 4 m of the player
-      const near = L.solids.filter((s) => s.role !== 'platform' && s.shape.kind === 'poly' && s.shape.pts.some((p) => Math.abs(p.x - L.playerSpot.x) < 4));
-      expect(near, L.key).toEqual([]);
-    }
-    for (const L of all.filter((l) => !(l.world.index === 1 && l.level <= 3))) expect(L.ai.missFirst).toBe(false);
-  });
-
-  it('difficulty rises smoothly: distance and enemy HP across worlds, AI within each world', () => {
-    expect(difficulty(1, 1)).toBe(0);
-    expect(difficulty(6, 10)).toBe(1);
-    const avg = (w: number, f: (L: (typeof all)[number]) => number) => {
-      const ls = all.filter((l) => l.world.index === w && !l.boss);
-      return ls.reduce((a, l) => a + f(l), 0) / ls.length;
-    };
-    for (let w = 2; w <= 6; w++) {
-      expect(avg(w, (l) => l.enemySpot.x)).toBeGreaterThan(avg(w - 1, (l) => l.enemySpot.x) - 0.5);
-      expect(avg(w, (l) => l.enemy.hp)).toBeGreaterThan(avg(w - 1, (l) => l.enemy.hp));
-    }
-    // within a world the AI gets steadily sharper and hits harder (snow/volcano trade AI skill for hazards)
-    for (const W of WORLDS) {
-      const ls = all.filter((l) => l.world.index === W.index && !l.boss && !(W.index === 1 && l.level <= 3));
-      for (let i = 1; i < ls.length; i++) {
-        expect(ls[i]!.skill, ls[i]!.key).toBeGreaterThanOrEqual(ls[i - 1]!.skill);
-        expect(ls[i]!.ai.damage, ls[i]!.key).toBeGreaterThanOrEqual(ls[i - 1]!.ai.damage);
-      }
-    }
-    for (const L of all) expect(L.skill).toBeLessThanOrEqual(0.85);
-  });
-
-
-  it('wind: calm forest, gusty mountains and desert', () => {
-    expect(all.filter((l) => l.world.id === 'forest' && l.level <= 3).every((l) => l.wind.base === 0)).toBe(true);
-    for (const id of ['mountains', 'desert'] as const) expect(all.filter((l) => l.world.id === id).every((l) => l.wind.gust >= 0.4)).toBe(true);
-  });
-
-  it('ice is slippery and volcano platforms crumble', () => {
-    expect(all.filter((l) => l.world.id === 'snow').every((l) => l.friction < 0.1)).toBe(true);
-    expect(all.filter((l) => l.world.id === 'volcano').every((l) => l.solids.some((s) => s.crumble))).toBe(true);
-  });
-});
-
-describe('scenery near the fighters', () => {
-  it('no obstacle within the clearance of either fighter (own platform excepted)', async () => {
-    const { CLEARANCE } = await import('../../src/game/levels');
-    for (const L of all) {
-      for (const p of [L.playerSpot, L.enemySpot]) {
-        const near = L.solids.filter((s) => s.group > 0 && (s.shape.kind === 'circle' ? Math.abs(s.shape.c.x - p.x) - s.shape.r : Math.min(...s.shape.pts.map((q) => Math.abs(q.x - p.x)))) < CLEARANCE);
-        expect(near, L.key).toEqual([]);
-      }
-    }
-  });
-  it('every leaf clump hangs on a trunk or branch', () => {
-    for (const L of all) {
-      for (const d of L.decos.filter((x) => x.kind === 'canopy')) {
-        const wood = L.solids.filter((s) => s.mat === 'wood' && s.shape.kind === 'poly');
-        const close = wood.some((s) => s.shape.kind === 'poly' && s.shape.pts.some((q) => Math.hypot(q.x - d.x, q.y - d.y) < 3.6));
-        expect(close, `${L.key} canopy at ${d.x.toFixed(1)},${d.y.toFixed(1)}`).toBe(true);
-      }
-    }
+  it('running out of shots loses', () => {
+    const d = new Duel(LEVELS[0]!, 1);
+    d.ammo.arrow = 1;
+    d.setAim(1.0, 0);
+    d.fire();
+    for (let k = 0; k < 60 * 20 && d.phase !== 'over'; k++) d.update(1 / 60);
+    expect(d.result).toMatchObject({ win: false, reason: 'shots' });
   });
 });

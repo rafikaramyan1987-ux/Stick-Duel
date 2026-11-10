@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { APP, RETURNING, SAVE_KEY, trackExternal, winCurrentLevel } from './helpers';
 
 /**
  * CrazyGames SDK v3 checklist, end to end, on the real CrazyGames build (dist-crazygames/),
@@ -11,11 +12,12 @@ test.beforeEach(async ({ page }) => {
 });
 type AdMode = 'finish' | 'error' | 'never';
 
-async function fakeSdk(page: Page, opts: { ad?: AdMode; muted?: boolean } = {}) {
-  await page.addInitScript(({ ad, muted }) => {
+async function fakeSdk(page: Page, opts: { ad?: AdMode; muted?: boolean; returning?: boolean } = {}) {
+  await page.addInitScript(({ ad, muted, save, key }) => {
     const w = window as unknown as Record<string, unknown>;
     const calls: string[] = [];
     const data = new Map<string, string>();
+    if (save) data.set(key, save);
     w.__cgCalls = calls;
     w.__cgData = data;
     w.CrazyGames = {
@@ -47,105 +49,115 @@ async function fakeSdk(page: Page, opts: { ad?: AdMode; muted?: boolean } = {}) 
         user: { systemInfo: { locale: 'en-US' } },
       },
     };
-  }, { ad: opts.ad ?? 'finish', muted: opts.muted ?? false });
+  }, { ad: opts.ad ?? 'finish', muted: opts.muted ?? false, save: opts.returning === false ? '' : RETURNING, key: SAVE_KEY });
 }
 
 const calls = (page: Page) => page.evaluate(() => (window as unknown as { __cgCalls: string[] }).__cgCalls.slice());
-const app = 'window.__stickDuel';
 
-test('SDK lifecycle: loading, gameplay only during real play, happytime on a boss win, Data Module saves', async ({ page }) => {
-  const external: string[] = [];
-  let sdkLoaded = false;
-  page.on('request', (r) => {
-    if (r.url() === CG_SDK) return void (sdkLoaded = true);
-    if (!r.url().startsWith('http://localhost') && !r.url().startsWith('data:') && !r.url().startsWith('blob:')) external.push(r.url());
-  });
+test('first visit: straight into level 1, gameplayStart right after loading', async ({ page }) => {
+  await fakeSdk(page, { returning: false });
+  await page.goto('/');
+  await expect(page.locator('.hud')).toBeVisible();
+  expect(await calls(page)).toEqual(['init', 'loadingStart', 'loadingStop', 'gameplayStart']);
+});
+
+test('SDK lifecycle: gameplay only during real play, happytime after the last level, Data Module saves', async ({ page }) => {
+  const external = trackExternal(page, [CG_SDK]);
   await fakeSdk(page);
   await page.goto('/');
   await expect(page.locator('#play')).toBeVisible();
   expect(await calls(page)).toEqual(['init', 'loadingStart', 'loadingStop']);
 
   // menus are not gameplay
-  await page.locator('#play').click();
-  await page.locator('.node[data-level="1"]').click();
+  await page.locator('#worlds').click();
   expect(await calls(page)).not.toContain('gameplayStart');
+  await page.locator('#back').click();
 
-  await page.locator('#fight').click();
+  await page.locator('#play').click();
+  await expect(page.locator('.hud')).toBeVisible();
   expect((await calls(page)).filter((c) => c === 'gameplayStart')).toHaveLength(1);
   await page.locator('#pause').click();
   expect((await calls(page)).at(-1)).toBe('gameplayStop');
   await page.locator('#resume').click();
   expect((await calls(page)).at(-1)).toBe('gameplayStart');
 
-  // a boss win: gameplayStop once the duel ends, then happytime
-  await page.evaluate(`(() => { const a = ${app}; a.speed = 3; a.intro(1, 10); a.fight(); })()`);
-  await page.waitForFunction(`${app}.duel.humanAiming`);
-  await page.evaluate(`(() => { const a = ${app}; a.duel.fighters[1].hp = 1; a.autoFire(false); })()`);
-  await expect(page.locator('.card.result.won')).toBeVisible({ timeout: 20_000 });
+  // win the three levels; midgame ads only between levels (throttled to one every 2 minutes)
+  for (let i = 0; i < 3; i++) {
+    await page.evaluate(`${APP}.throttle.last = 0`);
+    await winCurrentLevel(page);
+    const c = await calls(page);
+    expect(c.lastIndexOf('gameplayStop')).toBeGreaterThan(c.lastIndexOf('gameplayStart'));
+    if (i < 2) {
+      const n = c.length;
+      await page.locator('#next').click();
+      await expect(page.locator('.hud')).toBeVisible();
+      const after = (await calls(page)).slice(n);
+      expect(after.slice(0, 1)).toEqual(['ad:midgame']);
+    }
+  }
   const c = await calls(page);
   expect(c).toContain('happytime');
-  expect(c.lastIndexOf('gameplayStop')).toBeGreaterThan(c.lastIndexOf('gameplayStart'));
   // starts and stops are balanced, never twice in a row
   const gp = c.filter((x) => x.startsWith('gameplay'));
   for (let i = 1; i < gp.length; i++) expect(gp[i]).not.toBe(gp[i - 1]);
+  // no ad ever started during a duel: every midgame follows a gameplayStop
+  for (let i = 0; i < c.length; i++) if (c[i] === 'ad:midgame') expect(c.slice(0, i).filter((x) => x.startsWith('gameplay')).at(-1)).toBe('gameplayStop');
 
   // progress is saved in the Data Module, not in localStorage
-  const saved = await page.evaluate(() => (window as unknown as { __cgData: Map<string, string> }).__cgData.get('stick-duel.save.v1'));
-  expect(saved).toContain('"1-10"');
-  expect(await page.evaluate(() => localStorage.getItem('stick-duel.save.v1'))).toBeNull();
+  const saved = await page.evaluate((k) => (window as unknown as { __cgData: Map<string, string> }).__cgData.get(k), SAVE_KEY);
+  expect(saved).toContain('"desert-1"');
+  expect(await page.evaluate((k) => localStorage.getItem(k), SAVE_KEY)).toBeNull();
   expect(external).toEqual([]);
-  expect(sdkLoaded).toBe(true);
 });
 
 test('respects the SDK mute setting', async ({ page }) => {
   await fakeSdk(page, { muted: true });
   await page.goto('/');
   await expect(page.locator('#play')).toBeVisible();
-  expect(await page.evaluate(`${app}.platform.platformMuted()`)).toBe(true);
+  expect(await page.evaluate(`${APP}.platform.platformMuted()`)).toBe(true);
 });
 
 test('rewarded ad that never starts: button disabled, gives up after 8 s, message 2.5 s, then usable again', async ({ page }) => {
   await page.clock.install();
   await fakeSdk(page, { ad: 'never' });
   await page.goto('/');
-  await page.clock.runFor(500);
+  await page.clock.runFor(2_000);
   await page.locator('#play').click();
-  await page.locator('.node[data-level="1"]').click();
-  const btn = page.locator('#try-weapon');
-  const label = await btn.textContent();
+  // no rendering while the fake clock runs (software WebGL would make every frame slow)
+  await page.evaluate(`${APP}.manual = true`);
+  const btn = page.locator('#ad-fire');
+  const label = page.locator('#ad-fire .t');
+  await expect(label).toHaveText('Watch an ad: extra fire arrow');
   await btn.click();
   await expect(btn).toBeDisabled();
   await page.clock.runFor(7_000);
   await expect(btn).toBeDisabled();
   await page.clock.runFor(1_200); // > 8 s: the request is abandoned
-  await expect(btn).toHaveText('No ad available right now, try later');
+  await expect(label).toHaveText('No ad available right now, try later');
   await expect(btn).toBeDisabled();
   await page.clock.runFor(2_600);
-  await expect(btn).toHaveText(label ?? '');
+  await expect(label).toHaveText('Watch an ad: extra fire arrow');
   await expect(btn).toBeEnabled();
-  // the intro is still usable: the game never waited on the ad
-  await page.locator('#fight').click();
-  await expect(page.locator('.hud')).toBeVisible();
+  // the game never waited on the ad
+  expect(await page.evaluate(`${APP}.duel.phase`)).toBe('aim');
 });
 
-test('rewarded ad error: message, then the button comes back; a finished ad grants the reward', async ({ page }) => {
+test('rewarded ad error: message, then the button comes back, no reward', async ({ page }) => {
   await fakeSdk(page, { ad: 'error' });
   await page.goto('/');
   await page.locator('#play').click();
-  await page.locator('.node[data-level="1"]').click();
-  const btn = page.locator('#try-weapon');
-  await btn.click();
-  await expect(btn).toHaveText('No ad available right now, try later');
-  await expect(btn).toBeEnabled({ timeout: 4_000 });
+  await page.locator('#ad-fire').click();
+  await expect(page.locator('#ad-fire .t')).toHaveText('No ad available right now, try later');
+  await expect(page.locator('#ad-fire')).toBeEnabled({ timeout: 4_000 });
+  expect(await page.evaluate(`${APP}.duel.ammo.fire`)).toBe(0);
 });
 
-test('rewarded ad finished: the reward is granted', async ({ page }) => {
+test('rewarded ad finished: one extra fire arrow, offer gone for this level', async ({ page }) => {
   await fakeSdk(page, { ad: 'finish' });
   await page.goto('/');
   await page.locator('#play').click();
-  await page.locator('.node[data-level="1"]').click();
-  await page.locator('#try-weapon').click();
-  // the intro is rebuilt with the trial weapon selected and no more offer
-  await expect(page.locator('#try-weapon')).toHaveCount(0);
-  await expect(page.locator('.weaponpick .wbtn')).toHaveCount(2);
+  await page.locator('#ad-fire').click();
+  await expect(page.locator('#ad-fire')).toHaveCount(0);
+  await expect(page.locator('.ab.a-fire .cnt')).toHaveText('1');
+  expect(await page.evaluate(`${APP}.duel.selected`)).toBe('fire');
 });
