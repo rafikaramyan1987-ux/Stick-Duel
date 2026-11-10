@@ -50,6 +50,8 @@ export const HAZARD_DAMAGE = 30;
 export const TRAP_SCALE = 0.6;
 /** Environment damage to a fighter after the first hit of the same shot counts this much. */
 export const TRAP_FOLLOW_UP = 0.35;
+/** Environment hits closer together than this (seconds) are one trap moment. */
+export const TRAP_WINDOW = 6;
 
 export const zoneOf = (part: PartName): HitZone => (part === 'head' ? 'head' : part === 'torso' ? 'body' : 'limb');
 /** Slow arrows hurt less: 50 % at the slowest, 100 % from about 85 % power. */
@@ -177,7 +179,7 @@ export interface ShotStats {
   kill: boolean;
   /** The K.O. came from the environment (a trap), not from the arrow itself. */
   trapKill: boolean;
-  /** Environment damage per fighter during this shot (capped at TRAP_CAP). */
+  /** Largest trap moment per fighter during this shot (capped at TRAP_CAP). */
   envTo: [number, number];
   heads: number;
 }
@@ -236,7 +238,8 @@ export class Sim {
     c.quiet = this.quiet;
     c.damageOn = this.damageOn;
     c.stats = this.stats ? { ...this.stats, envTo: [...this.stats.envTo] } : null;
-    c.envFree = [...this.envFree];
+    c.envSum = [...this.envSum];
+    c.envAt = [...this.envAt];
     c.trapCap = this.trapCap;
     c.impactCooldown = new Map(this.impactCooldown);
     const src = new Map(this.ents.filter((e) => !e.dead).map((e) => [e.id, e]));
@@ -432,7 +435,6 @@ export class Sim {
     this.arrows.push(arrow);
     if (!volley || !this.stats) {
       this.stats = { side, ropes: 0, breaks: 0, explosions: 0, ignites: 0, direct: 0, env: 0, self: 0, kill: false, trapKill: false, envTo: [0, 0], heads: 0 };
-      this.envFree = [0, 0];
     }
     this.events.push({ t: 'shot', side, ammo, x: p.x, y: p.y, angle, power });
     // recoil pose: arm stays pointing for a moment
@@ -586,14 +588,17 @@ export class Sim {
     if (!f.alive || !this.damageOn) return;
     let dmg = Math.round(amount);
     const st = this.stats;
-    // traps: at most TRAP_CAP per fighter per shot, whatever piles up
+    // traps: one "trap moment" per fighter = environment hits less than TRAP_WINDOW s apart (even
+    // across turns). Its first hit counts in full, what piles up after it (the fall, debris, fire,
+    // lava) counts TRAP_FOLLOW_UP, and the whole moment never does more than TRAP_CAP.
     if (!direct) {
-      const used = st ? st.envTo[side] : this.envFree[side];
-      // one trap at a time: what piles up after the first hit of a shot (the fall, debris, lava) counts less
+      if (this.time - this.envAt[side] > TRAP_WINDOW) this.envSum[side] = 0;
+      const used = this.envSum[side];
       if (used > 0) dmg = Math.round(dmg * TRAP_FOLLOW_UP);
-      dmg = Math.min(dmg, this.trapCap - used);
-      if (st) st.envTo[side] += Math.max(0, dmg);
-      else this.envFree[side] += Math.max(0, dmg);
+      dmg = Math.max(0, Math.min(dmg, this.trapCap - used));
+      this.envSum[side] += dmg;
+      this.envAt[side] = this.time;
+      if (st) st.envTo[side] = Math.max(st.envTo[side], this.envSum[side]);
     }
     if (dmg <= 0) return;
     f.hp = Math.max(0, f.hp - dmg);
@@ -613,9 +618,10 @@ export class Sim {
   /** The trap cap (tools raise it to measure raw trap damage). */
   trapCap = TRAP_CAP;
   /** Environment damage outside any shot (between turns), with the same cap. */
-  private envFree: [number, number] = [0, 0];
+  private envSum: [number, number] = [0, 0];
+  private envAt: [number, number] = [-99, -99];
   resetTrapCap(): void {
-    this.envFree = [0, 0];
+    this.envSum = [0, 0];
   }
 
   /** A fighter that fell out, into lava or water: damage, then back on their start spot. */

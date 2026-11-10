@@ -19,60 +19,60 @@ at least 4 player shots on average.
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | forest-1 | 100 | 0.15 | won in 3 shots, 45 HP left, 1★ | 4/5 | 4.0 | 0 | — | 382 |
 | 2 | forest-2 | 100 | 0.16 | won in 3 shots, 77 HP left, 2★ | 5/5 | 6.4 | 17 | 17 (arrow → rival) | 878 |
-| 3 | forest-3 | 100 | 0.18 | won in 3 shots, 100 HP left, 2★ | 5/5 | 5.2 | 80 | 80 (arrow → rope rope) | 1093 |
-| 4 | forest-4 (tricky) | 100 | 0.20 | won in 3 shots, 100 HP left, 2★ | 2/5 | 14.0 | 47 | 12 (arrow → rival head) | 4263 |
-| 5 | forest-5 | 100 | 0.21 | won in 3 shots, 100 HP left, 3★ | 5/5 | 5.6 | 40 | 37 (fire → tnt) | 1299 |
-| 6 | forest-6 | 100 | 0.22 | won in 3 shots, 65 HP left, 3★ (trap K.O.) | 4/5 | 5.0 | 40 | 35 (arrow → rope ram-hold) | 2373 |
-| 7 | forest-7 | 100 | 0.24 | won in 2 shots, 100 HP left, 3★ | 4/5 | 8.3 | 80 | 80 (fire → rope rope) | 1973 |
-| 8 | forest-8 (tricky) | 100 | 0.26 | won in 2 shots, 100 HP left, 3★ | 5/5 | 8.2 | 80 | 80 (fire → rope rope) | 2786 |
-| 9 | forest-9 (boss) | 160 | 0.27 | won in 4 shots, 94 HP left, 3★ | 2/5 | 5.0 | 57 | 57 (fire → rope ram-swing) | 2102 |
-| 10 | castle-1 | 100 | 0.30 | won in 2 shots, 90 HP left, 3★ (trap K.O.) | 4/5 | 5.0 | 80 | 80 (arrow → rope chandelier-chain) | 2074 |
-| 11 | castle-2 | 100 | 0.32 | won in 3 shots, 100 HP left, 3★ (trap K.O.) | 5/5 | 6.0 | 80 | 80 (heavy → rival head) | 2439 |
+| 3 | forest-3 | 100 | 0.18 | won in 3 shots, 100 HP left, 2★ | 5/5 | 5.2 | 62 | 62 (arrow → rope rope) | 1066 |
+| 4 | forest-4 (tricky) | 100 | 0.20 | won in 3 shots, 100 HP left, 2★ | 2/5 | 14.0 | 36 | 12 (arrow → rival head) | 4263 |
+| 5 | forest-5 | 100 | 0.21 | won in 3 shots, 100 HP left, 3★ | 5/5 | 5.6 | 37 | 37 (fire → tnt) | 1299 |
+| 6 | forest-6 | 100 | 0.22 | won in 3 shots, 65 HP left, 3★ (trap K.O.) | 4/5 | 5.0 | 35 | 35 (arrow → rope ram-hold) | 2421 |
+| 7 | forest-7 | 100 | 0.24 | won in 3 shots, 100 HP left, 3★ (trap K.O.) | 1/5 | 12.0 | 59 | 59 (fire → rope rope) | 3961 |
+| 8 | forest-8 (tricky) | 100 | 0.26 | won in 2 shots, 100 HP left, 3★ | 5/5 | 10.8 | 60 | 60 (fire → rope rope) | 3626 |
+| 9 | forest-9 (boss) | 160 | 0.27 | won in 4 shots, 94 HP left, 3★ | 2/5 | 7.0 | 45 | 45 (fire → rope ram-swing) | 2206 |
+| 10 | castle-1 | 100 | 0.30 | won in 2 shots, 90 HP left, 3★ (trap K.O.) | 4/5 | 4.3 | 80 | 80 (heavy → chandelier) | 2560 |
+| 11 | castle-2 | 100 | 0.32 | won in 3 shots, 100 HP left, 3★ (trap K.O.) | 5/5 | 6.4 | 80 | 80 (heavy → rival head) | 2533 |
 | 12 | castle-3 | 100 | 0.33 | won in 3 shots, 100 HP left, 2★ | 4/5 | 3.0 **< 4** | 80 | 80 (heavy → chandelier) | 2147 |
-| 13 | castle-4 (tricky) | 100 | 0.34 | won in 4 shots, 100 HP left, 2★ | 3/5 | 11.3 | 80 | 80 (heavy → rival head) | 8935 |
-| 14 | castle-5 | 100 | 0.36 | won in 2 shots, 90 HP left, 3★ (trap K.O.) | 5/5 | 6.4 | 74 | 74 (heavy → sw6-1) | 2841 |
-| 15 | castle-6 | 100 | 0.38 | won in 3 shots, 80 HP left, 3★ (trap K.O.) | 5/5 | 6.2 | 64 | 63 (heavy → rival head) | 3697 |
-| 16 | castle-7 | 100 | 0.39 | won in 3 shots, 74 HP left, 2★ | 3/5 | 5.3 | 80 | 80 (arrow → rope rope) | 4467 |
-| 17 | castle-8 (tricky) | 100 | 0.40 | won in 3 shots, 100 HP left, 2★ | 3/5 | 8.3 | 80 | 80 (arrow → rope chandelier-chain) | 3949 |
-| 18 | castle-9 (boss) | 180 | 0.42 | won in 5 shots, 100 HP left, 3★ | 5/5 | 7.2 | 80 | 80 (arrow → rope chandelier-chain) | 5876 |
-| 19 | mountains-1 wind 1.2 | 100 | 0.38 | won in 4 shots, 73 HP left, 2★ | 5/5 | 4.6 | 80 | 80 (bomb → boulder) | 1605 |
-| 20 | mountains-2 wind -1.5 | 100 | 0.40 | won in 4 shots, 74 HP left, 3★ | 3/5 | 5.7 | 70 | 60 (bomb → rope rope) | 1292 |
-| 21 | mountains-3 wind 2 | 100 | 0.41 | won in 3 shots, 68 HP left, 2★ | 5/5 | 4.4 | 80 | 80 (arrow → rope rope) | 2418 |
-| 22 | mountains-4 (tricky) wind -3 | 100 | 0.42 | won in 3 shots, 92 HP left, 3★ | 5/5 | 2.8 **< 4** | 80 | 80 (bomb → rival head) | 1241 |
-| 23 | mountains-5 wind 1.5 | 100 | 0.44 | won in 2 shots, 65 HP left, 3★ (trap K.O.) | 5/5 | 4.6 | 80 | 80 (bomb → rope swing) | 1528 |
-| 24 | mountains-6 wind -2 | 100 | 0.46 | won in 2 shots, 100 HP left, 3★ (trap K.O.) | 5/5 | 5.0 | 80 | 80 (heavy → rival head) | 2408 |
-| 25 | mountains-7 wind 2.5 | 100 | 0.47 | won in 3 shots, 75 HP left, 3★ | 5/5 | 3.8 **< 4** | 80 | 80 (arrow → boulder) | 1466 |
-| 26 | mountains-8 (tricky) wind -2.5 | 100 | 0.48 | won in 3 shots, 93 HP left, 3★ | 5/5 | 3.4 **< 4** | 80 | 80 (fire → boulder-stop) | 2421 |
-| 27 | mountains-9 (boss) wind 2 | 190 | 0.50 | won in 3 shots, 75 HP left, 3★ | 5/5 | 6.0 | 80 | 80 (fire → rope ram-swing) | 3536 |
-| 28 | desert-1 | 100 | 0.46 | won in 3 shots, 54 HP left, 3★ | 4/5 | 5.8 | 80 | 42 (fire → tnt) | 1800 |
-| 29 | desert-2 wind 1.4 | 100 | 0.48 | won in 2 shots, 74 HP left, 3★ (trap K.O.) | 4/5 | 5.0 | 80 | 80 (heavy → rival head) | 1733 |
-| 30 | desert-3 wind -1.6 | 100 | 0.49 | won in 2 shots, 65 HP left, 3★ | 3/5 | 4.7 | 80 | 80 (bomb → rival head) | 1467 |
-| 31 | desert-4 (tricky) wind 2.2 | 100 | 0.51 | won in 4 shots, 100 HP left, 2★ | 5/5 | 6.0 | 80 | 80 (fire → bw-0) | 2090 |
-| 32 | desert-5 wind -1.8 | 100 | 0.52 | won in 2 shots, 70 HP left, 3★ | 5/5 | 2.8 **< 4** | 80 | 80 (heavy → rival) | 1044 |
-| 33 | desert-6 wind 1.5 | 100 | 0.54 | won in 2 shots, 74 HP left, 3★ | 5/5 | 4.8 | 80 | 80 (fire → s1) | 1314 |
-| 34 | desert-7 wind -2.4 | 100 | 0.55 | won in 2 shots, 100 HP left, 3★ (trap K.O.) | 5/5 | 3.6 **< 4** | 80 | 80 (heavy → rock) | 1794 |
-| 35 | desert-8 (tricky) wind 3 | 100 | 0.57 | won in 3 shots, 52 HP left, 2★ | 3/5 | 3.3 **< 4** | 80 | 80 (heavy → s0) | 2428 |
-| 36 | desert-9 (boss) wind -1.5 | 200 | 0.58 | won in 5 shots, 20 HP left, 2★ (trap K.O.) | 3/5 | 5.3 | 80 | 80 (bomb → rope ram-swing) | 2969 |
-| 37 | frozen-1 | 100 | 0.54 | won in 4 shots, 72 HP left, 2★ | 3/5 | 6.3 | 80 | 80 (heavy → rival head) | 3676 |
-| 38 | frozen-2 | 100 | 0.56 | won in 3 shots, 77 HP left, 2★ | 1/5 | 7.0 | 80 | 56 (ice → block) | 2751 |
-| 39 | frozen-3 | 100 | 0.57 | won in 2 shots, 73 HP left, 3★ | 5/5 | 4.8 | 80 | 80 (arrow → rope rope) | 2683 |
-| 40 | frozen-4 (tricky) | 100 | 0.59 | won in 3 shots, 64 HP left, 2★ | 1/5 | 9.0 | 38 | — | 4962 |
-| 41 | frozen-5 | 100 | 0.60 | won in 3 shots, 63 HP left, 3★ (trap K.O.) | 3/5 | 5.7 | 80 | 80 (heavy → swing-load) | 3803 |
-| 42 | frozen-6 | 100 | 0.61 | won in 5 shots, 55 HP left, 3★ | 5/5 | 4.6 | 78 | 78 (heavy → rival) | 3684 |
-| 43 | frozen-7 | 100 | 0.63 | won in 3 shots, 100 HP left, 2★ | 4/5 | 7.5 | 74 | 74 (arrow → rival head) | 4237 |
+| 13 | castle-4 (tricky) | 100 | 0.34 | won in 4 shots, 100 HP left, 2★ | 3/5 | 10.0 | 80 | 80 (arrow → rival head) | 8217 |
+| 14 | castle-5 | 100 | 0.36 | won in 2 shots, 90 HP left, 3★ (trap K.O.) | 5/5 | 6.0 | 69 | 69 (heavy → sw6-1) | 2761 |
+| 15 | castle-6 | 100 | 0.38 | won in 3 shots, 80 HP left, 3★ (trap K.O.) | 5/5 | 6.4 | 64 | 53 (heavy → sw8-0) | 3746 |
+| 16 | castle-7 | 100 | 0.39 | won in 3 shots, 74 HP left, 2★ | 3/5 | 5.3 | 64 | 64 (arrow → rope rope) | 4467 |
+| 17 | castle-8 (tricky) | 100 | 0.40 | won in 3 shots, 100 HP left, 2★ | 3/5 | 8.3 | 80 | 80 (heavy → rope chandelier-chain) | 3983 |
+| 18 | castle-9 (boss) | 180 | 0.42 | won in 5 shots, 100 HP left, 3★ | 4/5 | 7.5 | 76 | 76 (arrow → rope ram-hold) | 5579 |
+| 19 | mountains-1 wind 1.2 | 100 | 0.38 | won in 4 shots, 73 HP left, 2★ | 5/5 | 5.0 | 43 | 35 (bomb → boulder) | 1884 |
+| 20 | mountains-2 wind -1.5 | 100 | 0.40 | won in 4 shots, 74 HP left, 3★ | 0/5 | 4.0 | 39 | 39 (fire → rope rope) | 1862 |
+| 21 | mountains-3 wind 2 | 100 | 0.41 | won in 3 shots, 68 HP left, 2★ | 4/5 | 4.8 | 80 | 69 (arrow → rope rope) | 2508 |
+| 22 | mountains-4 (tricky) wind -3 | 100 | 0.42 | won in 3 shots, 100 HP left, 3★ | 5/5 | 4.2 | 80 | 80 (arrow → boulder) | 1283 |
+| 23 | mountains-5 wind 1.5 | 100 | 0.44 | won in 3 shots, 65 HP left, 3★ | 4/5 | 4.5 | 80 | 80 (heavy → rival head) | 1424 |
+| 24 | mountains-6 wind -2 | 100 | 0.46 | won in 3 shots, 90 HP left, 3★ | 5/5 | 5.4 | 80 | 80 (heavy → rival head) | 2650 |
+| 25 | mountains-7 wind 2.5 | 100 | 0.47 | won in 3 shots, 75 HP left, 3★ | 5/5 | 4.6 | 74 | 74 (bomb → rock) | 1635 |
+| 26 | mountains-8 (tricky) wind -2.5 | 100 | 0.48 | won in 4 shots, 100 HP left, 3★ | 3/5 | 4.7 | 80 | 80 (bomb → boulder) | 3090 |
+| 27 | mountains-9 (boss) wind 2 | 190 | 0.50 | won in 5 shots, 31 HP left, 2★ | 5/5 | 5.8 | 80 | 80 (heavy → sw51-1) | 3705 |
+| 28 | desert-1 | 100 | 0.46 | won in 3 shots, 54 HP left, 3★ | 4/5 | 5.8 | 80 | 38 (fire → tnt) | 1800 |
+| 29 | desert-2 wind 1.4 | 100 | 0.48 | won in 3 shots, 74 HP left, 2★ | 4/5 | 5.0 | 80 | 80 (heavy → rival head) | 1805 |
+| 30 | desert-3 wind -1.6 | 100 | 0.49 | won in 3 shots, 75 HP left, 3★ | 3/5 | 5.3 | 80 | 57 (bomb → rope ram-hold) | 1571 |
+| 31 | desert-4 (tricky) wind 2.2 | 100 | 0.51 | won in 4 shots, 100 HP left, 2★ | 5/5 | 6.0 | 55 | 55 (fire → bw-0) | 2162 |
+| 32 | desert-5 wind -1.8 | 100 | 0.52 | won in 3 shots, 42 HP left, 2★ | 5/5 | 4.6 | 51 | 51 (fire → boulder-stop) | 1262 |
+| 33 | desert-6 wind 1.5 | 100 | 0.54 | won in 3 shots, 74 HP left, 3★ | 5/5 | 5.0 | 80 | 80 (fire → s1) | 1410 |
+| 34 | desert-7 wind -2.4 | 100 | 0.55 | won in 2 shots, 100 HP left, 3★ (trap K.O.) | 5/5 | 4.4 | 80 | 80 (heavy → rock) | 1921 |
+| 35 | desert-8 (tricky) wind 3 | 100 | 0.57 | won in 3 shots, 52 HP left, 2★ | 5/5 | 3.8 **< 4** | 80 | 78 (heavy → s0) | 2700 |
+| 36 | desert-9 (boss) wind -1.5 | 200 | 0.58 | won in 6 shots, 20 HP left, 2★ (trap K.O.) | 2/5 | 6.5 | 80 | 80 (heavy → rival head) | 3435 |
+| 37 | frozen-1 | 100 | 0.54 | won in 4 shots, 72 HP left, 2★ | 3/5 | 6.3 | 38 | 38 (heavy → rival head) | 4074 |
+| 38 | frozen-2 | 100 | 0.56 | won in 3 shots, 77 HP left, 2★ | 1/5 | 7.0 | 80 | 51 (ice → block) | 2751 |
+| 39 | frozen-3 | 100 | 0.57 | won in 3 shots, 100 HP left, 3★ (trap K.O.) | 5/5 | 5.6 | 80 | 80 (heavy → rock) | 3181 |
+| 40 | frozen-4 (tricky) | 100 | 0.59 | won in 3 shots, 64 HP left, 2★ | 1/5 | 9.0 | 38 | — | 5186 |
+| 41 | frozen-5 | 100 | 0.60 | won in 3 shots, 63 HP left, 3★ (trap K.O.) | 3/5 | 6.0 | 80 | 80 (heavy → sw36-0) | 3881 |
+| 42 | frozen-6 | 100 | 0.61 | won in 5 shots, 55 HP left, 3★ | 5/5 | 5.0 | 80 | 80 (heavy → rival head) | 3738 |
+| 43 | frozen-7 | 100 | 0.63 | won in 3 shots, 79 HP left, 2★ | 5/5 | 8.8 | 48 | 48 (heavy → rival) | 4176 |
 | 44 | frozen-8 (tricky) | 100 | 0.65 | won in 3 shots, 77 HP left, 2★ | 1/5 | 5.0 | 80 | 52 (heavy → rival head) | 3905 |
-| 45 | frozen-9 (boss) | 220 | 0.66 | won in 6 shots, 31 HP left, 1★ | 3/5 | 7.3 | 80 | 80 (fire → rope ram-swing) | 6866 |
-| 46 | volcano-1 | 100 | 0.62 | won in 2 shots, 77 HP left, 3★ (trap K.O.) | 5/5 | 4.4 | 80 | 80 (arrow → rope rope) | 2949 |
-| 47 | volcano-2 | 100 | 0.64 | won in 2 shots, 73 HP left, 3★ (trap K.O.) | 1/5 | 4.0 | 80 | 80 (bomb → rival head) | 1027 |
-| 48 | volcano-3 | 100 | 0.65 | won in 2 shots, 72 HP left, 3★ (trap K.O.) | 4/5 | 3.5 **< 4** | 80 | 80 (heavy → boulder) | 2579 |
-| 49 | volcano-4 (tricky) | 100 | 0.67 | won in 3 shots, 55 HP left, 2★ | 4/5 | 4.8 | 80 | 80 (arrow → rope swing) | 3093 |
-| 50 | volcano-5 | 100 | 0.68 | won in 3 shots, 100 HP left, 3★ (trap K.O.) | 5/5 | 4.0 | 62 | 62 (heavy → rival head) | 2622 |
-| 51 | volcano-6 | 100 | 0.69 | won in 1 shots, 77 HP left, 3★ | 5/5 | 2.4 **< 4** | 80 | 80 (arrow → rope rope) | 2250 |
-| 52 | volcano-7 | 100 | 0.71 | won in 2 shots, 77 HP left, 3★ | 3/5 | 9.7 | 80 | 80 (fire → swingLog) | 2968 |
-| 53 | volcano-8 (tricky) | 100 | 0.72 | won in 2 shots, 73 HP left, 3★ | 5/5 | 2.4 **< 4** | 80 | 80 (bomb → boulder-stop) | 2153 |
-| 54 | volcano-9 (boss) | 250 | 0.74 | **lost** | 1/5 | 6.0 | 80 | 80 (heavy → rock) | 4166 |
+| 45 | frozen-9 (boss) | 220 | 0.66 | won in 6 shots, 31 HP left, 1★ | 3/5 | 7.7 | 69 | 69 (heavy → sw40-1) | 7333 |
+| 46 | volcano-1 | 100 | 0.62 | won in 2 shots, 77 HP left, 3★ (trap K.O.) | 5/5 | 4.4 | 80 | 73 (heavy → sw52-0) | 2949 |
+| 47 | volcano-2 | 100 | 0.64 | won in 3 shots, 39 HP left, 2★ | 3/5 | 5.0 | 80 | 43 (fire → tnt) | 1190 |
+| 48 | volcano-3 | 100 | 0.65 | won in 2 shots, 77 HP left, 3★ (trap K.O.) | 4/5 | 7.0 | 56 | 56 (bomb → rival head) | 3320 |
+| 49 | volcano-4 (tricky) | 100 | 0.67 | won in 3 shots, 55 HP left, 2★ | 5/5 | 4.2 | 80 | 70 (arrow → rope swing) | 2888 |
+| 50 | volcano-5 | 100 | 0.68 | won in 3 shots, 100 HP left, 3★ (trap K.O.) | 5/5 | 4.4 | 50 | 50 (heavy → rival head) | 2670 |
+| 51 | volcano-6 | 100 | 0.69 | won in 1 shots, 100 HP left, 3★ | 5/5 | 2.2 **< 4** | 80 | 80 (bomb → rope rope) | 1968 |
+| 52 | volcano-7 | 100 | 0.71 | won in 3 shots, 68 HP left, 3★ | 4/5 | 6.3 | 80 | 80 (fire → swingLog) | 2741 |
+| 53 | volcano-8 (tricky) | 100 | 0.72 | won in 2 shots, 73 HP left, 3★ | 4/5 | 7.8 | 80 | 80 (heavy → sh62) | 3892 |
+| 54 | volcano-9 (boss) | 220 | 0.74 | won in 5 shots, 6 HP left, 2★ | 1/5 | 6.0 | 80 | 80 (heavy → sw63-0) | 4103 |
 
-Average over all winning duels: 4.8 player shots.
+Average over all winning duels: 5.2 player shots.
 
 
 ## Sharp bot playthroughs
@@ -83,7 +83,7 @@ Average over all winning duels: 4.8 player shots.
 - **forest-4:** arrow → rival head · arrow → rival head · arrow → rival head
 - **forest-5:** fire → tnt · arrow → rival head · arrow → rival head
 - **forest-6:** arrow → rival head · arrow → rival head · arrow → rope ram-hold
-- **forest-7:** fire → rope rope · arrow → rival head
+- **forest-7:** fire → rope rope · arrow → rival head · arrow → rival head
 - **forest-8:** arrow → rope rope · arrow → rival head
 - **forest-9:** fire → trunk · fire → rope ram-swing · arrow → rival head · arrow → rival head
 - **castle-1:** heavy → sw1-1 · arrow → rope chandelier-chain
@@ -99,36 +99,37 @@ Average over all winning duels: 4.8 player shots.
 - **mountains-2:** bomb → rope rope · arrow → rival head · arrow → rival head · arrow → rival head
 - **mountains-3:** arrow → rope rope · heavy → rival head · arrow → rival head
 - **mountains-4:** bomb → rival head · arrow → rival head · arrow → rival head
-- **mountains-5:** heavy → rival · bomb → rival head
-- **mountains-6:** heavy → sh47 · bomb → rope ram-hold
+- **mountains-5:** heavy → rival · bomb → rope swing · arrow → rival head
+- **mountains-6:** heavy → sh47 · bomb → rope ram-hold · arrow → rival head
 - **mountains-7:** bomb → rock · arrow → rival head · arrow → rival head
-- **mountains-8:** fire → boulder · bomb → ram · arrow → rival head
-- **mountains-9:** fire → rope ram-swing · arrow → rival head · arrow → rival head
+- **mountains-8:** arrow → rival · fire → boulder-stop · bomb → rival · arrow → rival head
+- **mountains-9:** heavy → sw51-1 · bomb → rope ram-swing · arrow → rival head · fire → boulder-stop · arrow → rival head
 - **desert-1:** fire → tnt · arrow → rival head · arrow → rival head
-- **desert-2:** heavy → rival · arrow → rope tntRope
-- **desert-3:** bomb → rival · arrow → rival head
+- **desert-2:** heavy → rival · arrow → rope tntRope · arrow → rival head
+- **desert-3:** bomb → rope ram-hold · arrow → rival head · arrow → rival head
 - **desert-4:** fire → tnt · arrow → rival head · arrow → rival head · arrow → rival head
-- **desert-5:** fire → boulder-stop · arrow → rival head
-- **desert-6:** bomb → rival head · arrow → rival head
+- **desert-5:** fire → boulder-stop · heavy → rival head · arrow → rival head
+- **desert-6:** bomb → rival head · arrow → rival head · arrow → rival head
 - **desert-7:** heavy → tnt · arrow → rope rope
 - **desert-8:** heavy → rival head · heavy → rival head · arrow → rival head
-- **desert-9:** bomb → rope ram-swing · heavy → rival head · arrow → rival head · arrow → rival head · fire → rope tntRope
+- **desert-9:** bomb → rope ram-swing · heavy → rival head · arrow → rival head · arrow → rival head · arrow → rope tntRope · fire → tntHang
 - **frozen-1:** heavy → rival head · arrow → rival head · arrow → rival head · arrow → rival head
 - **frozen-2:** arrow → rival head · arrow → rival head · arrow → rival head
-- **frozen-3:** ice → rope rope · arrow → rival head
+- **frozen-3:** arrow → rope rope · arrow → sh33 · arrow → rival head
 - **frozen-4:** heavy → rival head · arrow → rival head · arrow → rival head
 - **frozen-5:** heavy → sw36-1 · heavy → rival head · arrow → rope swing
 - **frozen-6:** heavy → rival · ice → rope ram-swing · heavy → rival head · arrow → rival head · arrow → rival head
-- **frozen-7:** heavy → pillarRock · arrow → rival head · arrow → rival head
+- **frozen-7:** heavy → rival head · arrow → rival head · arrow → rival head
 - **frozen-8:** heavy → rival head · heavy → rival head · arrow → rival head
 - **frozen-9:** heavy → sw40-1 · arrow → rope ram-hold · ice → rope ram-swing · heavy → rival head · arrow → rival head · arrow → rival head
 - **volcano-1:** arrow → rope rope · heavy → sw52-1
-- **volcano-2:** bomb → rival head · fire → tnt
-- **volcano-3:** fire → boulder · bomb → boulder
+- **volcano-2:** fire → tnt · arrow → rival head · arrow → rival head
+- **volcano-3:** fire → boulder-stop · arrow → rival head
 - **volcano-4:** arrow → rope swing · heavy → rival head · arrow → rival head
 - **volcano-5:** heavy → rival head · arrow → rival head · arrow → rope ram-hold
-- **volcano-6:** arrow → rope rope
-- **volcano-7:** fire → swingLog · arrow → rival head
-- **volcano-8:** bomb → boulder-stop · arrow → rival head
+- **volcano-6:** bomb → rope rope
+- **volcano-7:** fire → swingLog · heavy → rival head · arrow → rival head
+- **volcano-8:** bomb → stopShield · arrow → rival head
+- **volcano-9:** bomb → rope ram-swing · arrow → rope rope · heavy → rival · heavy → rock · arrow → rival head
 
-**11 level(s) failed.**
+**3 level(s) failed.**
