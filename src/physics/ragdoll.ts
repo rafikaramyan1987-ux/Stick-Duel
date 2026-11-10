@@ -255,7 +255,8 @@ export class Ragdoll {
       const err = wrapAngle(target - j.getJointAngle());
       const leg = p.name.startsWith('thigh') || p.name.startsWith('shin');
       const base = leg ? 160 : p.name === 'head' ? 30 : 40;
-      j.setMaxMotorTorque(ko ? 0.3 : base * this.scale * this.scale * Math.max(st, 0.02));
+      // torque needed grows with mass × lever (scale³); tuned at scale 0.85
+      j.setMaxMotorTorque(ko ? 0.3 * this.scale : ((base * this.scale ** 3) / 0.85) * Math.max(st, 0.02));
       j.setMotorSpeed(clamp(err * 16, -18, 18));
     }
     if (ko || st < 0.1) return;

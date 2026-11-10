@@ -39,7 +39,12 @@ export function aimsAt(sim: Sim, side: Side, target: Vec, speeds = [10, 13, 16, 
       if (angle === null) continue;
       for (let i = 0; i < 2 && angle !== null; i++) angle = ballisticAngle(sim.muzzle(side, angle), target, speed, high);
       if (angle === null) continue;
-      out.push({ angle, power: powerForSpeed(speed) });
+      const power = powerForSpeed(speed);
+      if (sim.wind !== 0) {
+        angle = refineForWind(sim, side, target, angle, power);
+        if (angle === null) continue;
+      }
+      out.push({ angle, power });
     }
   }
   return out;
@@ -65,4 +70,48 @@ export function pathClear(sim: Sim, side: Side, aim: Aim, target: Vec, ignore: (
     if ((b.x - target.x) * Math.sign(target.x - pts[0]!.x) > 0.3) return true;
   }
   return true;
+}
+
+/** Closest distance between the flight path and a point. */
+export function missDistance(sim: Sim, side: Side, angle: number, power: number, target: Vec): number {
+  const pts = sim.previewPath(side, angle, power, 3.5);
+  let best = Infinity;
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1]!;
+    const b = pts[i]!;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const l2 = dx * dx + dy * dy || 1;
+    const t = clamp(((target.x - a.x) * dx + (target.y - a.y) * dy) / l2, 0, 1);
+    best = Math.min(best, Math.hypot(a.x + dx * t - target.x, a.y + dy * t - target.y));
+  }
+  return best;
+}
+
+/** Wind bends the arc: golden-section search around the no-wind angle. */
+function refineForWind(sim: Sim, side: Side, target: Vec, a0: number, power: number): number | null {
+  let lo = a0 - 0.45;
+  let hi = a0 + 0.45;
+  const g = (Math.sqrt(5) - 1) / 2;
+  let c = hi - g * (hi - lo);
+  let d = lo + g * (hi - lo);
+  let fc = missDistance(sim, side, c, power, target);
+  let fd = missDistance(sim, side, d, power, target);
+  for (let i = 0; i < 26; i++) {
+    if (fc < fd) {
+      hi = d;
+      d = c;
+      fd = fc;
+      c = hi - g * (hi - lo);
+      fc = missDistance(sim, side, c, power, target);
+    } else {
+      lo = c;
+      c = d;
+      fc = fd;
+      d = lo + g * (hi - lo);
+      fd = missDistance(sim, side, d, power, target);
+    }
+  }
+  const a = (lo + hi) / 2;
+  return missDistance(sim, side, a, power, target) < 0.15 ? a : null;
 }

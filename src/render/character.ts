@@ -25,6 +25,13 @@ export const RIVAL_LOOKS: Record<string, CharacterLook> = {
   mountains: { shirt: 0x8a5a3a, pants: 0x4b3a33, skin: 0xffd0a6, hat: 'viking', hatColor: 0xa9b0bc },
   frozen: { shirt: 0x9fd8ff, pants: 0x3d5470, skin: 0xffd6b3, hat: 'cap', hatColor: 0x5ab0ff },
   volcano: { shirt: 0x5b4a6b, pants: 0x2f2838, skin: 0xe8b08a, hat: 'wizard', hatColor: 0x7e57c2 },
+  // bosses
+  forestBoss: { shirt: 0x2e7d32, pants: 0x4e342e, skin: 0xf2c094, hat: 'crown', hatColor: 0xf5c04a },
+  castleBoss: { shirt: 0x9e9e9e, pants: 0x37474f, skin: 0xffcfa6, hat: 'helmet', hatColor: 0xf5c04a },
+  mountainsBoss: { shirt: 0x6d4c41, pants: 0x3e2723, skin: 0xffd0a6, hat: 'viking', hatColor: 0xf5c04a },
+  desertBoss: { shirt: 0xfff3e0, pants: 0xb26a3c, skin: 0xd9a06e, hat: 'crown', hatColor: 0xf5c04a },
+  frozenBoss: { shirt: 0xe3f2fd, pants: 0x546e7a, skin: 0xcfe8ff, hat: 'crown', hatColor: 0x9fd8ff },
+  volcanoBoss: { shirt: 0x3e2723, pants: 0x1b0f0c, skin: 0xff8a65, hat: 'wizard', hatColor: 0xff5722 },
 };
 
 interface PartMesh {
@@ -64,9 +71,10 @@ export class CharacterView {
       const front = sp.name.endsWith('F');
       const z = back ? -0.17 * scale : front ? 0.17 * scale : 0;
       if (sp.name === 'head') {
-        g.add(this.buildHead(sp.circle! * 1.12, skin, look));
+        g.add(this.buildHead(sp.circle! * 1.22, skin, look));
       } else {
-        const r = sp.name === 'torso' ? sp.hw * 1.15 : sp.hw * 1.25;
+        // chunky: thick rounded limbs and a barrel chest
+        const r = sp.name === 'torso' ? sp.hw * 1.35 : sp.hw * 1.5;
         const len = Math.max(0.01, sp.hh * 2 - r * 0.9);
         const mat = sp.name === 'torso' || sp.name.startsWith('uArm') ? shirt : sp.name.startsWith('lArm') ? skin : pants;
         const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 4, 10), back ? flatMat(shade((mat.color as THREE.Color).getHex(), 0.82), 0.8) : mat);

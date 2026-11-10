@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, type Page } from '@playwright/test';
 
 /** Automation hook name (src/ui/app.ts). */
@@ -7,12 +8,14 @@ export const SAVE_KEY = 'topple-duel.save.v1';
 /** A returning player (tutorial done): the game opens on the main menu. */
 export const RETURNING = JSON.stringify({ v: 1, levels: {}, coins: 0, tutorial: true, hints: ['castle-1', 'desert-1', 'direct'], music: true, sfx: true, lang: null, last: null });
 
-/** The intended solution of each preview level: target and ammo. */
-export const SOLUTIONS: Array<[string, string]> = [
-  ['rope', 'arrow'],
-  ['chain', 'arrow'],
-  ['tntHigh', 'fire'],
-];
+/** Winning shots proven by the level checker (docs/levels-report.json). */
+interface Shot {
+  ammo: string;
+  angle: number;
+  power: number;
+}
+const REPORT = JSON.parse(readFileSync(new URL('../../docs/levels-report.json', import.meta.url), 'utf8')) as Array<{ id: string; solution: Shot[] | null }>;
+export const solutionOf = (id: string): Shot[] => REPORT.find((r) => r.id === id)?.solution ?? [];
 
 /**
  * Runs the current duel on a manual clock (no rendering) until it is over. The software GPU in CI
@@ -28,13 +31,23 @@ export async function finishDuel(page: Page): Promise<void> {
   })()`);
 }
 
-/** Wins the current level with its intended environmental shot. */
+/** Wins the current level by replaying the level checker's solution, shot by shot. */
 export async function winCurrentLevel(page: Page): Promise<void> {
   await page.waitForFunction(`${APP}.duel && ${APP}.duel.phase === 'aim'`);
-  const idx = (await page.evaluate(`${APP}.levelIndex`)) as number;
-  const [target, ammo] = SOLUTIONS[idx]!;
-  expect(await page.evaluate(`${APP}.aimAtTarget(${JSON.stringify(target)}, ${JSON.stringify(ammo)})`)).toBe(true);
-  expect(await page.evaluate(`${APP}.autoFire()`)).toBe(true);
+  const id = (await page.evaluate(`${APP}.duel.level.id`)) as string;
+  const shots = solutionOf(id);
+  expect(shots.length, `no solution for ${id}`).toBeGreaterThan(0);
+  for (const s of shots) {
+    await page.waitForFunction(`${APP}.duel.phase === 'aim'`);
+    expect(await page.evaluate(`${APP}.shoot(${s.angle}, ${s.power}, ${JSON.stringify(s.ammo)})`)).toBe(true);
+    await page.evaluate(`(() => {
+      const a = ${APP};
+      a.manual = true;
+      for (let i = 0; i < 60 * 40 && a.duel.phase !== 'aim' && a.duel.phase !== 'over'; i++) a.advance(1 / 60, false);
+      a.advance(1 / 60, true);
+      a.manual = false;
+    })()`);
+  }
   await finishDuel(page);
   await expect(page.locator('.card.result.won')).toBeVisible({ timeout: 10_000 });
 }

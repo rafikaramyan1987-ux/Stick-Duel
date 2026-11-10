@@ -21,7 +21,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - name: Unit tests (physics, levels solvable with an environmental shot, AI, i18n keys, platform adapters)
+      - name: Unit tests (physics, levels, AI, every language has every English key, platform adapters)
         run: npm test
       - name: Build web, CrazyGames and GameDistribution
         run: |
@@ -61,6 +61,26 @@ jobs:
         with:
           name: topple-duel-gd
           path: topple-duel-gd.zip
+          retention-days: 30
+
+  levels:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Level checker (bot proves a win within par for all 54 levels; fails if any level is unsolvable)
+        run: npm run levels:check
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: levels-report
+          path: |
+            docs/levels-report.md
+            docs/levels-report.json
           retention-days: 30
 
   gamepix:

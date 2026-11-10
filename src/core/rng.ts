@@ -4,6 +4,13 @@ export class Rng {
   constructor(seed: number) {
     this.s = seed >>> 0 || 1;
   }
+  /** Internal state (for cloning a simulation). */
+  get state(): number {
+    return this.s;
+  }
+  set state(v: number) {
+    this.s = v >>> 0;
+  }
   next(): number {
     let t = (this.s = (this.s + 0x6d2b79f5) >>> 0);
     t = Math.imul(t ^ (t >>> 15), t | 1);

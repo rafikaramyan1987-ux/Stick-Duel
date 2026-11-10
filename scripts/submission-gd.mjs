@@ -1,11 +1,11 @@
-// Packs the GameDistribution build for upload: submission-gd/stick-duel-gd-v1.zip with
+// Packs the GameDistribution build for upload: submission-gd/topple-duel-gd-v1.zip with
 // index.html at the ROOT of the zip (GD requirement), under 50 MB.
 // Usage: npm run build:gd && npm run submission:gd   (thumbnails: npm run thumbnails:gd)
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { unzipSync, zipSync } from 'fflate';
 
 const DIR = 'dist-gd';
-const OUT = 'submission-gd/stick-duel-gd-v1.zip';
+const OUT = 'submission-gd/topple-duel-gd-v1.zip';
 const html = readFileSync(`${DIR}/index.html`);
 const text = html.toString('utf8');
 if (!text.includes('html5.api.gamedistribution.com/main.min.js') || !text.includes('f09f3bd24a744eefb2580b8c8f977edc')) {

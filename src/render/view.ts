@@ -43,6 +43,19 @@ function arrowMesh(ammo: AmmoId): THREE.Object3D {
   return g;
 }
 
+const frosted = new Map<THREE.Material, THREE.Material>();
+function frostMat(m: THREE.Material): THREE.Material {
+  let c = frosted.get(m);
+  if (!c) {
+    c = m.clone();
+    const sm = c as THREE.MeshStandardMaterial;
+    if (sm.color) sm.color.lerp(new THREE.Color(0xcfeeff), 0.6);
+    if ('roughness' in sm) sm.roughness = 0.25;
+    frosted.set(m, c);
+  }
+  return c;
+}
+
 const charred = new Map<THREE.Material, THREE.Material>();
 function charMat(m: THREE.Material): THREE.Material {
   let c = charred.get(m);
@@ -58,7 +71,9 @@ function charMat(m: THREE.Material): THREE.Material {
 export class View {
   readonly root = new THREE.Group();
   fx: Fx;
-  private props = new Map<number, { obj: THREE.Object3D; charred: boolean; desc: EntDesc }>();
+  private props = new Map<number, { obj: THREE.Object3D; charred: boolean; frozen: boolean; desc: EntDesc }>();
+  private pools: THREE.Mesh[] = [];
+  private lavaPools: Array<{ x0: number; x1: number; y: number }> = [];
   private ropes = new Map<string, RopeView>();
   private stubs = new Map<string, RopeView>();
   private arrows = new Map<number, THREE.Object3D>();
@@ -79,7 +94,7 @@ export class View {
     stage.scene.add(this.dots);
   }
 
-  build(level: LevelDef, sim: Sim, rivalLook?: CharacterLook): void {
+  build(level: LevelDef, sim: Sim, rivalLook?: CharacterLook, playerLook: CharacterLook = PLAYER_LOOK): void {
     this.clear();
     const theme = THEMES[level.world];
     this.stage.applyTheme(theme);
@@ -91,13 +106,35 @@ export class View {
     deep.position.set((level.view.x0 + level.view.x1) / 2, -45.5, -0.2);
     terrain.add(deep);
     this.root.add(mergeStatic(terrain, false, true));
+    // water pools (hidden once frozen: the ice platform is a body) and glowing lava
+    this.pools = [];
+    for (const w of level.water ?? []) {
+      const m = new THREE.Mesh(
+        new THREE.BoxGeometry(w.x1 - w.x0, w.depth, 3.1),
+        new THREE.MeshStandardMaterial({ color: 0x3fa9ff, transparent: true, opacity: 0.72, roughness: 0.1, metalness: 0.1 }),
+      );
+      m.position.set((w.x0 + w.x1) / 2, -(w.y + w.depth / 2), 0);
+      m.renderOrder = 2;
+      this.root.add(m);
+      this.pools.push(m);
+    }
+    this.lavaPools = [];
+    for (const l of level.lava ?? []) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(l.x1 - l.x0 + 0.1, l.depth, 3.1), new THREE.MeshBasicMaterial({ color: 0xff7a12 }));
+      m.position.set((l.x0 + l.x1) / 2, -(l.y + l.depth / 2), 0);
+      this.root.add(m);
+      const glow = new THREE.PointLight(0xff7a2a, 6, 7, 1.5);
+      glow.position.set((l.x0 + l.x1) / 2, -l.y + 0.8, 1.5);
+      this.root.add(glow);
+      this.lavaPools.push({ x0: l.x0, x1: l.x1, y: l.y });
+    }
     this.terrainGround = (x) => {
       const y = groundAt(level.terrain, x);
       return Number.isFinite(y) ? y : 50;
     };
     const facing0: 1 | -1 = level.rival.x >= level.player.x ? 1 : -1;
-    const c0 = new CharacterView(sim.fighters[0].rag.scale, facing0, PLAYER_LOOK);
-    const c1 = new CharacterView(sim.fighters[1].rag.scale, facing0 === 1 ? -1 : 1, rivalLook ?? RIVAL_LOOKS[level.world] ?? RIVAL_LOOKS.forest!);
+    const c0 = new CharacterView(sim.fighters[0].rag.scale, facing0, playerLook);
+    const c1 = new CharacterView(sim.fighters[1].rag.scale, facing0 === 1 ? -1 : 1, rivalLook ?? RIVAL_LOOKS[level.rivalLook ?? level.world] ?? RIVAL_LOOKS.forest!);
     this.root.add(c0.root, c1.root);
     this.chars = [c0, c1];
   }
@@ -124,7 +161,7 @@ export class View {
       if (!p) {
         const obj = buildProp(e.desc, e.charred);
         this.root.add(obj);
-        p = { obj, charred: e.charred, desc: e.desc };
+        p = { obj, charred: e.charred, frozen: false, desc: e.desc };
         this.props.set(e.id, p);
       }
       if (e.charred && !p.charred) {
@@ -132,6 +169,13 @@ export class View {
         p.obj.traverse((o) => {
           const m = o as THREE.Mesh;
           if (m.isMesh && !(m.material instanceof THREE.MeshBasicMaterial)) m.material = Array.isArray(m.material) ? m.material.map(charMat) : charMat(m.material);
+        });
+      }
+      if (e.frozen && !p.frozen && e.desc.mat !== 'ice') {
+        p.frozen = true;
+        p.obj.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh && !(m.material instanceof THREE.MeshBasicMaterial)) m.material = Array.isArray(m.material) ? m.material.map(frostMat) : frostMat(m.material);
         });
       }
       p.obj.position.set(e.x, -e.y, 0);
@@ -153,6 +197,14 @@ export class View {
         this.root.remove(p.obj);
         this.props.delete(id);
       }
+    }
+    frame.water?.forEach((fz, i) => {
+      const m = this.pools[i];
+      if (m) m.visible = !fz;
+    });
+    for (const l of this.lavaPools) {
+      if (Math.random() < dt * 9) this.fx.fire(l.x0 + Math.random() * (l.x1 - l.x0), -l.y + 0.1, 1, 0.8);
+      if (Math.random() < dt * 2) this.fx.smoke(l.x0 + Math.random() * (l.x1 - l.x0), -l.y + 0.4, 1, 0.3, 0.8);
     }
     // ropes
     for (const r of frame.ropes) {
@@ -285,6 +337,21 @@ export class View {
         break;
       case 'ko':
         this.fx.bitsBurst(e.x, y + 0.6, 'spark', 16, 4);
+        break;
+      case 'splash':
+        this.fx.dust(e.x, y, e.big ? 22 : 10, 0x9fd8ff, e.big ? 1.4 : 0.8);
+        this.fx.bitsBurst(e.x, y, 'ice', e.big ? 8 : 3, 3, 0.6);
+        break;
+      case 'freeze':
+        this.fx.bitsBurst(e.x, y, 'ice', 26, 4);
+        this.fx.dust(e.x, y, 16, 0xeaf8ff, 1.2);
+        break;
+      case 'frost':
+        this.fx.bitsBurst(e.x, y, 'ice', 10, 3);
+        break;
+      case 'lava':
+        this.fx.fire(e.x, y, 10, 1.2);
+        this.fx.smoke(e.x, y + 0.5, 6, 0.3);
         break;
       default:
         break;

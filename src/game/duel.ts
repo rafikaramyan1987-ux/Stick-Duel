@@ -33,13 +33,13 @@ export class Duel {
   phase: Phase = 'aim';
   turn: Side = 0;
   shotsUsed = 0;
-  readonly ammo: Record<AmmoId, number>;
+  ammo: Record<AmmoId, number>;
   selected: AmmoId = 'arrow';
   aim = { angle: -0.45, power: 0.7 };
   /** Rival's arm while it aims. */
   rivalAim: { from: number; shot: RivalShot; t: number } | null = null;
-  private rivalAmmo: Partial<Record<AmmoId, number>>;
-  private rivalTurns = 0;
+  rivalAmmo: Partial<Record<AmmoId, number>>;
+  rivalTurns = 0;
   private acc = 0;
   private phaseTime = 0;
   private koTime = -1;
@@ -54,27 +54,55 @@ export class Duel {
   paused = false;
   listeners: { event?: (e: SimEvent, replay: boolean) => void; phase?: (p: Phase) => void; over?: (r: DuelResult) => void } = {};
 
+  /** No frame recording and no replay (rival AI look-ahead, level checker). */
+  readonly headless: boolean;
+  /** Two players on one device: both sides are human, turns alternate, unlimited arrows. */
+  readonly versus: boolean;
+  /** The side that is not shooting keeps its ammo, aim and selection here (versus). */
+  private other: { ammo: Record<AmmoId, number>; aim: { angle: number; power: number }; selected: AmmoId } | null = null;
+
   constructor(
     readonly level: LevelDef,
     readonly seed = 1,
-    readonly twoPlayers = false,
+    opts: { headless?: boolean; sim?: Sim; versus?: boolean } = {},
   ) {
-    this.sim = new Sim(level, seed);
-    this.sim.warmUp();
+    this.headless = !!opts.headless;
+    this.versus = !!opts.versus;
+    if (opts.sim) this.sim = opts.sim;
+    else {
+      this.sim = new Sim(level, seed);
+      this.sim.warmUp();
+    }
     this.ammo = { arrow: 0, fire: 0, heavy: 0, ice: 0, bomb: 0, ...level.ammo };
     this.rivalAmmo = {};
     for (const a of level.rivalAmmo ?? []) this.rivalAmmo[a] = (this.rivalAmmo[a] ?? 0) + 1;
     const facing = level.rival.x >= level.player.x ? 1 : -1;
     this.aim.angle = facing === 1 ? -0.45 : -Math.PI + 0.45;
     this.sim.setAim(0, this.aim.angle);
+    if (this.versus) this.other = { ammo: { ...this.ammo }, aim: { angle: -Math.PI + 0.45, power: 0.7 }, selected: 'arrow' };
+  }
+
+  /** Versus: hands the bow to the other player. */
+  private swapTurn(): void {
+    if (!this.other) return;
+    const mine = { ammo: this.ammo, aim: this.aim, selected: this.selected };
+    this.ammo = this.other.ammo;
+    this.aim = this.other.aim;
+    this.selected = this.other.selected;
+    this.other = mine;
+    this.sim.setAim(this.turn, null);
+    this.turn = this.turn === 0 ? 1 : 0;
+    this.sim.setAim(this.turn, this.aim.angle);
   }
 
   get shotsLeft(): number {
     return AMMO_ORDER.reduce((n, a) => n + (this.ammo[a] ?? 0), 0);
   }
 
+  /** Facing of the side whose turn it is. */
   get facing(): 1 | -1 {
-    return this.level.rival.x >= this.level.player.x ? 1 : -1;
+    const right = this.level.rival.x >= this.level.player.x;
+    return (this.turn === 0) === right ? 1 : -1;
   }
 
   setAim(angle: number, power: number): void {
@@ -82,7 +110,7 @@ export class Duel {
     const f = this.facing;
     const a = f === 1 ? clamp(angle, -1.55, 1.1) : angle > 0 ? clamp(angle, Math.PI - 1.1, Math.PI) : clamp(angle, -Math.PI, -Math.PI + 1.55);
     this.aim = { angle: a, power: clamp(power, 0, 1) };
-    if (this.phase === 'aim') this.sim.setAim(0, a);
+    if (this.phase === 'aim') this.sim.setAim(this.turn, a);
   }
 
   selectAmmo(a: AmmoId): boolean {
@@ -101,7 +129,7 @@ export class Duel {
     this.ammo[this.selected]--;
     this.shotsUsed++;
     this.rec = { frames: [], events: [], koIndex: -1, firstEnv: -1 };
-    this.sim.fire(0, this.aim.angle, this.aim.power, this.selected);
+    this.sim.fire(this.turn, this.aim.angle, this.aim.power, this.selected);
     this.drainEvents();
     this.setPhase('flight');
     // pick the next available ammo if this one ran out
@@ -120,7 +148,7 @@ export class Duel {
 
   /** Preview of the shot path (the first part only, so aiming stays a skill). */
   preview(fraction = 0.42): Array<{ x: number; y: number }> {
-    return this.sim.previewPath(0, this.aim.angle, this.aim.power, 1.6 * fraction + 0.2);
+    return this.sim.previewPath(this.turn, this.aim.angle, this.aim.power, 1.6 * fraction + 0.2);
   }
 
   /** Current frame to draw (live, or the replay). */
@@ -179,7 +207,7 @@ export class Duel {
     }
     this.sim.step();
     const flying = this.phase === 'flight' || this.phase === 'rivalFlight';
-    if (this.phase === 'flight' && this.rec) this.rec.frames.push(captureFrame(this.sim));
+    if (this.phase === 'flight' && this.rec && !this.headless) this.rec.frames.push(captureFrame(this.sim));
     this.drainEvents();
     if (!flying) return;
     const anyDead = !this.sim.fighters[0].alive || !this.sim.fighters[1].alive;
@@ -220,6 +248,11 @@ export class Duel {
     if (!r.alive && p.alive) return this.finish(true, 'ko');
     if (!p.alive) return this.finish(false, 'ko');
     if (this.phase === 'flight') {
+      if (this.versus) {
+        this.swapTurn();
+        this.setPhase('aim');
+        return;
+      }
       if (this.shotsLeft <= 0) return this.finish(false, 'shots');
       this.startRival();
     } else {
@@ -248,7 +281,7 @@ export class Duel {
       stars: [win, win && this.shotsUsed <= this.level.par, win && (this.chain || noDirect)],
     };
     const rec = this.rec;
-    if (win && rec && rec.koIndex >= 0 && rec.frames.length > 10) {
+    if (win && rec && rec.koIndex >= 0 && rec.frames.length > 10 && !this.headless) {
       const start = Math.max(0, Math.max(rec.firstEnv - 20, rec.koIndex - 240));
       const end = Math.min(rec.frames.length - 1, rec.koIndex + 80);
       const frames = end - start;
@@ -278,6 +311,41 @@ export class Duel {
     this.replay = null;
     this.setPhase('over');
     if (this.result) this.listeners.over?.(this.result);
+  }
+
+  /** A headless copy of this duel at rest (player's turn), for look-ahead searches. */
+  clone(): Duel {
+    const d = new Duel(this.level, this.seed, { headless: true, sim: this.sim.clone() });
+    d.phase = this.phase;
+    d.shotsUsed = this.shotsUsed;
+    Object.assign(d.ammo, this.ammo);
+    d.selected = this.selected;
+    d.aim = { ...this.aim };
+    d.rivalAmmo = { ...this.rivalAmmo };
+    d.rivalTurns = this.rivalTurns;
+    d.chain = this.chain;
+    d.directOnRival = this.directOnRival;
+    return d;
+  }
+
+  /** Rewarded "continue with 1 HP": the player gets back up and it is their turn again. */
+  revive(): void {
+    const f = this.sim.fighters[0];
+    f.hp = 1;
+    f.alive = true;
+    f.rag.state = 'stand';
+    f.rag.strength = 1;
+    f.rag.stateTime = 0;
+    f.rag.placeAt(this.level.player.x, this.level.player.y);
+    if (this.shotsLeft <= 0) this.ammo.arrow = (this.ammo.arrow ?? 0) + 2;
+    if (!this.selectAmmo(this.selected)) this.selectAmmo(AMMO_ORDER.find((a) => (this.ammo[a] ?? 0) > 0) ?? 'arrow');
+    this.result = null;
+    this.replay = null;
+    this.koTime = -1;
+    this.turn = 0;
+    this.sim.setAim(1, null);
+    this.sim.setAim(0, this.aim.angle);
+    this.setPhase('aim');
   }
 
   /** Rewarded "continue with 1 HP" (Phase B) and tests. */

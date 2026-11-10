@@ -15,3 +15,5 @@ coverage/
 !submission/*.zip
 !submission-gd/*.zip
 !submission-gamepix/*.zip
+!submission-legacy/**/*.zip
+.levels/

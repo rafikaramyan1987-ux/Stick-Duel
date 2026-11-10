@@ -13,9 +13,11 @@ describe('rival AI', () => {
     expect(planRivalShot(a, lv, 3, 1, {})).toEqual(planRivalShot(b, lv, 3, 1, {}));
   });
 
-  it('uses the environment against the player when it can (castle: the crate rope; desert: a fire arrow on the barrel)', () => {
-    const castle = levelById('castle-1')!;
-    const desert = levelById('desert-1')!;
+  it('uses the environment against the player when it can (castle: the crate over you; desert: a fire arrow on the barrel)', () => {
+    const castle = levelById('castle-3')!;
+    // desert 1 without the rival's bunker (from inside it, the barrel is out of reach)
+    const d1 = levelById('desert-1')!;
+    const desert = { ...d1, objects: d1.objects.filter((o) => !o.fixed) };
     let env = 0;
     let fire = 0;
     for (let seed = 1; seed <= 12; seed++) {

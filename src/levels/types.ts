@@ -81,6 +81,14 @@ export interface RopeDef {
   kind?: 'rope' | 'chain';
 }
 
+/** A rectangular pool: surface at y, from x0 to x1, bottom at y + depth. */
+export interface Pool {
+  x0: number;
+  x1: number;
+  y: number;
+  depth: number;
+}
+
 export interface FighterDef {
   /** Feet position. */
   x: number;
@@ -110,8 +118,16 @@ export interface LevelDef {
   view: { x0: number; x1: number; y0: number; y1: number };
   /** Below this y everything is gone (falls off the world). */
   killY: number;
-  /** Lava surface (bodies and fighters touching it burn / are K.O.). */
-  lavaY?: number;
+  /** Lava pools: fighters touching them are K.O., bodies burn and sink. */
+  lava?: Pool[];
+  /** Water pools: fighters falling in are out (splash); ice arrows freeze them into platforms. */
+  water?: Pool[];
+  /** Horizontal wind acceleration on arrows (m/s², + is to the right). */
+  wind?: number;
+  /** Boss arena (bigger rival, special structure). */
+  boss?: boolean;
+  /** Rival look override (world look by default). */
+  rivalLook?: string;
   /** Rival AI: ids of ropes / objects it may shoot at to hurt the player. */
   rivalTargets?: string[];
   /** Rival AI accuracy 0..1 (1 = perfect). */

@@ -793,6 +793,52 @@ button:focus-visible {
   }
 }
 
+.powermeter {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  padding: 4px 8px;
+  pointer-events: none;
+}
+.powermeter .pbar {
+  width: 86px;
+  height: 14px;
+  border-radius: 7px;
+  border: 2px solid var(--ink);
+  background: #e2d7c8;
+  overflow: hidden;
+}
+.powermeter .pbar i {
+  display: block;
+  height: 100%;
+  background: hsl(var(--hue, 90), 85%, 52%);
+  transform-origin: left;
+}
+.powermeter b {
+  font-size: 15px;
+  min-width: 38px;
+  text-align: right;
+}
+.tricky {
+  margin-left: 6px;
+  background: #c77dff;
+  color: #fff;
+  border-radius: 8px;
+  padding: 1px 6px;
+  font-size: 12px;
+}
+.shots .wind {
+  font-size: 13px;
+  background: #d8f1ff;
+  border-radius: 8px;
+  padding: 1px 6px;
+}
+
 /* aim drag line */
 .aimline {
   position: absolute;
@@ -1046,8 +1092,27 @@ button:focus-visible {
 .is-portrait .ab .lbl {
   display: none;
 }
+.is-portrait .hud .bottom {
+  bottom: 0;
+  padding: 6px 8px calc(6px + var(--safe-b));
+  background: linear-gradient(rgba(43, 34, 53, 0), rgba(43, 34, 53, 0.35));
+}
+.is-portrait .ammo {
+  background: none;
+  padding: 0;
+  gap: 8px;
+}
 .is-portrait .ab {
-  padding: 6px 10px 6px 8px;
+  padding: 4px 8px 4px 6px;
+  min-height: 48px;
+  border-radius: 14px;
+}
+.is-portrait .ab .ic {
+  width: 30px;
+  height: 30px;
+}
+.is-portrait .ab kbd {
+  display: none;
 }
 @media (max-width: 760px) {
   .ab .lbl {
@@ -1108,4 +1173,188 @@ button:focus-visible {
   to {
     filter: brightness(1.4);
   }
+}
+
+/* coins pill doubles as the shop button */
+button.coins {
+  font: 700 20px/1 'Fredoka', system-ui, sans-serif;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--ink);
+  min-height: 46px;
+}
+.coins .shoplbl {
+  background: var(--gold);
+  border: 2px solid var(--ink);
+  border-radius: 9px;
+  padding: 3px 8px;
+  font-size: 15px;
+}
+.coins.inline {
+  position: static;
+  margin-left: auto;
+}
+.wstars {
+  float: right;
+  font-size: 16px;
+}
+.lvl.boss {
+  background: #ffe08a;
+}
+.lvl.tricky {
+  background: #ead7ff;
+}
+.lvl.locked.boss,
+.lvl.locked.tricky {
+  background: #cfc6b8;
+}
+
+/* 2 players: arena picker */
+.versussetup .sub {
+  color: #fff;
+  font-weight: 600;
+  font-size: 18px;
+  -webkit-text-stroke: 0.6px var(--ink);
+  paint-order: stroke fill;
+  margin: 0 0 12px;
+  text-align: center;
+}
+.arenagrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 820px;
+}
+.arena {
+  min-height: 84px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 0 5px 0 var(--ink);
+  cursor: pointer;
+  font: 700 22px/1.1 'Fredoka', system-ui, sans-serif;
+  color: #fff;
+  -webkit-text-stroke: 1px var(--ink);
+  paint-order: stroke fill;
+}
+
+/* shop */
+.shop {
+  justify-content: flex-start;
+  overflow-y: auto;
+  touch-action: pan-y;
+  background: rgba(30, 24, 44, 0.35);
+}
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.tab {
+  font: 600 18px/1 'Fredoka', system-ui, sans-serif;
+  min-height: 46px;
+  padding: 8px 18px;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  background: var(--cream);
+  cursor: pointer;
+  color: var(--ink);
+}
+.tab.on {
+  background: var(--gold);
+}
+.shopgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 820px;
+}
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 108px;
+  padding: 10px;
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  background: var(--cream);
+  box-shadow: 0 4px 0 var(--ink);
+  cursor: pointer;
+  font: 600 16px/1.1 'Fredoka', system-ui, sans-serif;
+  color: var(--ink);
+}
+.item.owned {
+  background: #e7f6dd;
+}
+.item.worn {
+  background: var(--gold);
+}
+.item .swatch {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+}
+.item .hatname {
+  font-size: 17px;
+  text-align: center;
+}
+.item .price {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.item .price .coin {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+.score {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+/* covers and trailers (automation) */
+.cinematic .hud,
+.cinematic .bubbles,
+.cinematic .banner,
+.cinematic .tutorial,
+.cinematic .layer,
+.cinematic .aimline,
+.cinematic .toast {
+  display: none !important;
+}
+.coverlogo {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.86;
+  font-weight: 700;
+  font-family: 'Fredoka', system-ui, sans-serif;
+  transform: rotate(-4deg);
+  filter: drop-shadow(0 0.08em 0 rgba(43, 34, 53, 0.4));
+  pointer-events: none;
+}
+.coverlogo span {
+  -webkit-text-stroke: 0.06em var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0 0.07em 0 var(--ink);
+  letter-spacing: 0.02em;
+}
+.coverlogo .l1 {
+  color: var(--gold);
+}
+.coverlogo .l2 {
+  font-size: 0.8em;
+  color: #fff;
+  background: var(--red);
+  padding: 0 0.18em 0.06em;
+  border: 0.05em solid var(--ink);
+  border-radius: 0.2em;
+  transform: rotate(5deg) translateX(18%);
+  margin-top: 0.05em;
 }

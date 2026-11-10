@@ -91,7 +91,7 @@ test('lifecycle: loading → loaded before the menu, gameStart once on the first
 
   // interstitial on Next: paused + muted while it plays, resumed after
   await page.locator('#next').click();
-  await expect(page.locator('.lvname')).toContainText('Grand Hall');
+  await expect(page.locator('.lvname')).toContainText('Forest 2');
   expect((await log(page)).slice(before + 1)).toEqual(['ad:interstitial', 'pause', 'resume']);
   expect(await page.evaluate(() => (window as unknown as { __gpxDuringAd: unknown }).__gpxDuringAd)).toEqual({ adPlaying: true });
   expect(await page.evaluate(`${APP}.adPlaying`)).toBe(false);

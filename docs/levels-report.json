@@ -1,0 +1,1033 @@
+[
+ {
+  "id": "forest-1",
+  "par": 1,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "arrow",
+    "angle": -1.2860900117830756,
+    "power": 0.21428571428571427,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": true,
+  "directOnly": false
+ },
+ {
+  "id": "forest-2",
+  "par": 1,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "arrow",
+    "angle": -0.6990586019755264,
+    "power": 0.5,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": true,
+  "directOnly": false
+ },
+ {
+  "id": "forest-3",
+  "par": 1,
+  "rivalHp": 50,
+  "solution": [
+   {
+    "ammo": "arrow",
+    "angle": -1.4599796499050317,
+    "power": 0.5,
+    "target": "rope ram-hold"
+   }
+  ],
+  "oneShot": true,
+  "directOnly": false
+ },
+ {
+  "id": "forest-4",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.49558607822259404,
+    "power": 0.7857142857142857,
+    "target": "log"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -1.4637098124594181,
+    "power": 1,
+    "target": "rival"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "forest-5",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "forest-6",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -1.15,
+    "power": 0.35,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.7378445520573059,
+    "power": 0.5,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "forest-7",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "forest-8",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -1,
+    "power": 0.35,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -1.520016030045128,
+    "power": 0.7857142857142857,
+    "target": "rope ram-hold"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.1802417290073461,
+    "power": 0.7857142857142857,
+    "target": "rival head"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "forest-9",
+  "par": 3,
+  "rivalHp": 160,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "castle-1",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.24999999999999997,
+    "power": 0.6,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.5846205950237171,
+    "power": 0.5,
+    "target": "rope chandelier-chain"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "castle-2",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "heavy",
+    "angle": -0.09999999999999998,
+    "power": 0.6,
+    "target": "grid"
+   },
+   {
+    "ammo": "heavy",
+    "angle": 0.019132343311944355,
+    "power": 1,
+    "target": "rival head"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "castle-3",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.24999999999999997,
+    "power": 0.6,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.5699916567939572,
+    "power": 0.5,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "castle-4",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "heavy",
+    "angle": -0.27255307429009007,
+    "power": 0.5,
+    "target": "roof"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -0.28024846523342256,
+    "power": 0.5,
+    "target": "roof top"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.6215522771236591,
+    "power": 0.5,
+    "target": "rope chandelier-chain"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "castle-5",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.16509043331303083,
+    "power": 0.7857142857142857,
+    "target": "roof top"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.5875294476793966,
+    "power": 0.5,
+    "target": "rope chandelier-chain"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "castle-6",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "castle-7",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "arrow",
+    "angle": -0.541149156049586,
+    "power": 0.5,
+    "target": "rope gate"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -0.2528414075153262,
+    "power": 0.5,
+    "target": "roof"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "castle-8",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.24999999999999997,
+    "power": 0.6,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.59267062279944,
+    "power": 0.5,
+    "target": "rope chandelier-chain"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "castle-9",
+  "par": 3,
+  "rivalHp": 160,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.6991536834053664,
+    "power": 0.21428571428571427,
+    "target": "rope ram-swing"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.6157250269787526,
+    "power": 0.5,
+    "target": "rope chandelier-chain"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "mountains-1",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -1.4339953939510537,
+    "power": 0.5,
+    "target": "rival"
+   },
+   {
+    "ammo": "fire",
+    "angle": -0.6268031466819635,
+    "power": 0.5,
+    "target": "boulder-stop"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "mountains-2",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "mountains-3",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "heavy",
+    "angle": -0.1836336684633839,
+    "power": 0.7857142857142857,
+    "target": "rival head"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -0.18077163894576553,
+    "power": 0.7857142857142857,
+    "target": "rival head"
+   },
+   {
+    "ammo": "bomb",
+    "angle": -0.26120168523845555,
+    "power": 0.5,
+    "target": "rival head"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "mountains-4",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -1.15,
+    "power": 0.85,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.5817280730830544,
+    "power": 0.7857142857142857,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "mountains-5",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "bomb",
+    "angle": -0.39999999999999997,
+    "power": 1,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.17585853426849163,
+    "power": 0.7857142857142857,
+    "target": "rival head"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "mountains-6",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "heavy",
+    "angle": -0.4423077552116529,
+    "power": 0.5,
+    "target": "roof"
+   },
+   {
+    "ammo": "bomb",
+    "angle": -0.5115052754215508,
+    "power": 0.7857142857142857,
+    "target": "b"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "mountains-7",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "mountains-8",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.8119172767377814,
+    "power": 0.5,
+    "target": "rope ram-swing"
+   },
+   {
+    "ammo": "bomb",
+    "angle": -0.27408715340291734,
+    "power": 1,
+    "target": "roof"
+   },
+   {
+    "ammo": "fire",
+    "angle": -0.9086479439640232,
+    "power": 0.5,
+    "target": "rope ram-hold"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "mountains-9",
+  "par": 3,
+  "rivalHp": 160,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.4246028276626408,
+    "power": 0.5,
+    "target": "roof"
+   },
+   {
+    "ammo": "fire",
+    "angle": -0.436833465133445,
+    "power": 0.5,
+    "target": "roof top"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -0.14201084461412464,
+    "power": 1,
+    "target": "rival head"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "desert-1",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.5499999999999999,
+    "power": 0.35,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.7184466049769875,
+    "power": 0.5,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "desert-2",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.39999999999999997,
+    "power": 0.6,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.7378632217384115,
+    "power": 0.5,
+    "target": "rope tntRope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "desert-3",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "desert-4",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.39999999999999997,
+    "power": 0.6,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.7378632217384115,
+    "power": 0.5,
+    "target": "rope tntRope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "desert-5",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.24999999999999997,
+    "power": 1,
+    "target": "grid"
+   },
+   {
+    "ammo": "fire",
+    "angle": -0.6229358245297042,
+    "power": 0.5,
+    "target": "boulder-stop"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "desert-6",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "heavy",
+    "angle": -0.24999999999999997,
+    "power": 0.6,
+    "target": "grid"
+   },
+   {
+    "ammo": "bomb",
+    "angle": -1.4602829216818072,
+    "power": 1,
+    "target": "rival"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.5541504474349572,
+    "power": 1,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "desert-7",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.39999999999999997,
+    "power": 0.6,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.7378638952918621,
+    "power": 0.5,
+    "target": "rope tntRope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "desert-8",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "arrow",
+    "angle": -0.16223788721043003,
+    "power": 0.5,
+    "target": "s1 top"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -0.1921983795609021,
+    "power": 0.5,
+    "target": "rival"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -0.26297752535121105,
+    "power": 0.5,
+    "target": "rival head"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "desert-9",
+  "par": 3,
+  "rivalHp": 160,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.6018678684045707,
+    "power": 0.7857142857142857,
+    "target": "rope tntRope"
+   },
+   {
+    "ammo": "fire",
+    "angle": -0.28468295630254375,
+    "power": 1,
+    "target": "roof top"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.6131614143303086,
+    "power": 0.7857142857142857,
+    "target": "rope tntRope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "frozen-1",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "ice",
+    "angle": -1.1917855130545492,
+    "power": 0.21428571428571427,
+    "target": "water"
+   },
+   {
+    "ammo": "ice",
+    "angle": -1.459724628706753,
+    "power": 0.5,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "frozen-2",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "frozen-3",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -1.15,
+    "power": 0.35,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.7184678463725154,
+    "power": 0.5,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "frozen-4",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "ice",
+    "angle": -1.1917855130545492,
+    "power": 0.21428571428571427,
+    "target": "water"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -1.348914541353595,
+    "power": 0.21428571428571427,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "frozen-5",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "frozen-6",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "heavy",
+    "angle": -0.414821014807784,
+    "power": 0.5,
+    "target": "roof"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -0.41070517228791437,
+    "power": 0.5,
+    "target": "roof"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -1.3374457643571762,
+    "power": 0.5,
+    "target": "rival"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "frozen-7",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -1.15,
+    "power": 0.35,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.7378431494357482,
+    "power": 0.5,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "frozen-8",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "frozen-9",
+  "par": 3,
+  "rivalHp": 160,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.8298575069602162,
+    "power": 0.5,
+    "target": "rope ram-swing"
+   },
+   {
+    "ammo": "fire",
+    "angle": -0.27151341182296584,
+    "power": 1,
+    "target": "roof"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -0.26145098445552334,
+    "power": 0.5,
+    "target": "rival head"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "volcano-1",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.5499999999999999,
+    "power": 0.35,
+    "target": "grid"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.718442831927779,
+    "power": 0.5,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "volcano-2",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "volcano-3",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "heavy",
+    "angle": -0.24999999999999997,
+    "power": 0.6,
+    "target": "grid"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -0.26869598139864354,
+    "power": 0.5,
+    "target": "rival head"
+   },
+   {
+    "ammo": "bomb",
+    "angle": -0.2627251461516226,
+    "power": 0.5,
+    "target": "rival head"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "volcano-4",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "volcano-5",
+  "par": 2,
+  "rivalHp": 100,
+  "solution": null,
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "volcano-6",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "heavy",
+    "angle": -0.42510957049781534,
+    "power": 0.5,
+    "target": "roof"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -1.3201786225861198,
+    "power": 0.5,
+    "target": "rival"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.7391707135120902,
+    "power": 0.5,
+    "target": "rope rope"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "volcano-7",
+  "par": 2,
+  "rivalHp": 254,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.3093564445572726,
+    "power": 0.7857142857142857,
+    "target": "roof"
+   },
+   {
+    "ammo": "fire",
+    "angle": -0.622826797298944,
+    "power": 0.5,
+    "target": "boulder-stop"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "volcano-8",
+  "par": 3,
+  "rivalHp": 100,
+  "solution": [
+   {
+    "ammo": "arrow",
+    "angle": -1.2670681020261758,
+    "power": 0.5,
+    "target": "legR"
+   },
+   {
+    "ammo": "fire",
+    "angle": -1.2760337783092626,
+    "power": 0.5,
+    "target": "legR"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.19799140219083797,
+    "power": 0.21428571428571427,
+    "target": "legL"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ },
+ {
+  "id": "volcano-9",
+  "par": 3,
+  "rivalHp": 177,
+  "solution": [
+   {
+    "ammo": "fire",
+    "angle": -0.2804060831453092,
+    "power": 0.5,
+    "target": "rival head"
+   },
+   {
+    "ammo": "bomb",
+    "angle": -0.2847326150426861,
+    "power": 1,
+    "target": "roof top"
+   },
+   {
+    "ammo": "fire",
+    "angle": -1.4964524398203491,
+    "power": 0.5,
+    "target": "rope ram-hold"
+   }
+  ],
+  "oneShot": false,
+  "directOnly": false
+ }
+]
