@@ -1,4 +1,4 @@
-// Packs the GamePix build for upload: submission-gamepix/topple-duel-gamepix-v1.zip with
+// Packs the GamePix build for upload: submission-gamepix/topple-duel-gamepix-v2.zip (v1 is kept) with
 // index.html at the ROOT of the zip and nothing else outside the build (dist-gamepix/).
 // Usage: npm run build:gamepix && npm run submission:gamepix
 // (then: node scripts/check-gamepix-zip.mjs — the same check CI runs)
@@ -7,7 +7,7 @@ import { join, relative } from 'node:path';
 import { zipSync } from 'fflate';
 
 const DIR = 'dist-gamepix';
-const OUT = 'submission-gamepix/topple-duel-gamepix-v1.zip';
+const OUT = 'submission-gamepix/topple-duel-gamepix-v2.zip';
 const text = readFileSync(`${DIR}/index.html`, 'utf8');
 if (!text.includes('integration.gamepix.com/sdk/v3/gamepix.sdk.js')) {
   console.error(`${DIR}/index.html is not the GamePix build — run \`npm run build:gamepix\` first.`);

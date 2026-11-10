@@ -127,6 +127,12 @@ jobs:
         run: |
           node scripts/zip-dist.mjs dist-gamepix topple-duel-gamepix.zip
           node scripts/check-gamepix-zip.mjs topple-duel-gamepix.zip
+      - name: GamePix bundle declares GamePix.soundOff / soundOn and calls GamePix.lang() (build + newest committed zip)
+        run: |
+          for re in 'GamePix\.soundOff[[:space:]]*=[^=]' 'GamePix\.soundOn[[:space:]]*=[^=]' 'GamePix\.lang\(\)'; do
+            grep -qE "$re" dist-gamepix/index.html || { echo "::error::dist-gamepix has no match for $re"; exit 1; }
+          done
+          node scripts/check-gamepix-zip.mjs
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Playwright e2e (GamePix build, mock SDK; desktop + phone portrait)

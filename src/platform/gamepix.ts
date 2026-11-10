@@ -11,11 +11,16 @@ import type { AdHooks, AdsUnavailable, Platform, StorageLike } from './ads';
  *   gameplayStart() → GamePix.lifecycle.gameStart() (sent once).
  * - GamePix.events 'pause' / 'resume' and document visibilitychange (hidden / visible) pause the
  *   game and mute all audio through AdHooks.onAdPause; both are idempotent. Window blur is ignored.
+ * - GamePix.events 'soundOff' / 'soundOn' mute / unmute (platformMuted()). The same four handlers
+ *   are also assigned to the legacy properties GamePix.soundOff / soundOn / pause / resume (the
+ *   GamePix player checks that they are declared), before loaded(). Every handler is idempotent, so
+ *   the event and the property both firing for one change (in any order) count once.
  * - Ads only after loaded() completed, one at a time: interstitial → midgame(), reward → rewarded()
  *   (true only when the SDK answers { success: true }). Every request settles exactly once, and is
  *   abandoned (game continues, no reward) if nothing happened within AD_START_TIMEOUT_MS.
  * - happyMoment / sadMoment signals after loaded(). Saves stay in plain localStorage (the SDK syncs
- *   it); the locale is GamePix.lang(), English when the game does not have that language.
+ *   it); the locale is GamePix.lang(), read once in init() (before loaded()) and cached, English
+ *   when the game does not have that language. A language picked in Settings wins.
  */
 export const GAMEPIX_SDK_URL = 'https://integration.gamepix.com/sdk/v3/gamepix.sdk.js';
 
@@ -35,9 +40,11 @@ export interface GPXSDK {
     gameStart(): void;
   };
   events: { on(name: 'pause' | 'resume' | 'soundOff' | 'soundOn', fn: () => void): void };
-  /** Legacy SDK callbacks: the game defines them and the SDK calls them. */
+  /** Legacy SDK callbacks: the game defines them and the SDK / player calls them. */
   soundOff?: () => void;
   soundOn?: () => void;
+  pause?: () => void;
+  resume?: () => void;
   ads: {
     interstitial(): Promise<GPXAdResult>;
     reward(): Promise<GPXAdResult>;
@@ -80,6 +87,8 @@ export class GamePixPlatform implements Platform {
   private muteListeners: Array<(muted: boolean) => void> = [];
   /** The request being waited for: set to started when the SDK pauses the game for it. */
   private pending: { started: boolean } | null = null;
+  /** GamePix.lang() as read once in init(), or null. */
+  private sdkLang: string | null = null;
 
   constructor(private readonly hooks: AdHooks) {}
 
@@ -103,24 +112,39 @@ export class GamePixPlatform implements Platform {
       return;
     }
     this.sdk = sdk;
+    // one handler per signal, shared by the events and the legacy properties; each is idempotent
+    const pause = () => this.setSdkPaused(true);
+    const resume = () => this.setSdkPaused(false);
+    const soundOff = () => this.setSoundOff(true);
+    const soundOn = () => this.setSoundOff(false);
     try {
-      sdk.events.on('pause', () => this.setSdkPaused(true));
-      sdk.events.on('resume', () => this.setSdkPaused(false));
+      sdk.events.on('pause', pause);
+      sdk.events.on('resume', resume);
     } catch (err) {
       console.warn('[GamePix] events.on failed', err);
     }
     try {
-      sdk.events.on('soundOff', () => this.setSoundOff(true));
-      sdk.events.on('soundOn', () => this.setSoundOff(false));
+      sdk.events.on('soundOff', soundOff);
+      sdk.events.on('soundOn', soundOn);
     } catch (err) {
       console.warn('[GamePix] sound events not supported', err);
     }
-    // legacy fallback: older SDKs call GamePix.soundOff() / GamePix.soundOn() defined by the game
+    // the legacy GamePix.soundOff / soundOn / pause / resume the player checks for, written out on
+    // window.GamePix so the minified bundle keeps the literal names (checked in CI)
     try {
-      sdk.soundOff = () => this.setSoundOff(true);
-      sdk.soundOn = () => this.setSoundOff(false);
+      window.GamePix!.soundOff = soundOff;
+      window.GamePix!.soundOn = soundOn;
+      window.GamePix!.pause = pause;
+      window.GamePix!.resume = resume;
     } catch {
       /* read-only SDK object */
+    }
+    // GamePix.lang(): once, while booting (before loaded()); locale() returns the cached value
+    try {
+      const l = typeof window.GamePix!.lang === 'function' ? window.GamePix!.lang() : null;
+      this.sdkLang = typeof l === 'string' && l ? l : null;
+    } catch (err) {
+      console.warn('[GamePix] lang() failed', err);
     }
   }
 
@@ -143,9 +167,11 @@ export class GamePixPlatform implements Platform {
     }
   }
 
+  /** Idempotent: a repeated 'pause' / 'resume' (event + legacy property) changes nothing. */
   private setSdkPaused(paused: boolean): void {
-    this.sdkPaused = paused;
     if (paused && this.pending) this.pending.started = true;
+    if (paused === this.sdkPaused) return;
+    this.sdkPaused = paused;
     this.sync();
   }
 
@@ -293,16 +319,14 @@ export class GamePixPlatform implements Platform {
     if (this.ready) this.safe((s) => s.sadMoment?.(name));
   }
 
-  /** GamePix.lang() ('en', 'fr', 'de', …); a language the game does not have falls back to English. */
+  /**
+   * GamePix.lang() ('en', 'fr', 'de', …) as read once in init(); a language the game does not have
+   * falls back to English.
+   */
   locale(): string | null {
     if (!this.sdk) return null;
-    try {
-      const l = this.sdk.lang?.();
-      const code = typeof l === 'string' ? l.toLowerCase().slice(0, 2) : '';
-      return Object.prototype.hasOwnProperty.call(GAME_LANGS, code) ? code : 'en';
-    } catch {
-      return 'en';
-    }
+    const code = this.sdkLang ? this.sdkLang.toLowerCase().slice(0, 2) : '';
+    return Object.prototype.hasOwnProperty.call(GAME_LANGS, code) ? code : 'en';
   }
 
   /** Rewarded buttons are hidden when the SDK could not be loaded. */

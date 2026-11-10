@@ -254,3 +254,119 @@ describe('GamePix SDK v3 adapter', () => {
     expect(pauses).toEqual([true, false]);
   });
 });
+
+describe('GamePix legacy properties next to the events (the player checks GamePix.soundOff / soundOn)', () => {
+  type Sig = 'pause' | 'resume' | 'soundOff' | 'soundOn';
+  type Src = 'event' | 'prop';
+  async function boot() {
+    const f = fakeSdk();
+    const pauses: boolean[] = [];
+    const p = await ready({ onAdPause: (x) => pauses.push(x) });
+    const mutes: boolean[] = [];
+    p.onPlatformMuteChange((m) => mutes.push(m));
+    const legacy = f.sdk as unknown as Record<Sig, (() => void) | undefined>;
+    const fire = (sig: Sig, src: Src) => (src === 'event' ? f.emit(sig) : legacy[sig]!());
+    return { p, pauses, mutes, fire, legacy };
+  }
+  const ORDERS: [Src, Src][] = [
+    ['event', 'prop'],
+    ['prop', 'event'],
+    ['event', 'event'],
+    ['prop', 'prop'],
+  ];
+
+  it('assigns GamePix.soundOff / soundOn / pause / resume in init(), before loaded()', async () => {
+    const { sdk, calls } = fakeSdk();
+    const p = new GamePixPlatform({ onAdPause: () => {} });
+    await p.init();
+    expect(calls).not.toContain('loaded');
+    const legacy = sdk as unknown as Record<Sig, unknown>;
+    for (const k of ['soundOff', 'soundOn', 'pause', 'resume'] as const) expect(typeof legacy[k]).toBe('function');
+  });
+
+  for (const [a, b] of ORDERS) {
+    it(`each signal through ${a} then ${b}: one transition each, sound back during a pause keeps the game paused`, async () => {
+      const { p, pauses, mutes, fire } = await boot();
+      fire('soundOff', a);
+      fire('soundOff', b);
+      expect(mutes).toEqual([true]);
+      expect(pauses).toEqual([]); // sound alone never pauses
+      fire('pause', a);
+      fire('pause', b);
+      expect(pauses).toEqual([true]);
+      fire('soundOn', b);
+      fire('soundOn', a);
+      expect(mutes).toEqual([true, false]);
+      expect(pauses).toEqual([true]); // still paused (and muted through onAdPause)
+      fire('resume', b);
+      fire('resume', a);
+      expect(pauses).toEqual([true, false]);
+      expect(p.platformMuted()).toBe(false);
+    });
+  }
+
+  it('interleaved and repeated: pause twice + resume once is resumed; a toggle back within a burst counts', async () => {
+    const { p, pauses, mutes, fire } = await boot();
+    fire('pause', 'prop');
+    fire('soundOff', 'event');
+    fire('pause', 'event');
+    fire('soundOff', 'prop');
+    fire('resume', 'prop');
+    expect(pauses).toEqual([true, false]);
+    fire('resume', 'event');
+    fire('soundOn', 'event');
+    fire('soundOff', 'prop');
+    fire('soundOn', 'prop');
+    expect(mutes).toEqual([true, false, true, false]);
+    expect(pauses).toEqual([true, false]);
+    expect(p.platformMuted()).toBe(false);
+  });
+
+  it('an ad whose pause / resume come through both: settles once, the game is resumed', async () => {
+    for (const [a, b] of ORDERS) {
+      const f = fakeSdk({ reward: 'stuck' });
+      const pauses: boolean[] = [];
+      const p = await ready({ onAdPause: (x) => pauses.push(x) });
+      const legacy = f.sdk as unknown as Record<Sig, () => void>;
+      const fire = (sig: Sig, src: Src) => (src === 'event' ? f.emit(sig) : legacy[sig]());
+      vi.useFakeTimers();
+      const r = p.rewarded(); // the fake SDK emits 'pause' (event) and never answers
+      fire('pause', a);
+      fire('pause', b);
+      await vi.advanceTimersByTimeAsync(AD_START_TIMEOUT_MS + 100); // started: no timeout
+      expect(pauses).toEqual([true]);
+      fire('resume', a);
+      fire('resume', b);
+      expect(pauses).toEqual([true, false]);
+      vi.useRealTimers();
+      void r;
+    }
+  });
+});
+
+describe('GamePix language', () => {
+  it('GamePix.lang() is called once in init(), before loaded(), and its value is the locale', async () => {
+    const { sdk, calls } = fakeSdk({ lang: 'de-DE' });
+    const lang = vi.fn(() => {
+      calls.push('lang');
+      return 'de-DE';
+    });
+    sdk.lang = lang;
+    const p = new GamePixPlatform({ onAdPause: () => {} });
+    await p.init();
+    expect(lang).toHaveBeenCalledTimes(1);
+    await p.loaded();
+    expect(calls.indexOf('lang')).toBeLessThan(calls.indexOf('loaded'));
+    expect(p.locale()).toBe('de');
+    expect(p.locale()).toBe('de');
+    expect(lang).toHaveBeenCalledTimes(1);
+  });
+
+  it('a throwing lang() gives English', async () => {
+    const { sdk } = fakeSdk();
+    sdk.lang = () => {
+      throw new Error('no lang');
+    };
+    expect((await ready()).locale()).toBe('en');
+  });
+});
