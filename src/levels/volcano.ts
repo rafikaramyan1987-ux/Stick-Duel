@@ -49,7 +49,7 @@ const v8 = level('volcano', 8, { ammo: { fire: 1, heavy: 2, bomb: 1 }, ...parts(
 // boss: Magmor throws bombs every other turn
 const vBoss = level('volcano', 9, {
   boss: true,
-  rivalHp: 250,
+  rivalHp: 220,
   ammo: { fire: 2, heavy: 2, bomb: 1 },
   ...parts(lavaPit(12.9, 16), drop('rope', 11.6, 1.6, rock('rock', 0.9, 0.8), 12.5), pendulum('ram', { x: 10.6, y: -7.4 }, 5, 1.05, 4.9), cover(...stoneWall(9.6, 2)), playerCrates(), playerTnt()),
   rivalLook: 'volcanoBoss',

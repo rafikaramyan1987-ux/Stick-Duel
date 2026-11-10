@@ -48,6 +48,8 @@ export const TRAP_CAP = 80;
 export const HAZARD_DAMAGE = 30;
 /** Things that fall or blow up hurt fighters by mass and speed, scaled so a big trap lands at 40–80. */
 export const TRAP_SCALE = 0.6;
+/** Environment damage to a fighter after the first hit of the same shot counts this much. */
+export const TRAP_FOLLOW_UP = 0.35;
 
 export const zoneOf = (part: PartName): HitZone => (part === 'head' ? 'head' : part === 'torso' ? 'body' : 'limb');
 /** Slow arrows hurt less: 50 % at the slowest, 100 % from about 85 % power. */
@@ -587,6 +589,8 @@ export class Sim {
     // traps: at most TRAP_CAP per fighter per shot, whatever piles up
     if (!direct) {
       const used = st ? st.envTo[side] : this.envFree[side];
+      // one trap at a time: what piles up after the first hit of a shot (the fall, debris, lava) counts less
+      if (used > 0) dmg = Math.round(dmg * TRAP_FOLLOW_UP);
       dmg = Math.min(dmg, this.trapCap - used);
       if (st) st.envTo[side] += Math.max(0, dmg);
       else this.envFree[side] += Math.max(0, dmg);

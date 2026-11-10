@@ -34,7 +34,7 @@ const m7 = level('mountains', 7, { wind: 2.5, ammo: { bomb: 1, fire: 1 }, ...par
 const m8 = level('mountains', 8, {
   wind: -2.5,
   ammo: { bomb: 2, fire: 1 },
-  ...parts(ledge('boulder', 15, 12.2, -5.2, 0.5, 'boulder', G), pendulum('ram', { x: 10.6, y: -7.4 }, 5, 1.05, 4.9), cover(...shield(10.6), ...stoneWall(10, 2)), playerCrates(), playerTnt()),
+  ...parts(ledge('boulder', 15, 12.2, -5.2, 0.5, 'boulder', G), pendulum('ram', { x: 10.6, y: -7.4 }, 5, 1.05, 4.9, 0, 0.7, 15.8), cover(...shield(10.6), ...stoneWall(10, 2)), playerCrates(), playerTnt()),
   rivalTargets: ['pTnt'],
   rivalAmmo: ['fire'],
 });
@@ -45,7 +45,7 @@ const mBoss = level('mountains', 9, {
   rivalHp: 190,
   wind: 2,
   ammo: { bomb: 2, fire: 1, heavy: 1 },
-  ...parts(ledge('boulder', 15.2, 12.2, -5.6, 0.5, 'boulder', G), pendulum('ram', { x: 10.6, y: -7.4 }, 5, 1.05, 4.9), cover(...stoneWall(10.1, 2)), playerCrates(), pCrate),
+  ...parts(ledge('boulder', 15.2, 12.2, -5.6, 0.5, 'boulder', G), pendulum('ram', { x: 10.6, y: -7.4 }, 5, 1.05, 4.9, 0, 0.7, 15.8), cover(...stoneWall(10.1, 2)), playerCrates(), pCrate),
   rivalLook: 'mountainsBoss',
   rivalWeapon: 'bomb',
   rivalTargets: ['pRope'],

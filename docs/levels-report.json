@@ -57,24 +57,24 @@
   "solution": [
    {
     "ammo": "arrow",
-    "angle": -1.1034088414332157,
+    "angle": -1.1136689189015567,
     "power": 0.35714285714285715,
     "target": "rope rope"
    },
    {
     "ammo": "arrow",
-    "angle": -1.4571675742907506,
+    "angle": -1.4552324743762817,
     "power": 1,
     "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -0.12783959524738497,
+    "angle": -0.22545363917576408,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 5.25,
+  "avgShots": 5.2,
   "maxTrap": 80
  },
  {
@@ -121,13 +121,13 @@
    },
    {
     "ammo": "arrow",
-    "angle": -0.20386520567812438,
-    "power": 0.35714285714285715,
+    "angle": -1.4835335779811905,
+    "power": 0.6071428571428571,
     "target": "rival head"
    }
   ],
-  "avgShots": 5,
-  "maxTrap": 43
+  "avgShots": 5.6,
+  "maxTrap": 40
  },
  {
   "id": "forest-6",
@@ -135,27 +135,21 @@
   "solution": [
    {
     "ammo": "arrow",
-    "angle": -1.0101693763733393,
+    "angle": -0.14706543069884814,
+    "power": 1,
+    "target": "rival head"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.14567849917700965,
+    "power": 1,
+    "target": "rival head"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -1.022103786048412,
     "power": 0.35714285714285715,
     "target": "rope ram-hold"
-   },
-   {
-    "ammo": "fire",
-    "angle": -0.18089094118329327,
-    "power": 1,
-    "target": "ram"
-   },
-   {
-    "ammo": "arrow",
-    "angle": -0.17809660793406604,
-    "power": 0.8214285714285714,
-    "target": "rival head"
-   },
-   {
-    "ammo": "arrow",
-    "angle": -0.4112691981763565,
-    "power": 0.35714285714285715,
-    "target": "rival head"
    }
   ],
   "avgShots": 5,
@@ -173,18 +167,12 @@
    },
    {
     "ammo": "arrow",
-    "angle": -1.454559139966275,
+    "angle": -1.454763274092945,
     "power": 1,
-    "target": "rival head"
-   },
-   {
-    "ammo": "arrow",
-    "angle": -0.23043065007799693,
-    "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 9.5,
+  "avgShots": 8.25,
   "maxTrap": 80
  },
  {
@@ -193,18 +181,18 @@
   "solution": [
    {
     "ammo": "arrow",
-    "angle": -0.5465327735327008,
-    "power": 0.6071428571428571,
+    "angle": -0.4414725799791806,
+    "power": 1,
     "target": "rope rope"
    },
    {
     "ammo": "arrow",
-    "angle": -1.1487716850624639,
+    "angle": -1.2163932933889503,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 5.8,
+  "avgShots": 8.2,
   "maxTrap": 80
  },
  {
@@ -219,25 +207,25 @@
    },
    {
     "ammo": "fire",
-    "angle": -0.8798010846294515,
+    "angle": -0.8797980759807299,
     "power": 0.35714285714285715,
     "target": "rope ram-swing"
    },
    {
     "ammo": "arrow",
-    "angle": -0.04997717610109266,
+    "angle": -0.04605408097313868,
     "power": 1,
     "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -0.2378372132558546,
+    "angle": -0.21486308310604058,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 6,
-  "maxTrap": 59
+  "avgShots": 5,
+  "maxTrap": 57
  },
  {
   "id": "castle-1",
@@ -245,24 +233,18 @@
   "solution": [
    {
     "ammo": "heavy",
-    "angle": -1.3406765961042155,
-    "power": 0.6071428571428571,
-    "target": "chandelier"
-   },
-   {
-    "ammo": "heavy",
-    "angle": -0.1758617625963161,
-    "power": 0.8214285714285714,
-    "target": "rival head"
+    "angle": -0.03842340026341514,
+    "power": 1,
+    "target": "sw1-1"
    },
    {
     "ammo": "arrow",
-    "angle": -0.3822322161109455,
-    "power": 0.35714285714285715,
-    "target": "rival head"
+    "angle": -0.6351477114901497,
+    "power": 0.6071428571428571,
+    "target": "rope chandelier-chain"
    }
   ],
-  "avgShots": 3.8,
+  "avgShots": 5,
   "maxTrap": 80
  },
  {
@@ -277,12 +259,18 @@
    },
    {
     "ammo": "heavy",
-    "angle": -1.4291967188620522,
-    "power": 0.8214285714285714,
+    "angle": -1.4608921100151648,
+    "power": 1,
+    "target": "rival head"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -1.167640698989979,
+    "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 4.8,
+  "avgShots": 6,
   "maxTrap": 80
  },
  {
@@ -297,12 +285,18 @@
    },
    {
     "ammo": "heavy",
-    "angle": -1.4324170294054892,
-    "power": 0.8214285714285714,
+    "angle": -1.4611442885766535,
+    "power": 1,
+    "target": "rival head"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -1.2399402115643108,
+    "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 5.4,
+  "avgShots": 3,
   "maxTrap": 80
  },
  {
@@ -322,19 +316,19 @@
     "target": "rope chandelier-chain"
    },
    {
-    "ammo": "arrow",
-    "angle": -0.38451201543327534,
-    "power": 0.35714285714285715,
+    "ammo": "heavy",
+    "angle": -1.4471019570336525,
+    "power": 1,
     "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -1.3281268821507466,
-    "power": 0.6071428571428571,
+    "angle": -1.4139297891685647,
+    "power": 0.8214285714285714,
     "target": "rival head"
    }
   ],
-  "avgShots": 6,
+  "avgShots": 11.333333333333334,
   "maxTrap": 80
  },
  {
@@ -354,8 +348,8 @@
     "target": "rope chandelier-chain"
    }
   ],
-  "avgShots": 4.4,
-  "maxTrap": 80
+  "avgShots": 6.4,
+  "maxTrap": 74
  },
  {
   "id": "castle-6",
@@ -375,13 +369,13 @@
    },
    {
     "ammo": "arrow",
-    "angle": -0.5980070804422345,
-    "power": 0.6071428571428571,
+    "angle": -0.7727581330331985,
+    "power": 0.35714285714285715,
     "target": "rope ram-swing"
    }
   ],
-  "avgShots": 4.2,
-  "maxTrap": 63
+  "avgShots": 6.2,
+  "maxTrap": 64
  },
  {
   "id": "castle-7",
@@ -389,24 +383,24 @@
   "solution": [
    {
     "ammo": "arrow",
-    "angle": -0.5372387255371125,
+    "angle": -0.5567903113743936,
     "power": 0.6071428571428571,
     "target": "rope rope"
    },
    {
     "ammo": "heavy",
-    "angle": -1.3502808719183412,
+    "angle": -1.3456807607450192,
     "power": 0.6071428571428571,
     "target": "rival"
    },
    {
     "ammo": "arrow",
-    "angle": -1.1793797874735457,
+    "angle": -1.1777180166250714,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 5.75,
+  "avgShots": 5.333333333333333,
   "maxTrap": 80
  },
  {
@@ -421,12 +415,18 @@
    },
    {
     "ammo": "arrow",
-    "angle": -0.6140700484815302,
-    "power": 0.8214285714285714,
+    "angle": -0.5079420521312826,
+    "power": 1,
     "target": "rope chandelier-chain"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -1.2287093637404236,
+    "power": 0.35714285714285715,
+    "target": "rival head"
    }
   ],
-  "avgShots": 8.5,
+  "avgShots": 8.333333333333334,
   "maxTrap": 80
  },
  {
@@ -441,30 +441,30 @@
    },
    {
     "ammo": "heavy",
-    "angle": -0.1780882390341451,
-    "power": 0.8214285714285714,
-    "target": "rival head"
-   },
-   {
-    "ammo": "heavy",
-    "angle": -0.37313583072032147,
+    "angle": -0.04189723972856533,
     "power": 0.35714285714285715,
-    "target": "rival head"
+    "target": "ram"
    },
    {
-    "ammo": "heavy",
-    "angle": -0.16798361891556204,
-    "power": 0.8214285714285714,
+    "ammo": "arrow",
+    "angle": -0.23548847212155355,
+    "power": 0.6071428571428571,
     "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -0.3949795639486203,
+    "angle": -0.22992332933375315,
+    "power": 0.6071428571428571,
+    "target": "rival head"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.36619459631525597,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 7,
+  "avgShots": 7.2,
   "maxTrap": 80
  },
  {
@@ -537,18 +537,24 @@
   "solution": [
    {
     "ammo": "arrow",
-    "angle": -0.4793149266402397,
-    "power": 1,
+    "angle": -0.6043463505209115,
+    "power": 0.6071428571428571,
     "target": "rope rope"
    },
    {
     "ammo": "heavy",
-    "angle": -0.08646980731229015,
-    "power": 1,
-    "target": "rival"
+    "angle": -1.5528819464729722,
+    "power": 0.6071428571428571,
+    "target": "rival head"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -1.3963838451866795,
+    "power": 0.35714285714285715,
+    "target": "rival head"
    }
   ],
-  "avgShots": 5,
+  "avgShots": 4.4,
   "maxTrap": 80
  },
  {
@@ -563,12 +569,18 @@
    },
    {
     "ammo": "arrow",
-    "angle": -0.7893733052036382,
+    "angle": -0.49205962485349775,
+    "power": 0.35714285714285715,
+    "target": "rival head"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.4651715673310103,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 3.6,
+  "avgShots": 2.8,
   "maxTrap": 80
  },
  {
@@ -576,25 +588,19 @@
   "rivalHp": 100,
   "solution": [
    {
-    "ammo": "bomb",
-    "angle": -0.6250077525154469,
-    "power": 0.35714285714285715,
-    "target": "swingLog"
-   },
-   {
     "ammo": "heavy",
-    "angle": -0.1704999024566833,
-    "power": 0.8214285714285714,
-    "target": "rival head"
+    "angle": -0.0765406562514798,
+    "power": 1,
+    "target": "rival"
    },
    {
-    "ammo": "arrow",
-    "angle": -0.34627486308070693,
-    "power": 0.35714285714285715,
+    "ammo": "bomb",
+    "angle": -0.22735923868721677,
+    "power": 0.6071428571428571,
     "target": "rival head"
    }
   ],
-  "avgShots": 4.5,
+  "avgShots": 4.6,
   "maxTrap": 80
  },
  {
@@ -622,19 +628,25 @@
   "rivalHp": 100,
   "solution": [
    {
-    "ammo": "fire",
-    "angle": -0.46373199381937397,
-    "power": 1,
-    "target": "rope rope"
+    "ammo": "bomb",
+    "angle": -0.6499988964438286,
+    "power": 0.35714285714285715,
+    "target": "rock"
    },
    {
     "ammo": "arrow",
-    "angle": -0.3036646248519656,
+    "angle": -0.1781020736669449,
+    "power": 0.8214285714285714,
+    "target": "rival head"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.3616793688861604,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 4.6,
+  "avgShots": 3.8,
   "maxTrap": 80
  },
  {
@@ -660,7 +672,7 @@
     "target": "rival head"
    }
   ],
-  "avgShots": 3,
+  "avgShots": 3.4,
   "maxTrap": 80
  },
  {
@@ -674,31 +686,19 @@
     "target": "rope ram-swing"
    },
    {
-    "ammo": "heavy",
-    "angle": -0.28930352216580646,
-    "power": 0.35714285714285715,
-    "target": "rival"
-   },
-   {
     "ammo": "arrow",
-    "angle": -0.17545063226612317,
+    "angle": -0.1780872363954945,
     "power": 0.8214285714285714,
     "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -0.22685450573682778,
-    "power": 0.6071428571428571,
-    "target": "rival head"
-   },
-   {
-    "ammo": "arrow",
-    "angle": -0.3021388925910342,
+    "angle": -0.34886342841841644,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 5.8,
+  "avgShots": 6,
   "maxTrap": 80
  },
  {
@@ -719,12 +719,12 @@
    },
    {
     "ammo": "arrow",
-    "angle": -0.20237500514985535,
-    "power": 0.35714285714285715,
+    "angle": -0.16405863132116377,
+    "power": 0.6071428571428571,
     "target": "rival head"
    }
   ],
-  "avgShots": 5.6,
+  "avgShots": 5.75,
   "maxTrap": 80
  },
  {
@@ -753,13 +753,13 @@
   "solution": [
    {
     "ammo": "bomb",
-    "angle": -0.9766433187054255,
+    "angle": -0.9899530562522186,
     "power": 0.35714285714285715,
-    "target": "rival head"
+    "target": "rival"
    },
    {
     "ammo": "arrow",
-    "angle": -0.3793180405488986,
+    "angle": -0.41292793574234593,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
@@ -805,18 +805,18 @@
   "solution": [
    {
     "ammo": "fire",
-    "angle": -0.5873309167107115,
+    "angle": -0.5617419275318236,
     "power": 0.6071428571428571,
-    "target": "boulder"
+    "target": "boulder-stop"
    },
    {
     "ammo": "arrow",
-    "angle": -0.4347790756274327,
+    "angle": -0.4359512563189303,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 3.5,
+  "avgShots": 2.8,
   "maxTrap": 80
  },
  {
@@ -836,7 +836,7 @@
     "target": "rival head"
    }
   ],
-  "avgShots": 4.5,
+  "avgShots": 4.8,
   "maxTrap": 80
  },
  {
@@ -856,7 +856,7 @@
     "target": "rope rope"
    }
   ],
-  "avgShots": 3.8,
+  "avgShots": 3.6,
   "maxTrap": 80
  },
  {
@@ -882,7 +882,7 @@
     "target": "rival head"
    }
   ],
-  "avgShots": 3.25,
+  "avgShots": 3.3333333333333335,
   "maxTrap": 80
  },
  {
@@ -891,30 +891,36 @@
   "solution": [
    {
     "ammo": "bomb",
-    "angle": -0.6448841660101152,
+    "angle": -0.6489905887037613,
     "power": 0.8214285714285714,
-    "target": "ram"
-   },
-   {
-    "ammo": "arrow",
-    "angle": -0.5981699989419631,
-    "power": 0.6071428571428571,
-    "target": "rope tntRope"
+    "target": "rope ram-swing"
    },
    {
     "ammo": "heavy",
-    "angle": 0.2129807284434333,
-    "power": 1,
-    "target": "tntHang"
+    "angle": -0.19432039985066538,
+    "power": 0.8214285714285714,
+    "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -0.1983927359296747,
-    "power": 0.35714285714285715,
+    "angle": -0.15452371804823772,
+    "power": 1,
     "target": "rival head"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.15110273238333688,
+    "power": 1,
+    "target": "rival head"
+   },
+   {
+    "ammo": "fire",
+    "angle": -0.8822247451348733,
+    "power": 0.35714285714285715,
+    "target": "rope tntRope"
    }
   ],
-  "avgShots": 4.8,
+  "avgShots": 5.333333333333333,
   "maxTrap": 80
  },
  {
@@ -980,19 +986,19 @@
   "rivalHp": 100,
   "solution": [
    {
-    "ammo": "arrow",
-    "angle": -0.5567903113743936,
-    "power": 0.6071428571428571,
+    "ammo": "ice",
+    "angle": -0.43536703032847196,
+    "power": 1,
     "target": "rope rope"
    },
    {
     "ammo": "arrow",
-    "angle": -1.2215106731750478,
+    "angle": -0.37290442237480304,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 2.6,
+  "avgShots": 4.8,
   "maxTrap": 80
  },
  {
@@ -1027,24 +1033,24 @@
   "solution": [
    {
     "ammo": "heavy",
-    "angle": -1.4125597900121862,
-    "power": 0.8214285714285714,
-    "target": "rope swing"
+    "angle": -0.030135133879167653,
+    "power": 1,
+    "target": "sw36-1"
    },
    {
     "ammo": "heavy",
-    "angle": -1.4637426129238666,
+    "angle": -0.14253295351903392,
     "power": 1,
     "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -0.18597886692360724,
-    "power": 0.35714285714285715,
-    "target": "rival head"
+    "angle": -1.3375528357491255,
+    "power": 0.6071428571428571,
+    "target": "rope swing"
    }
   ],
-  "avgShots": 3,
+  "avgShots": 5.666666666666667,
   "maxTrap": 80
  },
  {
@@ -1082,7 +1088,7 @@
     "target": "rival head"
    }
   ],
-  "avgShots": 5,
+  "avgShots": 4.6,
   "maxTrap": 78
  },
  {
@@ -1097,13 +1103,19 @@
    },
    {
     "ammo": "arrow",
-    "angle": -1.4232697876285414,
-    "power": 0.8214285714285714,
+    "angle": -1.4565166751593464,
+    "power": 1,
+    "target": "rival head"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.38610347045962384,
+    "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
   "avgShots": 7.5,
-  "maxTrap": 80
+  "maxTrap": 74
  },
  {
   "id": "frozen-8",
@@ -1149,30 +1161,30 @@
    },
    {
     "ammo": "ice",
-    "angle": -0.5215179210007019,
-    "power": 0.6071428571428571,
-    "target": "block"
+    "angle": -0.7771327725351242,
+    "power": 0.35714285714285715,
+    "target": "rope ram-swing"
    },
    {
     "ammo": "heavy",
-    "angle": -0.14112768312607382,
+    "angle": -0.141863790068757,
     "power": 1,
     "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -0.13970206776813848,
+    "angle": -0.1398166257733691,
     "power": 1,
     "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -0.3642636885156504,
+    "angle": -0.3597793175885007,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 8.5,
+  "avgShots": 7.333333333333333,
   "maxTrap": 80
  },
  {
@@ -1187,19 +1199,13 @@
    },
    {
     "ammo": "heavy",
-    "angle": 0.10042227026383693,
-    "power": 0.8214285714285714,
+    "angle": 0.0014221721102528795,
+    "power": 0.35714285714285715,
     "target": "sw52-1"
-   },
-   {
-    "ammo": "heavy",
-    "angle": -0.15750309592397585,
-    "power": 0.8214285714285714,
-    "target": "rival head"
    }
   ],
-  "avgShots": 4,
-  "maxTrap": 72
+  "avgShots": 4.4,
+  "maxTrap": 80
  },
  {
   "id": "volcano-2",
@@ -1207,13 +1213,13 @@
   "solution": [
    {
     "ammo": "bomb",
-    "angle": -0.3896242380730733,
-    "power": 0.35714285714285715,
+    "angle": -0.23662953863922237,
+    "power": 0.6071428571428571,
     "target": "rival head"
    },
    {
     "ammo": "fire",
-    "angle": -1.2547503992224798,
+    "angle": -1.2518060752317963,
     "power": 0.35714285714285715,
     "target": "tnt"
    }
@@ -1233,12 +1239,12 @@
    },
    {
     "ammo": "bomb",
-    "angle": -1.2449263989136665,
+    "angle": -1.235861983721647,
     "power": 0.35714285714285715,
     "target": "boulder"
    }
   ],
-  "avgShots": 3.75,
+  "avgShots": 3.5,
   "maxTrap": 80
  },
  {
@@ -1253,12 +1259,18 @@
    },
    {
     "ammo": "heavy",
-    "angle": -1.426468296691202,
-    "power": 0.8214285714285714,
+    "angle": -1.4599729358841569,
+    "power": 1,
+    "target": "rival head"
+   },
+   {
+    "ammo": "arrow",
+    "angle": -0.20703357598031738,
+    "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 3.5,
+  "avgShots": 4.75,
   "maxTrap": 80
  },
  {
@@ -1273,24 +1285,18 @@
    },
    {
     "ammo": "arrow",
-    "angle": -1.028990268568887,
-    "power": 0.35714285714285715,
-    "target": "rope ram-hold"
-   },
-   {
-    "ammo": "fire",
-    "angle": -0.2474102534044681,
-    "power": 0.6071428571428571,
-    "target": "ram"
+    "angle": -0.14548227127382612,
+    "power": 1,
+    "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -0.41555114785728914,
+    "angle": -1.044555687939392,
     "power": 0.35714285714285715,
-    "target": "rival head"
+    "target": "rope ram-hold"
    }
   ],
-  "avgShots": 4.6,
+  "avgShots": 4,
   "maxTrap": 62
  },
  {
@@ -1298,13 +1304,13 @@
   "rivalHp": 100,
   "solution": [
    {
-    "ammo": "bomb",
-    "angle": -0.5136171588694998,
-    "power": 0.8214285714285714,
+    "ammo": "arrow",
+    "angle": -0.5844012051454411,
+    "power": 0.6071428571428571,
     "target": "rope rope"
    }
   ],
-  "avgShots": 2.8,
+  "avgShots": 2.4,
   "maxTrap": 80
  },
  {
@@ -1319,12 +1325,12 @@
    },
    {
     "ammo": "arrow",
-    "angle": -0.3588899044320415,
+    "angle": -0.34519208764542625,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 3.5,
+  "avgShots": 9.666666666666666,
   "maxTrap": 80
  },
  {
@@ -1339,50 +1345,19 @@
    },
    {
     "ammo": "arrow",
-    "angle": -0.39065974127748765,
+    "angle": -1.1930724251408587,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 3.4,
+  "avgShots": 2.4,
   "maxTrap": 80
  },
  {
   "id": "volcano-9",
   "rivalHp": 250,
-  "solution": [
-   {
-    "ammo": "bomb",
-    "angle": -0.47610358946233167,
-    "power": 0.6071428571428571,
-    "target": "rock"
-   },
-   {
-    "ammo": "fire",
-    "angle": -0.8798898657339734,
-    "power": 0.35714285714285715,
-    "target": "rope ram-swing"
-   },
-   {
-    "ammo": "heavy",
-    "angle": -0.02636163586540783,
-    "power": 1,
-    "target": "rival head"
-   },
-   {
-    "ammo": "heavy",
-    "angle": -0.0223225255743273,
-    "power": 1,
-    "target": "rival head"
-   },
-   {
-    "ammo": "arrow",
-    "angle": -0.21144900161966418,
-    "power": 0.35714285714285715,
-    "target": "rival head"
-   }
-  ],
-  "avgShots": 7,
+  "solution": null,
+  "avgShots": 6,
   "maxTrap": 80
  }
 ]

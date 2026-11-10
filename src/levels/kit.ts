@@ -270,13 +270,13 @@ export function slopeLog(id: string, ropeId: string, x0: number, x1: number, x2:
  * A ram: a log hanging from `anchor` on its swing rope, pulled aside and held there by a second rope
  * up to the same beam at holdX (nothing stands in the firing line). Cut the hold rope: it swings in.
  */
-export function pendulum(id: string, anchor: V2, len: number, pullAngle: number, holdX: number, groundY = 0, r = 0.7, frame = true): Part {
+export function pendulum(id: string, anchor: V2, len: number, pullAngle: number, holdX: number, groundY = 0, r = 0.7, frame: boolean | number = true): Part {
   const bx = anchor.x - Math.sin(pullAngle) * len;
   const by = anchor.y + Math.cos(pullAngle) * len;
   void groundY;
   const objects: ObjDef[] = [log(id, bx, by, r)];
   // the frame post stands behind the rival's spot, not on it; iron-hard timber (does not burn)
-  const px = Math.max(anchor.x + 3.4, 13.7);
+  const px = typeof frame === 'number' ? frame : Math.max(anchor.x + 3.4, 13.7);
   const x0 = Math.min(holdX, anchor.x) - 0.4;
   if (frame) objects.push({ ...post(px, groundY, groundY - anchor.y + 0.2, 0.4), mat: 'metal' }, box((x0 + px) / 2, anchor.y - 0.1, px - x0 + 0.4, 0.36, 'metal', 'woodPlank', { fixed: true, depth: 0.8 }));
   return {
