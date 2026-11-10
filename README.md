@@ -4,7 +4,7 @@ A turn-based **2.5D physics archery duel**. You and your rival take turns shooti
 behind cover that wears down under the arrows, and the arena is full of traps: cut the rope that holds a
 rock, light a barrel, free a boulder, knock your rival into the lake.
 
-Media: covers and ~18 s trailers in [`submission/`](submission/), the level checker's report in
+Media: covers and ~20 s trailers in [`submission/`](submission/), the level checker's report in
 [`docs/levels-report.md`](docs/levels-report.md), the Phase A preview in [`docs/preview/`](docs/preview/).
 
 ## How it plays

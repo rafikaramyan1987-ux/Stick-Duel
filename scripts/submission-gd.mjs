@@ -35,6 +35,6 @@ if (total > 50 * 1024 * 1024 || statSync(OUT).size > 50 * 1024 * 1024) {
 const kb = (n) => `${(n / 1024).toFixed(0)} KB`;
 console.info(`${OUT}: ${names.join(', ')} (${kb(total)} unpacked, ${kb(statSync(OUT).size)} zipped)`);
 for (const f of ['thumb-512x512', 'thumb-512x384', 'thumb-200x120', 'thumb-1280x720', 'thumb-1280x550']) {
-  if (!existsSync(`submission-gd/thumbnails/${f}.png`)) console.warn(`missing submission-gd/thumbnails/${f}.png`);
+  if (!existsSync(`submission-gd/thumbnails/${f}.jpg`)) console.warn(`missing submission-gd/thumbnails/${f}.jpg`);
 }
 if (!existsSync('submission-gd/README.md')) console.warn('missing submission-gd/README.md');

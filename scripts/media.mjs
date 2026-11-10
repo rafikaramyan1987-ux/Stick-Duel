@@ -117,6 +117,10 @@ async function logo(page, w, h, pos) {
         el.style.left = '50%';
         el.style.bottom = `${h * 0.06}px`;
         el.style.transform = 'translateX(-50%) rotate(-4deg)';
+      } else if (pos === 'top') {
+        el.style.left = '50%';
+        el.style.top = `${h * 0.07}px`;
+        el.style.transform = 'translateX(-50%) rotate(-4deg)';
       } else if (pos === 'icon') {
         el.style.left = '50%';
         el.style.top = '50%';
@@ -151,11 +155,11 @@ async function still(w, h, scale, pos, out) {
 
 // covers: title away from the top-left corner
 await still(1920, 1080, 1, 'right', 'submission/covers/cover-1920x1080.jpg');
-await still(800, 1200, 1, 'bottom', 'submission/covers/cover-800x1200.jpg');
-await still(800, 800, 1, 'bottom', 'submission/covers/cover-800x800.jpg');
+await still(800, 1200, 1, 'top', 'submission/covers/cover-800x1200.jpg');
+await still(800, 800, 1, 'top', 'submission/covers/cover-800x800.jpg');
 // GameDistribution thumbnails
 await still(512, 384, 2, 'right', 'submission-gd/thumbnails/thumb-512x384.jpg');
-await still(512, 512, 2, 'bottom', 'submission-gd/thumbnails/thumb-512x512.jpg');
+await still(512, 512, 2, 'top', 'submission-gd/thumbnails/thumb-512x512.jpg');
 await still(200, 120, 4, 'right', 'submission-gd/thumbnails/thumb-200x120.jpg');
 await still(1280, 720, 1, 'right', 'submission-gd/thumbnails/thumb-1280x720.jpg');
 await still(1280, 550, 1, 'right', 'submission-gd/thumbnails/thumb-1280x550.jpg');
@@ -187,14 +191,14 @@ async function trailer(w, h, out) {
   // 1) first frame = the cover: the hero scene just before the shot, with the title
   let shot = await setup(page, HERO);
   await adv(page, 0.05);
-  await logo(page, w, h, h > w ? 'bottom' : 'right');
+  await logo(page, w, h, h > w ? 'top' : 'right');
   await page.screenshot({ path: join(tmp, `${String(n++).padStart(5, '0')}.png`) });
   await hold(0.4);
   await page.evaluate(() => document.querySelector('.coverlogo')?.remove());
   // 2) the chain reaction, inside the first 3 seconds, and its slow-motion replay
   await page.evaluate((s) => window.__toppleDuel.shoot(s.angle, s.power, s.ammo), shot);
   await until("d.phase === 'replay' || d.phase === 'over'", 6);
-  await hold(3.2);
+  await hold(2.0);
   await page.evaluate(() => window.__toppleDuel.duel.skipReplay());
   // 3) two more levels, each with its winning shot
   for (const id of CLIPS) {
@@ -206,8 +210,8 @@ async function trailer(w, h, out) {
     await page.evaluate(() => window.__toppleDuel.duel.skipReplay());
   }
   // 4) end card: the title over the last scene
-  await logo(page, w, h, h > w ? 'bottom' : 'right');
-  await hold(1.5);
+  await logo(page, w, h, h > w ? 'top' : 'right');
+  await hold(1.1);
   execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-framerate', String(FPS), '-i', join(tmp, '%05d.png'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '21', '-preset', 'slow', '-movflags', '+faststart', out]);
   rmSync(tmp, { recursive: true, force: true });
   console.info(`${out}: ${(n / FPS).toFixed(1)} s`);
