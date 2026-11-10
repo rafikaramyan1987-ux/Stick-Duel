@@ -35,7 +35,8 @@ function platformSdk(platform: PlatformId): Plugin {
 }
 
 // Everything (code, CSS, fonts) is inlined into a single index.html:
-// dist/ (web), dist-crazygames/, dist-gd/, dist-gamepix/.
+// dist/ (web), dist-crazygames/, dist-gd/, dist-gamepix/, and dist-web/ for `--mode web`: the ad-free build for
+// open portals (itch.io, Newgrounds, Y8, Playgama), the web platform without the rewarded-ad offers (src/main.ts).
 export default defineConfig(({ mode }) => {
   const platform = platformFor(mode);
   return {
@@ -44,7 +45,7 @@ export default defineConfig(({ mode }) => {
     define: { 'import.meta.env.VITE_PLATFORM': JSON.stringify(platform) },
     build: {
       target: 'es2020',
-      outDir: platform === 'web' ? 'dist' : `dist-${platform}`,
+      outDir: mode === 'web' ? 'dist-web' : platform === 'web' ? 'dist' : `dist-${platform}`,
       reportCompressedSize: true,
       chunkSizeWarningLimit: 4000,
     },

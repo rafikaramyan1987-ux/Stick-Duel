@@ -15,3 +15,4 @@ coverage/
 !submission/*.zip
 !submission-gd/*.zip
 !submission-gamepix/*.zip
+!submission-web/*.zip
