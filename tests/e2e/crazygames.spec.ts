@@ -62,6 +62,8 @@ test('first visit: straight into level 1, gameplayStart right after loading', as
 });
 
 test('SDK lifecycle: gameplay only during real play, happytime after a boss, Data Module saves', async ({ page }) => {
+  // three levels and a boss on the software GPU: longer than one level
+  test.setTimeout(240_000);
   const external = trackExternal(page, [CG_SDK]);
   await fakeSdk(page);
   await page.goto('/');
