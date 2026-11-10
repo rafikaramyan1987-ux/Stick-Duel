@@ -13,6 +13,11 @@ export function setStorageBackend(s: StorageLike | null): void {
 }
 
 function store(): StorageLike {
+  // Playgama (3.2.1): progress only through Bridge Storage; without Bridge the in-memory copy below is the save
+  if (import.meta.env.VITE_PLATFORM === 'playgama') {
+    if (!backend) throw new Error('no Bridge storage');
+    return backend;
+  }
   return backend ?? window.localStorage;
 }
 

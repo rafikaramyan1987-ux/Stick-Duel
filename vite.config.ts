@@ -1,14 +1,15 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig, type Plugin } from 'vitest/config';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
 const CRAZYGAMES_SDK = 'https://sdk.crazygames.com/crazygames-sdk-v3.js';
 const GAMEPIX_SDK = 'https://integration.gamepix.com/sdk/v3/gamepix.sdk.js';
-const PLATFORMS = ['crazygames', 'gd', 'gamepix', 'web'] as const;
+const PLATFORMS = ['crazygames', 'gd', 'gamepix', 'playgama', 'web'] as const;
 type PlatformId = (typeof PLATFORMS)[number];
 
 /**
- * Build-time platform flag: VITE_PLATFORM=crazygames | gd | gamepix | web, or the build mode
- * (`vite build --mode crazygames` / `--mode gd` / `--mode gamepix`). Anything else is the web build.
+ * Build-time platform flag: VITE_PLATFORM=crazygames | gd | gamepix | playgama | web, or the build mode
+ * (`vite build --mode crazygames` / `--mode gd` / `--mode gamepix` / `--mode playgama`). Anything else is the web build.
  */
 function platformFor(mode: string): PlatformId {
   const v = process.env.VITE_PLATFORM ?? mode;
@@ -34,17 +35,38 @@ function platformSdk(platform: PlatformId): Plugin {
   };
 }
 
+/**
+ * Playgama build: Playgama Bridge 2.4.1 (vendor/playgama-bridge/, the official standalone `playgama` build) as
+ * `./playgama-bridge.js`, the first script in <head>, loaded normally (not async), and `playgama-bridge-config.json`
+ * beside index.html (Bridge loads it from there). The game itself stays inlined in index.html.
+ */
+function playgamaBridge(): Plugin {
+  return {
+    name: 'playgama-bridge',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'pre',
+      handler: () => [{ tag: 'script', attrs: { src: './playgama-bridge.js' }, injectTo: 'head-prepend' }],
+    },
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'playgama-bridge.js', source: readFileSync('vendor/playgama-bridge/playgama-bridge.js') });
+      this.emitFile({ type: 'asset', fileName: 'playgama-bridge-config.json', source: readFileSync('scripts/playgama/playgama-bridge-config.json') });
+    },
+  };
+}
+
 // Everything (code, CSS, fonts) is inlined into a single index.html:
-// dist/ (web), dist-crazygames/, dist-gd/, dist-gamepix/.
+// dist/ (web), dist-crazygames/, dist-gd/, dist-gamepix/, dist-playgama/ (+ the two Bridge files), and dist-web/ for `--mode web`: the ad-free build for
+// open portals (itch.io, Newgrounds, Y8, Playgama), the web platform without the rewarded-ad offers (src/main.ts).
 export default defineConfig(({ mode }) => {
   const platform = platformFor(mode);
   return {
     base: './',
-    plugins: [platformSdk(platform), viteSingleFile()],
+    plugins: [platformSdk(platform), ...(platform === 'playgama' ? [playgamaBridge()] : []), viteSingleFile()],
     define: { 'import.meta.env.VITE_PLATFORM': JSON.stringify(platform) },
     build: {
       target: 'es2020',
-      outDir: platform === 'web' ? 'dist' : `dist-${platform}`,
+      outDir: mode === 'web' ? 'dist-web' : platform === 'web' ? 'dist' : `dist-${platform}`,
       reportCompressedSize: true,
       chunkSizeWarningLimit: 4000,
     },

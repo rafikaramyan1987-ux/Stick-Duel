@@ -272,7 +272,8 @@ export class App {
       if (import.meta.env.VITE_PLATFORM === 'gamepix' && this.adPlaying) return;
       audio.unlock();
       const duel = this.duel;
-      if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+      // Playgama 1.5.2: Esc is left to the browser (exit full screen); P pauses
+      if ((e.key === 'Escape' && import.meta.env.VITE_PLATFORM !== 'playgama') || e.key === 'p' || e.key === 'P') {
         if (this.isPlaying()) this.pause();
         else if (this.paused) this.resume();
         return;
@@ -493,6 +494,8 @@ export class App {
   private prepareDuel(): void {
     const s = this.session;
     if (!s) return;
+    // Playgama: a level left from the pause menu (map / retry) ends there; after a result screen this does nothing
+    if (import.meta.env.VITE_PLATFORM === 'playgama') this.platform.levelEnd?.(false);
     const L = s.L;
     const weapons = [...this.save.weapons];
     if (s.tryWeapon && !weapons.includes(s.tryWeapon)) weapons.push(s.tryWeapon);
@@ -1179,6 +1182,7 @@ export class App {
     this.tracker.stop();
     this.hud.classList.add('hidden');
     const won = duel.winner === 0;
+    if (import.meta.env.VITE_PLATFORM === 'playgama') this.platform.levelEnd?.(won);
     if (s.mode === 'versus') return this.versusResult();
     if (s.mode === 'endless') return this.endlessResult(won);
     const me = duel.fighters[0];

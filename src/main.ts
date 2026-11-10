@@ -3,10 +3,11 @@ import '@fontsource/fredoka/latin-700.css';
 import '@fontsource/fredoka/latin-ext-700.css';
 import './style.css';
 import { loadSave } from './game/save';
-import { NoopPlatform, type AdHooks, type Platform } from './platform/ads';
+import { NoopPlatform, type AdHooks, type AdsUnavailable, type Platform } from './platform/ads';
 import { CrazyGamesPlatform } from './platform/crazygames';
 import { GameDistributionPlatform } from './platform/gamedistribution';
 import { GamePixPlatform } from './platform/gamepix';
+import { PlaygamaPlatform } from './platform/playgama';
 import { setStorageBackend } from './platform/storage';
 import { App } from './ui/app';
 
@@ -15,8 +16,12 @@ import { App } from './ui/app';
  * portals — and their SDK adapters — are dropped from the bundle.
  */
 function createPlatform(hooks: AdHooks): Platform {
+  // `vite build --mode web` (open portals): no ads at all, so the rewarded-ad offers (try a weapon, double coins,
+  // revive) are not shown — instead of being granted for free like on the GitHub Pages / dev web build
+  if (import.meta.env.MODE === 'web') return Object.assign(new NoopPlatform(), { adsUnavailable: (): AdsUnavailable => 'disabled', rewarded: async () => false });
   if (import.meta.env.VITE_PLATFORM === 'gd') return new GameDistributionPlatform(hooks);
   if (import.meta.env.VITE_PLATFORM === 'gamepix') return new GamePixPlatform(hooks);
+  if (import.meta.env.VITE_PLATFORM === 'playgama') return new PlaygamaPlatform(hooks);
   if (import.meta.env.VITE_PLATFORM === 'crazygames') return window.CrazyGames?.SDK ? new CrazyGamesPlatform(hooks) : new NoopPlatform();
   return new NoopPlatform();
 }
@@ -45,8 +50,11 @@ async function boot(): Promise<void> {
   }
   app = new App(root, save, platform);
   if (import.meta.env.VITE_PLATFORM === 'gamepix' && platform instanceof GamePixPlatform) platform.syncPause();
+  if (import.meta.env.VITE_PLATFORM === 'playgama' && platform instanceof PlaygamaPlatform) platform.syncPause();
   app.title();
   platform.loadingStop();
+  // Playgama: game_ready once the boot screen is gone and the title menu takes input
+  if (import.meta.env.VITE_PLATFORM === 'playgama') setTimeout(() => platform.gameReady?.(), 500);
 }
 
 void boot();

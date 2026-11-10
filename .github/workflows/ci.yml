@@ -89,3 +89,50 @@ jobs:
           name: stick-duel-gamepix
           path: submission-gamepix/stick-duel-gamepix-v1.zip
           retention-days: 30
+
+  web:
+    # open portals (itch.io, Newgrounds, Y8, Playgama): the ad-free web build as a zip with index.html at the root
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Web build + zip
+        run: npm run build:web && node scripts/web/zip.mjs ci-web/stick-duel-web.zip
+      - name: Web zip checks (index.html at the root, no crazygames / gamedistribution / gamepix / googlesyndication, no http(s) request at runtime, iframe 640x480 / 960x600 / 1280x720 / 390x844, first level played)
+        run: node scripts/web/check.mjs ci-web/stick-duel-web.zip --shots ci-web/checks
+      - name: Committed zip (submission-web/stick-duel-web-v1.zip) passes the same file checks
+        run: node scripts/web/check.mjs submission-web/stick-duel-web-v1.zip --static
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-zip-checks
+          path: ci-web/
+
+  playgama:
+    # Playgama: the build with Playgama Bridge 2.4.1 (vendor/playgama-bridge/) as a zip with index.html at the root
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Playgama build
+        run: npm run build:playgama
+      - name: Playgama zip checks (index.html at the root, Bridge script referenced first in <head>, pinned Bridge build, no crazygames / gamedistribution / gamepix, Playgama's precheck)
+        run: node scripts/playgama/zip.mjs ci-playgama/stick-duel-playgama.zip && node scripts/playgama/check.mjs ci-playgama/stick-duel-playgama.zip
+      - name: Committed zip (submission-playgama/stick-duel-playgama-v1.zip) passes the same checks
+        run: node scripts/playgama/check.mjs submission-playgama/stick-duel-playgama-v1.zip
+      - name: Bridge test (mock platform + stubbed Playgama SDK; interstitial, rewarded completed / cancelled, muted during ads)
+        run: node scripts/playgama/test.mjs ci-playgama/stick-duel-playgama.zip
+      - name: Vendored Bridge = official v2.4.1 standalone playgama build (rebuilt from the tag)
+        run: bash scripts/playgama/build-bridge.sh

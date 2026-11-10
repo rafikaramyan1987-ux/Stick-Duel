@@ -11,6 +11,8 @@
     "build:crazygames": "tsc --noEmit && vite build --mode crazygames",
     "build:gd": "tsc --noEmit && vite build --mode gd",
     "build:gamepix": "tsc --noEmit && vite build --mode gamepix",
+    "build:web": "tsc --noEmit && vite build --mode web",
+    "build:playgama": "tsc --noEmit && vite build --mode playgama",
     "zip": "node scripts/zip-dist.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -26,7 +28,13 @@
     "submission": "node scripts/submission.mjs",
     "submission:gd": "node scripts/submission-gd.mjs",
     "submission:gamepix": "node scripts/submission-gamepix.mjs",
-    "thumbnails:gd": "node scripts/thumbnails-gd.mjs"
+    "thumbnails:gd": "node scripts/thumbnails-gd.mjs",
+    "submission:web": "npm run build:web && node scripts/web/zip.mjs",
+    "check:web": "node scripts/web/check.mjs",
+    "store:web": "node scripts/web/store.mjs",
+    "submission:playgama": "npm run build:playgama && node scripts/playgama/zip.mjs",
+    "check:playgama": "node scripts/playgama/check.mjs",
+    "test:playgama": "node scripts/playgama/test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

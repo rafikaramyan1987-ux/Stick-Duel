@@ -1,6 +1,7 @@
 node_modules/
 dist/
 dist-*/
+dist-playgama
 *.zip
 test-results/
 playwright-report/
@@ -15,3 +16,5 @@ coverage/
 !submission/*.zip
 !submission-gd/*.zip
 !submission-gamepix/*.zip
+!submission-web/*.zip
+!submission-playgama/*.zip
