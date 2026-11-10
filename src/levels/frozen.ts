@@ -47,9 +47,8 @@ const z4 = level('frozen', 4, { ammo: { ice: 1, heavy: 1 }, ...parts(rampPond(),
 // a moving target: a block of ice swings over the rival
 const z5 = level('frozen', 5, {
   ammo: { ice: 1, heavy: 2 },
-  ...parts(lakeBehind(), cover(...gallows(12.5, 0, 7.4, -0.9)), swinger('swing', { x: 11.6, y: -7.2 }, 3, box(0, 0, 0.9, 0.9, 'ice', 'iceBlock', { hp: 999 }), 2.2, 'rope'), cover(...stoneWall(9.6, 2)), playerCrates(), playerTnt()),
-  rivalTargets: ['pTnt'],
-  rivalAmmo: ['fire'],
+  ...parts(lakeBehind(), cover(...gallows(12.5, 0, 7.4, -0.9)), swinger('swing', { x: 11.6, y: -7.2 }, 3, box(0, 0, 0.9, 0.9, 'ice', 'iceBlock', { hp: 999 }), 2.2, 'rope'), cover(...stoneWall(9.6, 2)), playerCrates(), pCrate),
+  rivalTargets: ['pRope'],
 });
 
 const z6 = level('frozen', 6, { ammo: { ice: 2, heavy: 2 }, ...parts(iceShelf('block', -5.6), pendulum('ram', { x: 10.6, y: -7.4 }, 5, 1.05, 4.9), cover(...shield(10.6)), playerCrates(), pCrate), rivalTargets: ['pRope'] });

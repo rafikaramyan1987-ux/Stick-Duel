@@ -69,10 +69,10 @@ export const sand = (x: number, groundY: number, w: number, h: number, id?: stri
 export const glass = (x: number, y: number, w: number, h = 0.25, id?: string): BoxObj => box(x, y, w, h, 'glass', 'glass', { id, fixed: true, depth: 2 });
 
 export function log(id: string, x: number, y: number, r = 0.7): BallObj {
-  return { id, shape: 'ball', x, y, r, mat: 'wood', look: 'log', hp: 999, depth: 1.6, hurts: 45 };
+  return { id, shape: 'ball', x, y, r, mat: 'wood', look: 'log', hp: 999, depth: 1.6, hurts: 40 };
 }
 export function boulder(id: string, x: number, y: number, r = 0.75): BallObj {
-  return { id, shape: 'ball', x, y, r, mat: 'rock', look: 'boulder', depth: 1.5, hurts: 55 };
+  return { id, shape: 'ball', x, y, r, mat: 'rock', look: 'boulder', depth: 1.5, hurts: 46 };
 }
 
 /** Something hanging on a rope from an anchor; the body is placed `len` below the anchor. */
@@ -83,8 +83,8 @@ export function hang(ropeId: string, anchor: V2, len: number, body: ObjDef, kind
   return { obj, rope: { id: ropeId, anchor, body: id, local: { x: 0, y: -h / 2 }, kind } };
 }
 
-export const rock = (id: string, w = 1, h = 1, hurts = 50): BoxObj => ({ ...box(0, 0, w, h, 'stone', 'stoneBlock', { id, hp: 1e9 }), hurts });
-export const chandelier = (id: string, hurts = 60): BoxObj => ({ ...box(0, 0, 2, 0.5, 'metal', 'chandelier', { id, depth: 1.4 }), hurts });
+export const rock = (id: string, w = 1, h = 1, hurts = 42): BoxObj => ({ ...box(0, 0, w, h, 'stone', 'stoneBlock', { id, hp: 1e9 }), hurts });
+export const chandelier = (id: string, hurts = 48): BoxObj => ({ ...box(0, 0, 2, 0.5, 'metal', 'chandelier', { id, depth: 1.4 }), hurts });
 
 /** A gallows-style frame: a post and a beam on top, to hang things from. */
 export function gallows(x: number, groundY: number, h: number, reach: number): ObjDef[] {
@@ -195,7 +195,7 @@ export function icePillar(id: string, x: number, groundY: number, h: number, loa
 
 /** A chandelier (or log) swinging for ever on a chain from a beam: a moving target. */
 export function swinger(id: string, anchor: V2, len: number, load: ObjDef, speed = 2.2, kind: RopeDef['kind'] = 'chain'): Part {
-  const hg = hang(id, anchor, len, { ...load, id: load.id ?? `${id}-load`, hurts: load.hurts ?? 45 }, kind);
+  const hg = hang(id, anchor, len, { ...load, id: load.id ?? `${id}-load`, hurts: load.hurts ?? 40 }, kind);
   return { objects: [hg.obj], ropes: [{ ...hg.rope, swing: speed }] };
 }
 
@@ -312,7 +312,7 @@ export function ledge(id: string, x0: number, x1: number, y: number, tilt: numbe
   const cx = sx - dir * 1.15;
   const cy = y + tilt * ((cx - x0) / (x1 - x0));
   if (thing === 'boulder') objects.push(boulder(id, cx, cy - 0.78, 0.75));
-  else objects.push({ ...box(cx, cy - 0.55, 1.1, 1.1, 'stone', 'stoneBlock', { id, angle: Math.atan2(tilt, x1 - x0) }), hurts: 55 });
+  else objects.push({ ...box(cx, cy - 0.55, 1.1, 1.1, 'stone', 'stoneBlock', { id, angle: Math.atan2(tilt, x1 - x0) }), hurts: 45 });
   return { terrain: [terrain], objects, ropes: [] };
 }
 

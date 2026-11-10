@@ -2,7 +2,7 @@ import { board, boulder, cover, crate, drop, gallows, level, ledge, log, parts, 
 import type { LevelDef, TerrainDef } from './types';
 
 /**
- * Volcano: lava behind the rival (knocked in: 35 HP and back to the spot), everything wooden burns,
+ * Volcano: lava behind the rival (knocked in: 30 HP and back to the spot), everything wooden burns,
  * swinging loads over the rival, and the sharpest rivals.
  */
 const D = 'dark' as const;

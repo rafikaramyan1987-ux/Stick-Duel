@@ -21,7 +21,7 @@ Media: covers and ~18 s trailers in [`submission/`](submission/), the level chec
 - **Traps** (ropes holding rocks, logs or chandeliers, explosive barrels, logs on slopes, ice pillars,
   boulders behind a stopper, swinging rams) do 40–80 damage, but need a small target, two steps or the
   right ammo. **A trap never does more than 80 in one shot**, so it can never K.O. a full-HP fighter on its
-  own. Falling into water, lava or out of the arena costs 35 HP and puts you back on your spot.
+  own. Falling into water, lava or out of the arena costs 30 HP and puts you back on your spot.
 - **The rival** plays by the same rules: it shoots at you and through your cover, and from world 2 on it
   also shoots the traps on your side. Its accuracy grows by world and by level.
 - **Ammo:** normal arrows are unlimited; special ammo is limited per level and unlocks over time: fire

@@ -45,7 +45,7 @@ export const ZONE_DAMAGE: Record<HitZone, number> = { head: 35, body: 20, limb: 
 /** The most damage the environment can do to one fighter during one shot: a trap never K.O.s a full-HP fighter. */
 export const TRAP_CAP = 80;
 /** Falling out of the arena, into lava or into deep water: this much damage, then back to the start spot. */
-export const HAZARD_DAMAGE = 35;
+export const HAZARD_DAMAGE = 30;
 /** Things that fall or blow up hurt fighters by mass and speed, scaled so a big trap lands at 40–80. */
 export const TRAP_SCALE = 0.6;
 
@@ -787,7 +787,7 @@ export class Sim {
       const d = Math.hypot(tp.x - x, tp.y - y);
       if (d > r + 0.4) continue;
       const k = clamp(1 - d / (r + 0.4), 0, 1);
-      this.hurt(f.side, (30 + 80 * k) * hurt * TRAP_SCALE, tp, false);
+      this.hurt(f.side, (30 + 60 * k) * hurt * TRAP_SCALE, tp, false);
       f.rag.hit(1.4);
       for (const p of f.rag.parts) {
         const pp = p.body.getPosition();
