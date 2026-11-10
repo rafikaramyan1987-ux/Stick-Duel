@@ -1,115 +1,120 @@
-import type { WorldId } from '../game/worlds';
+import type { WorldId } from '../levels/types';
 
+/** One bright palette per world (matches the Kenney kits' warm, soft look). */
 export interface Theme {
-  sky: [string, string, string];
-  sun: { color: string; glow: string; x: number; y: number; r: number } | null;
-  far: string;
-  farTop: string;
-  mid: string;
-  midTop: string;
-  near: string;
-  nearTop: string;
-  haze: string;
-  outline: string;
-  /** Platform colours: top surface, body light, body dark. */
-  top: string;
-  body: string;
-  bodyDark: string;
-  accent: string;
-  floor: string;
-  floorDark: string;
-  ambient: 'leaves' | 'embers' | 'clouds' | 'sand' | 'snow' | 'ash';
+  skyTop: number;
+  skyBottom: number;
+  fog: number;
+  fogNear: number;
+  fogFar: number;
+  sun: number;
+  sunIntensity: number;
+  hemiSky: number;
+  hemiGround: number;
+  /** Terrain top surface and sides. */
+  top: Record<'grass' | 'stone' | 'sand' | 'snow' | 'dark', number>;
+  side: number;
+  sideDark: number;
+  /** Ground plane stretching into the distance. */
+  far: number;
+  hills: number[];
 }
-
-export const OUTLINE = '#1e1a2b';
 
 export const THEMES: Record<WorldId, Theme> = {
   forest: {
-    sky: ['#7fd1f0', '#b8ecf5', '#e9f7d7'],
-    sun: { color: '#fff8d6', glow: 'rgba(255,248,200,0.55)', x: 0.78, y: 0.16, r: 0.06 },
-    far: '#8cc7b0', farTop: '#a6d8c0',
-    mid: '#4f9e63', midTop: '#66b873',
-    near: '#2f6e45', nearTop: '#3c8452',
-    haze: 'rgba(220,245,230,0.35)',
-    outline: OUTLINE,
-    top: '#6cc24a', body: '#8a5a3b', bodyDark: '#5e3b27', accent: '#a7e05a',
-    floor: '#3f8a46', floorDark: '#2b6233',
-    ambient: 'leaves',
+    skyTop: 0x5fb8ff,
+    skyBottom: 0xdff4ff,
+    fog: 0xcfeefc,
+    fogNear: 30,
+    fogFar: 95,
+    sun: 0xfff1d6,
+    sunIntensity: 2.4,
+    hemiSky: 0xd9f0ff,
+    hemiGround: 0x7a9a55,
+    top: { grass: 0x7dd54f, stone: 0xb9b3a8, sand: 0xf2d38a, snow: 0xf4fbff, dark: 0x5b5048 },
+    side: 0xb87c4c,
+    sideDark: 0x8e5a35,
+    far: 0x8fd35c,
+    hills: [0x86cf5d, 0x6fbf55, 0x5aa94e],
   },
   castle: {
-    sky: ['#3b3a78', '#c0628a', '#ffb877'],
-    sun: { color: '#ffd38a', glow: 'rgba(255,170,110,0.55)', x: 0.25, y: 0.55, r: 0.09 },
-    far: '#6b4f86', farTop: '#7d5d98',
-    mid: '#4a3a66', midTop: '#5a4878',
-    near: '#2c2440', nearTop: '#3a3052',
-    haze: 'rgba(255,190,150,0.25)',
-    outline: OUTLINE,
-    top: '#b9b2a6', body: '#9a9387', bodyDark: '#6e685f', accent: '#d8473f',
-    floor: '#5c7a3e', floorDark: '#425a2c',
-    ambient: 'embers',
+    skyTop: 0x76a8ff,
+    skyBottom: 0xffe8cc,
+    fog: 0xf6e3cf,
+    fogNear: 30,
+    fogFar: 95,
+    sun: 0xffe2b8,
+    sunIntensity: 2.4,
+    hemiSky: 0xe7e6ff,
+    hemiGround: 0x9a8670,
+    top: { grass: 0x86cf5a, stone: 0xd9c4a4, sand: 0xf2d38a, snow: 0xf4fbff, dark: 0x5b5048 },
+    side: 0xb79c7c,
+    sideDark: 0x8f765b,
+    far: 0x9bcf6a,
+    hills: [0x9ccc6c, 0x86ba60, 0x74a85a],
   },
   mountains: {
-    sky: ['#2f8fe0', '#7cc4f2', '#dff2ff'],
-    sun: { color: '#ffffff', glow: 'rgba(255,255,255,0.6)', x: 0.2, y: 0.14, r: 0.05 },
-    far: '#a9c6e8', farTop: '#f4f9ff',
-    mid: '#6f86a8', midTop: '#e8f0fa',
-    near: '#3d5470', nearTop: '#4c6685',
-    haze: 'rgba(235,245,255,0.5)',
-    outline: OUTLINE,
-    top: '#8fa36a', body: '#8c8579', bodyDark: '#5f5a52', accent: '#e9eef5',
-    floor: '#cfe2f5', floorDark: '#9bb6d4',
-    ambient: 'clouds',
+    skyTop: 0x6aa8f0,
+    skyBottom: 0xe6f0ff,
+    fog: 0xdbe7f5,
+    fogNear: 30,
+    fogFar: 100,
+    sun: 0xfff4e0,
+    sunIntensity: 2.3,
+    hemiSky: 0xdfeaff,
+    hemiGround: 0x7d8a90,
+    top: { grass: 0x8ccf5e, stone: 0xb7b8bd, sand: 0xf2d38a, snow: 0xf4fbff, dark: 0x5b5048 },
+    side: 0x9a8f88,
+    sideDark: 0x766c66,
+    far: 0x9ccf74,
+    hills: [0xa3acb8, 0x8e98a6, 0x7b8595],
   },
   desert: {
-    sky: ['#f6a64a', '#ffd27a', '#fff0c4'],
-    sun: { color: '#fffbe8', glow: 'rgba(255,240,180,0.7)', x: 0.7, y: 0.24, r: 0.1 },
-    far: '#e8b77e', farTop: '#f2c891',
-    mid: '#d7924f', midTop: '#e6a660',
-    near: '#b9713a', nearTop: '#c98248',
-    haze: 'rgba(255,230,180,0.35)',
-    outline: OUTLINE,
-    top: '#f5cf7d', body: '#e3ab5c', bodyDark: '#b97c3a', accent: '#4f9e55',
-    floor: '#e6b062', floorDark: '#c48a44',
-    ambient: 'sand',
+    skyTop: 0x4fb0ff,
+    skyBottom: 0xffeab8,
+    fog: 0xffe6bd,
+    fogNear: 28,
+    fogFar: 90,
+    sun: 0xfff0c8,
+    sunIntensity: 2.6,
+    hemiSky: 0xfff3dc,
+    hemiGround: 0xc49a5c,
+    top: { grass: 0x9ccf5a, stone: 0xd8a476, sand: 0xf5d08a, snow: 0xf4fbff, dark: 0x5b5048 },
+    side: 0xe0a862,
+    sideDark: 0xbf8546,
+    far: 0xf4cc85,
+    hills: [0xf2c27a, 0xe8b06a, 0xd99c5c],
   },
-  snow: {
-    sky: ['#0f1b45', '#28407a', '#6b86c2'],
-    sun: { color: '#f4f6ff', glow: 'rgba(200,220,255,0.45)', x: 0.82, y: 0.15, r: 0.045 },
-    far: '#5a6fa6', farTop: '#c8d6f5',
-    mid: '#3e5288', midTop: '#e6eeff',
-    near: '#283a6a', nearTop: '#f2f6ff',
-    haze: 'rgba(170,200,255,0.25)',
-    outline: '#16223f',
-    top: '#f7fbff', body: '#9fd8f5', bodyDark: '#5fa9d6', accent: '#e9f6ff',
-    floor: '#8fc6e6', floorDark: '#5d94bd',
-    ambient: 'snow',
+  frozen: {
+    skyTop: 0x7fbfff,
+    skyBottom: 0xeaf7ff,
+    fog: 0xe4f3ff,
+    fogNear: 30,
+    fogFar: 95,
+    sun: 0xf4f8ff,
+    sunIntensity: 2.2,
+    hemiSky: 0xeaf6ff,
+    hemiGround: 0x9ab4c8,
+    top: { grass: 0x8ccf5e, stone: 0xb7c2cc, sand: 0xf2d38a, snow: 0xf6fcff, dark: 0x5b5048 },
+    side: 0x9fb6c9,
+    sideDark: 0x7d96ab,
+    far: 0xf0f8ff,
+    hills: [0xdcecf8, 0xc8deef, 0xb3cfe6],
   },
   volcano: {
-    sky: ['#1d0f1f', '#5a1e2a', '#c4482e'],
-    sun: null,
-    far: '#4a2330', farTop: '#5c2c38',
-    mid: '#2e1820', midTop: '#3a1f27',
-    near: '#1a1014', nearTop: '#25161b',
-    haze: 'rgba(255,120,60,0.18)',
-    outline: '#130b0e',
-    top: '#4a3b3d', body: '#3a2e31', bodyDark: '#241c1e', accent: '#ff7a2a',
-    floor: '#ff6a1f', floorDark: '#c6361a',
-    ambient: 'ash',
+    skyTop: 0x7a5a8a,
+    skyBottom: 0xffb27a,
+    fog: 0xe8a07a,
+    fogNear: 28,
+    fogFar: 85,
+    sun: 0xffc89a,
+    sunIntensity: 2.2,
+    hemiSky: 0xffd2b0,
+    hemiGround: 0x5a3b33,
+    top: { grass: 0x7aa04a, stone: 0x6d5a52, sand: 0xc9a06a, snow: 0xf4fbff, dark: 0x4a3b36 },
+    side: 0x5e4740,
+    sideDark: 0x47342f,
+    far: 0x6a4f45,
+    hills: [0x6b4c48, 0x583d3b, 0x47302f],
   },
-};
-
-/** Player shirt/limb colours. */
-export const HERO_COLORS: Record<string, string> = {
-  blue: '#3d7bff',
-  red: '#ff4d4d',
-  green: '#3cc46a',
-  purple: '#9b5cff',
-  orange: '#ff9a2e',
-  pink: '#ff6fb5',
-  black: '#3a3a48',
-  gold: '#ffc83d',
-  teal: '#2ec4b6',
-  lime: '#a3e635',
-  navy: '#2c3e8f',
-  rainbow: '#ff4d4d',
 };

@@ -1,14 +1,14 @@
 // Checks the GamePix upload zip (CI): index.html at the zip root, the GamePix SDK v3 referenced
 // as an external <script src>, no CrazyGames / GameDistribution code or strings, and no http(s)
 // URL other than the GamePix SDK. The only other URL-shaped string allowed is the SVG XML
-// namespace identifier (http://www.w3.org/2000/svg), which is never requested nor shown.
+// namespace identifier (http://www.w3.org/2000/svg, http://www.w3.org/1999/xhtml), which is never requested nor shown.
 // Usage: node scripts/check-gamepix-zip.mjs [zip=submission-gamepix/stick-duel-gamepix-v1.zip]
 import { readFileSync, statSync } from 'node:fs';
 import { strFromU8, unzipSync } from 'fflate';
 
 const ZIP = process.argv[2] ?? 'submission-gamepix/stick-duel-gamepix-v1.zip';
 const SDK = 'https://integration.gamepix.com/sdk/v3/gamepix.sdk.js';
-const NOT_A_LINK = new Set(['http://www.w3.org/2000/svg']);
+const NOT_A_LINK = new Set(['http://www.w3.org/2000/svg', 'http://www.w3.org/1999/xhtml']);
 const fail = (msg) => {
   console.error(`✗ ${msg}`);
   process.exitCode = 1;

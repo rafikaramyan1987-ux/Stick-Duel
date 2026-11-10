@@ -1,13 +1,13 @@
 // Packs a build folder into a zip with index.html at the zip root (CrazyGames and
 // GameDistribution both expect that).
-// Usage: node scripts/zip-dist.mjs [dir=dist-crazygames] [out=stick-duel-crazygames.zip]
+// Usage: node scripts/zip-dist.mjs [dir=dist-crazygames] [out=topple-duel-crazygames.zip]
 // (npm run build:crazygames && npm run zip)
 import { readdirSync, readFileSync, statSync, writeFileSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { zipSync } from 'fflate';
 
 const dist = process.argv[2] ?? 'dist-crazygames';
-const out = process.argv[3] ?? 'stick-duel-crazygames.zip';
+const out = process.argv[3] ?? 'topple-duel-crazygames.zip';
 if (!existsSync(join(dist, 'index.html'))) {
   console.error(`${dist}/index.html not found — run a build first.`);
   process.exit(1);

@@ -21,13 +21,14 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
+      - name: Unit tests (physics, levels solvable with an environmental shot, AI, i18n keys, platform adapters)
+        run: npm test
       - name: Build web, CrazyGames and GameDistribution
         run: |
           npm run build
           npm run build:crazygames
           npm run build:gd
-      - name: Build self-check (single file, size, no external links, no other portal's SDK)
+      - name: Build self-check (single file, < 8 MB, no external links, no other portal's SDK)
         run: |
           node scripts/check-build.mjs web
           node scripts/check-build.mjs crazygames
@@ -45,16 +46,21 @@ jobs:
       - name: Build CrazyGames and GameDistribution zips
         run: |
           npm run zip
-          node scripts/zip-dist.mjs dist-gd stick-duel-gd.zip
+          node scripts/zip-dist.mjs dist-gd topple-duel-gd.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: stick-duel-crazygames
-          path: stick-duel-crazygames.zip
+          name: topple-duel-web
+          path: dist/index.html
           retention-days: 30
       - uses: actions/upload-artifact@v4
         with:
-          name: stick-duel-gd
-          path: stick-duel-gd.zip
+          name: topple-duel-crazygames
+          path: topple-duel-crazygames.zip
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: topple-duel-gd
+          path: topple-duel-gd.zip
           retention-days: 30
 
   gamepix:
@@ -72,8 +78,8 @@ jobs:
         run: node scripts/check-build.mjs gamepix
       - name: Pack and check the GamePix zip (index.html at the root, gamepix.sdk.js, no other portal, no other URL)
         run: |
-          node scripts/submission-gamepix.mjs
-          node scripts/check-gamepix-zip.mjs submission-gamepix/stick-duel-gamepix-v1.zip
+          node scripts/zip-dist.mjs dist-gamepix topple-duel-gamepix.zip
+          node scripts/check-gamepix-zip.mjs topple-duel-gamepix.zip
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Playwright e2e (GamePix build, mock SDK; desktop + phone portrait)
@@ -86,6 +92,6 @@ jobs:
           retention-days: 7
       - uses: actions/upload-artifact@v4
         with:
-          name: stick-duel-gamepix
-          path: submission-gamepix/stick-duel-gamepix-v1.zip
+          name: topple-duel-gamepix
+          path: topple-duel-gamepix.zip
           retention-days: 30
