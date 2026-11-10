@@ -34,7 +34,10 @@ export interface GPXSDK {
     loaded(): Promise<unknown>;
     gameStart(): void;
   };
-  events: { on(name: 'pause' | 'resume', fn: () => void): void };
+  events: { on(name: 'pause' | 'resume' | 'soundOff' | 'soundOn', fn: () => void): void };
+  /** Legacy SDK callbacks: the game defines them and the SDK calls them. */
+  soundOff?: () => void;
+  soundOn?: () => void;
   ads: {
     interstitial(): Promise<GPXAdResult>;
     reward(): Promise<GPXAdResult>;
@@ -55,7 +58,7 @@ type AdKind = 'interstitial' | 'reward';
  * Languages the game has (type-checked against src/i18n DICTS). A type-only import, so this module
  * does not change the module order of the other builds.
  */
-const GAME_LANGS: Record<LangCode, true> = { en: true, fr: true };
+const GAME_LANGS: Record<LangCode, true> = { en: true, fr: true, de: true, it: true, es: true, pt: true, nl: true, pl: true, tr: true, ru: true };
 
 export class GamePixPlatform implements Platform {
   readonly name = 'gamepix';
@@ -72,6 +75,9 @@ export class GamePixPlatform implements Platform {
   private paused = false;
   /** An SDK ad promise is outstanding (never two ads at once). */
   private busy = false;
+  /** The SDK asked for silence (soundOff … soundOn): independent of pause, the game stays muted. */
+  private soundOff = false;
+  private muteListeners: Array<(muted: boolean) => void> = [];
   /** The request being waited for: set to started when the SDK pauses the game for it. */
   private pending: { started: boolean } | null = null;
 
@@ -102,6 +108,19 @@ export class GamePixPlatform implements Platform {
       sdk.events.on('resume', () => this.setSdkPaused(false));
     } catch (err) {
       console.warn('[GamePix] events.on failed', err);
+    }
+    try {
+      sdk.events.on('soundOff', () => this.setSoundOff(true));
+      sdk.events.on('soundOn', () => this.setSoundOff(false));
+    } catch (err) {
+      console.warn('[GamePix] sound events not supported', err);
+    }
+    // legacy fallback: older SDKs call GamePix.soundOff() / GamePix.soundOn() defined by the game
+    try {
+      sdk.soundOff = () => this.setSoundOff(true);
+      sdk.soundOn = () => this.setSoundOff(false);
+    } catch {
+      /* read-only SDK object */
     }
   }
 
@@ -295,8 +314,24 @@ export class GamePixPlatform implements Platform {
   storage(): StorageLike | null {
     return null;
   }
-  platformMuted(): boolean {
-    return false;
+  /** Idempotent: repeated soundOff / soundOn calls change nothing. */
+  private setSoundOff(off: boolean): void {
+    if (this.soundOff === off) return;
+    this.soundOff = off;
+    for (const cb of this.muteListeners) {
+      try {
+        cb(off);
+      } catch (err) {
+        console.warn('[GamePix] mute listener failed', err);
+      }
+    }
   }
-  onPlatformMuteChange(): void {}
+
+  /** Muted by the GamePix sound setting (pauses and ads mute through onAdPause on top of this). */
+  platformMuted(): boolean {
+    return this.soundOff;
+  }
+  onPlatformMuteChange(cb: (muted: boolean) => void): void {
+    this.muteListeners.push(cb);
+  }
 }

@@ -1,11 +1,11 @@
-// Packs the GameDistribution build for upload: submission-gd/stick-duel-gd-v1.zip with
+// Packs the GameDistribution build for upload: submission-gd/topple-duel-gd-v1.zip with
 // index.html at the ROOT of the zip (GD requirement), under 50 MB.
 // Usage: npm run build:gd && npm run submission:gd   (thumbnails: npm run thumbnails:gd)
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { unzipSync, zipSync } from 'fflate';
 
 const DIR = 'dist-gd';
-const OUT = 'submission-gd/stick-duel-gd-v1.zip';
+const OUT = 'submission-gd/topple-duel-gd-v1.zip';
 const html = readFileSync(`${DIR}/index.html`);
 const text = html.toString('utf8');
 if (!text.includes('html5.api.gamedistribution.com/main.min.js') || !text.includes('f09f3bd24a744eefb2580b8c8f977edc')) {
@@ -35,6 +35,6 @@ if (total > 50 * 1024 * 1024 || statSync(OUT).size > 50 * 1024 * 1024) {
 const kb = (n) => `${(n / 1024).toFixed(0)} KB`;
 console.info(`${OUT}: ${names.join(', ')} (${kb(total)} unpacked, ${kb(statSync(OUT).size)} zipped)`);
 for (const f of ['thumb-512x512', 'thumb-512x384', 'thumb-200x120', 'thumb-1280x720', 'thumb-1280x550']) {
-  if (!existsSync(`submission-gd/thumbnails/${f}.png`)) console.warn(`missing submission-gd/thumbnails/${f}.png`);
+  if (!existsSync(`submission-gd/thumbnails/${f}.jpg`)) console.warn(`missing submission-gd/thumbnails/${f}.jpg`);
 }
 if (!existsSync('submission-gd/README.md')) console.warn('missing submission-gd/README.md');

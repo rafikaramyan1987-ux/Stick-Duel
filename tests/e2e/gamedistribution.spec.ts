@@ -80,7 +80,7 @@ test('loads the GD SDK once while booting, pre-roll on Play, mid-roll between le
 
   // mid-roll on Next
   await page.locator('#next').click();
-  await expect(page.locator('.lvname')).toContainText('Grand Hall');
+  await expect(page.locator('.lvname')).toContainText('Forest 2');
   expect((await log(page)).slice(before)).toEqual(['showAd:interstitial', 'SDK_GAME_PAUSE', 'STARTED', 'SDK_GAME_START']);
 
   // progress saved in localStorage

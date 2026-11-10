@@ -24,7 +24,8 @@
     "submission:gd": "node scripts/submission-gd.mjs",
     "submission:gamepix": "node scripts/submission-gamepix.mjs",
     "assets": "node scripts/pack-assets.mjs",
-    "preview:media": "node scripts/preview.mjs"
+    "levels:check": "vitest run -c vitest.levels.config.ts tests/levels/forest.test.ts tests/levels/castle.test.ts tests/levels/mountains.test.ts tests/levels/desert.test.ts tests/levels/frozen.test.ts tests/levels/volcano.test.ts; node scripts/levels-report.mjs",
+    "media": "node scripts/media.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

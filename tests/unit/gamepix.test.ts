@@ -9,7 +9,7 @@ type AdBehaviour = 'success' | 'fail' | 'throw' | 'reject' | 'never' | 'stuck' |
 
 function fakeSdk(opts: { ad?: AdBehaviour; reward?: AdBehaviour; lang?: string; loaded?: 'ok' | 'never' } = {}) {
   const calls: string[] = [];
-  const handlers: Record<string, Array<() => void>> = { pause: [], resume: [] };
+  const handlers: Record<string, Array<() => void>> = { pause: [], resume: [], soundOff: [], soundOn: [] };
   const docListeners: Array<() => void> = [];
   const doc = {
     hidden: false,
@@ -18,7 +18,7 @@ function fakeSdk(opts: { ad?: AdBehaviour; reward?: AdBehaviour; lang?: string; 
     },
     querySelector: () => null,
   };
-  const emit = (name: 'pause' | 'resume') => handlers[name]!.forEach((fn) => fn());
+  const emit = (name: 'pause' | 'resume' | 'soundOff' | 'soundOn') => handlers[name]!.forEach((fn) => fn());
   const run = (kind: string, b: AdBehaviour): Promise<GPXAdResult> => {
     calls.push(`ad:${kind}`);
     if (b === 'throw') throw new Error('sdk exploded');
@@ -177,6 +177,8 @@ describe('GamePix SDK v3 adapter', () => {
     expect(calls.filter((c) => /happy|sad/.test(c))).toEqual(['happy:boss_defeated', 'happy:level_complete', 'sad:level_failed']);
     expect(p.locale()).toBe('fr');
     fakeSdk({ lang: 'de' });
+    expect((await ready()).locale()).toBe('de');
+    fakeSdk({ lang: 'ja' });
     const q = await ready();
     expect(q.locale()).toBe('en'); // not translated: English
     expect(q.storage()).toBeNull();
@@ -196,5 +198,59 @@ describe('GamePix SDK v3 adapter', () => {
     expect(await p.rewarded()).toBe(false);
     expect(p.adsUnavailable()).toBe('disabled');
     expect(p.locale()).toBeNull();
+  });
+
+  it('soundOff / soundOn (events): idempotent, independent of pause, overlapping with an ad', async () => {
+    const { emit } = fakeSdk({ ad: 'success' });
+    const pauses: boolean[] = [];
+    const p = await ready({ onAdPause: (x) => pauses.push(x) });
+    const mutes: boolean[] = [];
+    p.onPlatformMuteChange((m) => mutes.push(m));
+    expect(p.platformMuted()).toBe(false);
+    emit('soundOff');
+    emit('soundOff');
+    expect(p.platformMuted()).toBe(true);
+    expect(mutes).toEqual([true]); // only one change for two calls
+    // a pause (ad) while the sound is off: the game pauses, and stays muted after the resume
+    vi.useFakeTimers();
+    const ad = p.midgame();
+    await vi.advanceTimersByTimeAsync(200);
+    await ad;
+    expect(pauses).toEqual([true, false]);
+    expect(p.platformMuted()).toBe(true);
+    // pause again, sound back on during the pause: unmute is reported, the pause still holds
+    emit('pause');
+    emit('soundOn');
+    emit('soundOn');
+    expect(mutes).toEqual([true, false]);
+    expect(pauses.at(-1)).toBe(true);
+    emit('resume');
+    expect(pauses.at(-1)).toBe(false);
+    expect(p.platformMuted()).toBe(false);
+  });
+
+  it('legacy GamePix.soundOff() / GamePix.soundOn() callbacks work too', async () => {
+    const { sdk } = fakeSdk();
+    const p = await ready();
+    const legacy = sdk as unknown as { soundOff?: () => void; soundOn?: () => void };
+    expect(typeof legacy.soundOff).toBe('function');
+    legacy.soundOff!();
+    expect(p.platformMuted()).toBe(true);
+    legacy.soundOff!();
+    legacy.soundOn!();
+    expect(p.platformMuted()).toBe(false);
+  });
+
+  it('overlapping pause sources: SDK pause and hidden page; the game resumes only when both are over', async () => {
+    const { emit, setHidden } = fakeSdk();
+    const pauses: boolean[] = [];
+    await ready({ onAdPause: (x) => pauses.push(x) });
+    emit('pause');
+    setHidden(true);
+    emit('pause');
+    emit('resume'); // still hidden
+    expect(pauses).toEqual([true]);
+    setHidden(false);
+    expect(pauses).toEqual([true, false]);
   });
 });

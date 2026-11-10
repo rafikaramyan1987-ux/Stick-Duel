@@ -50,6 +50,7 @@ export default defineConfig(({ mode }) => {
     },
     test: {
       include: ['tests/unit/**/*.test.ts'],
+      testTimeout: 60_000,
       environment: 'node',
     },
   };

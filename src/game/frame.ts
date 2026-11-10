@@ -12,6 +12,7 @@ export interface FrameEnt {
   burning: boolean;
   fuse: boolean;
   charred: boolean;
+  frozen: boolean;
 }
 export interface PartState {
   x: number;
@@ -24,6 +25,8 @@ export interface Frame {
   ropes: Array<{ id: string; kind: 'rope' | 'chain'; ax: number; ay: number; bx: number; by: number; cut: boolean }>;
   arrows: Array<{ id: number; ammo: AmmoId; x: number; y: number; a: number }>;
   stuck: Array<{ id: number; ammo: AmmoId; x: number; y: number; a: number }>;
+  /** Frozen state of each water pool (same order as the level's pools). */
+  water: boolean[];
 }
 
 export function captureFrame(sim: Sim): Frame {
@@ -31,7 +34,7 @@ export function captureFrame(sim: Sim): Frame {
   for (const e of sim.ents) {
     if (e.dead) continue;
     const p = e.body.getPosition();
-    ents.push({ id: e.id, desc: e.desc, x: p.x, y: p.y, a: e.body.getAngle(), burning: e.burning >= 0, fuse: e.fuse >= 0, charred: e.charred });
+    ents.push({ id: e.id, desc: e.desc, x: p.x, y: p.y, a: e.body.getAngle(), burning: e.burning >= 0, fuse: e.fuse >= 0, charred: e.charred, frozen: e.frozen });
   }
   const parts = sim.fighters.map((f) => {
     const r = {} as Record<PartName, PartState>;
@@ -60,6 +63,6 @@ export function captureFrame(sim: Sim): Frame {
       stuck.push({ id: s.id, ammo: s.ammo, x: w.x, y: w.y, a: s.angle + host.getAngle() });
     } else stuck.push({ id: s.id, ammo: s.ammo, x: s.local.x, y: s.local.y, a: s.angle });
   }
-  return { ents, parts, ropes, arrows, stuck };
+  return { ents, parts, ropes, arrows, stuck, water: sim.water.map((w) => w.frozen) };
 }
 

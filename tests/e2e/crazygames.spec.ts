@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { APP, RETURNING, SAVE_KEY, trackExternal, winCurrentLevel } from './helpers';
+import { APP, RETURNING, SAVE_KEY, loseCurrentLevel, trackExternal, winCurrentLevel } from './helpers';
 
 /**
  * CrazyGames SDK v3 checklist, end to end, on the real CrazyGames build (dist-crazygames/),
@@ -61,7 +61,9 @@ test('first visit: straight into level 1, gameplayStart right after loading', as
   expect(await calls(page)).toEqual(['init', 'loadingStart', 'loadingStop', 'gameplayStart']);
 });
 
-test('SDK lifecycle: gameplay only during real play, happytime after the last level, Data Module saves', async ({ page }) => {
+test('SDK lifecycle: gameplay only during real play, happytime after a boss, Data Module saves', async ({ page }) => {
+  // three levels and a boss on the software GPU: longer than one level
+  test.setTimeout(240_000);
   const external = trackExternal(page, [CG_SDK]);
   await fakeSdk(page);
   await page.goto('/');
@@ -95,6 +97,10 @@ test('SDK lifecycle: gameplay only during real play, happytime after the last le
       expect(after.slice(0, 1)).toEqual(['ad:midgame']);
     }
   }
+  expect(await calls(page)).not.toContain('happytime'); // ordinary levels: no happytime
+  // the forest boss: happytime when he is beaten
+  await page.evaluate(`(() => { const a = ${APP}; a.throttle.last = Date.now(); a.play(8); })()`);
+  await winCurrentLevel(page);
   const c = await calls(page);
   expect(c).toContain('happytime');
   // starts and stops are balanced, never twice in a row
@@ -105,7 +111,7 @@ test('SDK lifecycle: gameplay only during real play, happytime after the last le
 
   // progress is saved in the Data Module, not in localStorage
   const saved = await page.evaluate((k) => (window as unknown as { __cgData: Map<string, string> }).__cgData.get(k), SAVE_KEY);
-  expect(saved).toContain('"desert-1"');
+  expect(saved).toContain('"forest-9"');
   expect(await page.evaluate((k) => localStorage.getItem(k), SAVE_KEY)).toBeNull();
   expect(external).toEqual([]);
 });
@@ -160,4 +166,29 @@ test('rewarded ad finished: one extra fire arrow, offer gone for this level', as
   await expect(page.locator('#ad-fire')).toHaveCount(0);
   await expect(page.locator('.ab.a-fire .cnt')).toHaveText('1');
   expect(await page.evaluate(`${APP}.duel.selected`)).toBe('fire');
+});
+
+test('rewarded on the win screen: double coins, only after the ad finished', async ({ page }) => {
+  await fakeSdk(page, { ad: 'finish' });
+  await page.goto('/');
+  await page.locator('#play').click();
+  await winCurrentLevel(page);
+  const before = (await page.evaluate(`${APP}.save.coins`)) as number;
+  await expect(page.locator('#ad-double .t')).toHaveText('Watch an ad: double coins');
+  await page.locator('#ad-double').click();
+  await expect(page.locator('#ad-double')).toHaveCount(0);
+  expect(await page.evaluate(`${APP}.save.coins`)).toBe(before * 2);
+});
+
+test('rewarded on defeat: continue with 1 HP, once per level', async ({ page }) => {
+  await fakeSdk(page, { ad: 'finish' });
+  await page.goto('/');
+  await page.locator('#play').click();
+  await loseCurrentLevel(page);
+  await page.locator('#ad-continue').click();
+  await expect(page.locator('.hud')).toBeVisible();
+  await page.waitForFunction(`${APP}.duel.phase === 'aim'`);
+  expect(await page.evaluate(`${APP}.duel.playerHp`)).toBe(1);
+  await loseCurrentLevel(page);
+  await expect(page.locator('#ad-continue')).toHaveCount(0); // once per level
 });

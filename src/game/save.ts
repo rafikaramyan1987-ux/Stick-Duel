@@ -22,10 +22,17 @@ export interface SaveData {
   lang: LangCode | null;
   /** Last level played (Continue). */
   last: string | null;
+  /** Cosmetics owned and worn. */
+  hats: string[];
+  colors: string[];
+  hat: string;
+  color: string;
+  /** Endless mode best score (rivals toppled in a row). */
+  endlessBest: number;
 }
 
 export function freshSave(): SaveData {
-  return { v: 1, levels: {}, coins: 0, tutorial: false, hints: [], music: true, sfx: true, lang: null, last: null };
+  return { v: 1, levels: {}, coins: 0, tutorial: false, hints: [], music: true, sfx: true, lang: null, last: null, hats: ['headband', 'none'], colors: ['blue'], hat: 'headband', color: 'blue', endlessBest: 0 };
 }
 
 export function sanitize(raw: unknown): SaveData {
@@ -45,6 +52,12 @@ export function sanitize(raw: unknown): SaveData {
   s.sfx = r.sfx !== false;
   s.lang = typeof r.lang === 'string' ? (r.lang as LangCode) : null;
   s.last = typeof r.last === 'string' ? r.last : null;
+  const strs = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
+  s.hats = [...new Set([...s.hats, ...strs(r.hats)])];
+  s.colors = [...new Set([...s.colors, ...strs(r.colors)])];
+  if (typeof r.hat === 'string' && s.hats.includes(r.hat)) s.hat = r.hat;
+  if (typeof r.color === 'string' && s.colors.includes(r.color)) s.color = r.color;
+  s.endlessBest = Number.isFinite(r.endlessBest) && (r.endlessBest as number) > 0 ? Math.floor(r.endlessBest as number) : 0;
   return s;
 }
 

@@ -27,6 +27,8 @@ export class Stage {
   insetTop = 0;
   insetBottom = 0;
   readonly fov = 30;
+  /** Width-limited framing: the camera looks almost straight ahead so the horizon sits low. */
+  private lowHorizon = false;
 
   constructor(readonly canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: false });
@@ -86,10 +88,18 @@ export class Stage {
     const h = y1 - y0;
     // half height of the visible area needed to fit both dimensions
     const halfH = Math.max(h / 2 / usable, w / 2 / aspect);
-    // shift the centre so the box sits between the insets
-    const offset = ((this.insetTop - this.insetBottom) / this.height) * halfH;
     this.tx = (x0 + x1) / 2;
-    this.ty = -(y0 + y1) / 2 + offset;
+    if (h / 2 / usable < w / 2 / aspect) {
+      // width-limited (phone in portrait): sit the box on the bottom inset, sky and scenery above
+      const f = (this.height - this.insetBottom) / this.height;
+      this.ty = -y1 - (1 - 2 * f) * halfH;
+      this.lowHorizon = true;
+    } else {
+      // shift the centre so the box sits between the insets
+      const offset = ((this.insetTop - this.insetBottom) / this.height) * halfH;
+      this.ty = -(y0 + y1) / 2 + offset;
+      this.lowHorizon = false;
+    }
     this.tHalfH = halfH;
     if (instant) {
       this.cx = this.tx;
@@ -122,7 +132,7 @@ export class Stage {
       fog.near = dist + 8;
       fog.far = dist + 75;
     }
-    const lift = this.halfH * 0.22;
+    const lift = this.halfH * (this.lowHorizon ? 0.06 : 0.22);
     this.camera.position.set(this.cx + sx, this.cy + lift + sy, dist);
     this.camera.lookAt(this.cx + sx * 0.5, this.cy + sy * 0.5, 0);
     // the sun follows the camera so shadows stay sharp where we look

@@ -14,7 +14,7 @@ import { Ragdoll, STAND, type PartName } from './ragdoll';
  */
 export const DT = 1 / 60;
 export const GRAVITY = 10;
-export const FIGHTER_SCALE = 0.85;
+export const FIGHTER_SCALE = 1.35;
 export const MIN_SPEED = 7;
 export const MAX_SPEED = 21;
 
@@ -22,7 +22,7 @@ export type Side = 0 | 1;
 
 export interface AmmoDef {
   id: AmmoId;
-  /** Damage of a direct hit on a fighter (small on purpose: the environment does the real work). */
+  /** Multiplier on the zone damage of a direct hit (head 35, body 20, arm/leg 10 at full speed). */
   direct: number;
   /** Push impulse per (m/s) of arrow speed. */
   push: number;
@@ -32,12 +32,30 @@ export interface AmmoDef {
 }
 
 export const AMMO: Record<AmmoId, AmmoDef> = {
-  arrow: { id: 'arrow', direct: 6, push: 0.22, crack: 6, radius: 0.05 },
-  fire: { id: 'fire', direct: 7, push: 0.18, crack: 4, radius: 0.05 },
-  heavy: { id: 'heavy', direct: 10, push: 1.3, crack: 55, radius: 0.08 },
-  ice: { id: 'ice', direct: 6, push: 0.2, crack: 4, radius: 0.05 },
+  arrow: { id: 'arrow', direct: 1, push: 0.22, crack: 22, radius: 0.05 },
+  fire: { id: 'fire', direct: 0.9, push: 0.18, crack: 12, radius: 0.05 },
+  heavy: { id: 'heavy', direct: 1.25, push: 1.3, crack: 55, radius: 0.08 },
+  ice: { id: 'ice', direct: 0.9, push: 0.2, crack: 12, radius: 0.05 },
   bomb: { id: 'bomb', direct: 0, push: 0, crack: 0, radius: 0.16 },
 };
+
+export type HitZone = 'head' | 'body' | 'limb';
+/** Damage of a direct hit at full speed, by zone. */
+export const ZONE_DAMAGE: Record<HitZone, number> = { head: 35, body: 20, limb: 10 };
+/** The most damage the environment can do to one fighter during one shot: a trap never K.O.s a full-HP fighter. */
+export const TRAP_CAP = 80;
+/** Falling out of the arena, into lava or into deep water: this much damage, then back to the start spot. */
+export const HAZARD_DAMAGE = 30;
+/** Things that fall or blow up hurt fighters by mass and speed, scaled so a big trap lands at 40–80. */
+export const TRAP_SCALE = 0.6;
+/** Environment damage to a fighter after the first hit of the same shot counts this much. */
+export const TRAP_FOLLOW_UP = 0.35;
+/** Environment hits closer together than this (seconds) are one trap moment. */
+export const TRAP_WINDOW = 6;
+
+export const zoneOf = (part: PartName): HitZone => (part === 'head' ? 'head' : part === 'torso' ? 'body' : 'limb');
+/** Slow arrows hurt less: 50 % at the slowest, 100 % from about 85 % power. */
+export const speedFactor = (speed: number): number => clamp(0.3 + (0.7 * speed) / (MAX_SPEED * 0.92), 0.5, 1);
 
 export interface EntDesc {
   shape: 'box' | 'ball';
@@ -66,6 +84,23 @@ export interface Ent {
   dead: boolean;
   /** Charred (burnt chunks look dark). */
   charred: boolean;
+  /** Hit by an ice arrow: slippery (and looks frosted). */
+  frozen: boolean;
+  /** Seconds spent in lava. */
+  inLava: number;
+  /** Swings for ever on its rope (a moving target); does not keep the turn from ending. */
+  swinging?: boolean;
+  /** A trap load: the damage it does to a fighter on a solid hit (by design, 40–80). */
+  hurts?: number;
+}
+
+/** A water pool at runtime. */
+export interface WaterState {
+  x0: number;
+  x1: number;
+  y: number;
+  depth: number;
+  frozen: boolean;
 }
 
 export interface Rope {
@@ -106,10 +141,15 @@ export type SimEvent =
   | { t: 'ropeCut'; id: string; x: number; y: number }
   | { t: 'ignite'; x: number; y: number }
   | { t: 'explode'; x: number; y: number; r: number }
-  | { t: 'damage'; side: Side; amount: number; x: number; y: number; direct: boolean; hp: number }
+  | { t: 'damage'; side: Side; amount: number; x: number; y: number; direct: boolean; hp: number; zone?: HitZone }
+  | { t: 'respawn'; side: Side; x: number; y: number }
   | { t: 'ko'; side: Side; x: number; y: number }
   | { t: 'stick'; x: number; y: number; sound: string; ammo: AmmoId }
-  | { t: 'fall'; x: number; y: number };
+  | { t: 'fall'; x: number; y: number }
+  | { t: 'splash'; x: number; y: number; big: boolean }
+  | { t: 'freeze'; x: number; y: number; w: number }
+  | { t: 'frost'; x: number; y: number }
+  | { t: 'lava'; x: number; y: number };
 
 export interface Fighter {
   side: Side;
@@ -137,6 +177,11 @@ export interface ShotStats {
   /** Damage the shooter did to themself. */
   self: number;
   kill: boolean;
+  /** The K.O. came from the environment (a trap), not from the arrow itself. */
+  trapKill: boolean;
+  /** Largest trap moment per fighter during this shot (capped at TRAP_CAP). */
+  envTo: [number, number];
+  heads: number;
 }
 
 interface BodyTag {
@@ -171,18 +216,107 @@ export class Sim {
   stats: ShotStats | null = null;
   /** Seconds everything has been at rest. */
   quiet = 0;
-  private nextId = 1;
+  readonly water: WaterState[];
+  readonly wind: number;
+  nextId = 1;
   private readonly anchor: Body;
   private pendingHits: PendingHit[] = [];
   private breakQueue = new Set<Ent>();
-  private explodeQueue: Array<{ x: number; y: number; r: number; power: number }> = [];
+  private explodeQueue: Array<{ x: number; y: number; r: number; power: number; hurt: number }> = [];
   private impactCooldown = new Map<number, number>();
+
+  /**
+   * A copy of the world at rest (between turns), for the rival AI and the level checker to try shots
+   * without touching the real game. Contact warm-starting is not copied, so a clone can drift a tiny
+   * bit from the original: anything the checker finds is verified again from scratch.
+   */
+  clone(): Sim {
+    const c = new Sim(this.level, 1);
+    c.rng.state = this.rng.state;
+    c.time = this.time;
+    c.steps = this.steps;
+    c.quiet = this.quiet;
+    c.damageOn = this.damageOn;
+    c.stats = this.stats ? { ...this.stats, envTo: [...this.stats.envTo] } : null;
+    c.envSum = [...this.envSum];
+    c.envAt = [...this.envAt];
+    c.trapCap = this.trapCap;
+    c.impactCooldown = new Map(this.impactCooldown);
+    const src = new Map(this.ents.filter((e) => !e.dead).map((e) => [e.id, e]));
+    for (const e of c.ents.slice()) if (!src.has(e.id)) c.removeEnt(e);
+    const have = new Set(c.ents.filter((e) => !e.dead).map((e) => e.id));
+    for (const e of src.values()) {
+      if (have.has(e.id)) continue;
+      const d = e.desc;
+      const n = c.addObj(
+        { shape: d.shape, x: 0, y: 0, w: d.w, h: d.h, r: d.r, mat: d.mat, look: d.look, depth: d.depth, fixed: d.fixed } as ObjDef,
+        d.chunk,
+        e.charred,
+      );
+      n.id = e.id;
+    }
+    const byId = new Map(c.ents.filter((e) => !e.dead).map((e) => [e.id, e]));
+    for (const e of src.values()) {
+      const n = byId.get(e.id)!;
+      n.body.setTransform(e.body.getPosition(), e.body.getAngle());
+      n.body.setLinearVelocity(e.body.getLinearVelocity());
+      n.body.setAngularVelocity(e.body.getAngularVelocity());
+      n.body.setAwake(e.body.isAwake());
+      n.hp = e.hp;
+      n.burning = e.burning;
+      n.fuse = e.fuse;
+      n.age = e.age;
+      n.charred = e.charred;
+      n.inLava = e.inLava;
+      n.name = e.name;
+      if (e.frozen) {
+        n.frozen = true;
+        for (let f = n.body.getFixtureList(); f; f = f.getNext()) f.setFriction(0.02);
+      }
+    }
+    c.nextId = this.nextId;
+    this.ropes.forEach((r, i) => {
+      const cr = c.ropes[i]!;
+      if (!r.joint && cr.joint) {
+        c.world.destroyJoint(cr.joint);
+        cr.joint = null;
+        cr.cutAt = r.cutAt;
+      }
+    });
+    this.water.forEach((w, i) => (c.water[i]!.frozen = w.frozen));
+    this.fighters.forEach((f, i) => {
+      const g = c.fighters[i]!;
+      g.hp = f.hp;
+      g.maxHp = f.maxHp;
+      g.alive = f.alive;
+      g.aim = f.aim;
+      g.lastHit = new Map(f.lastHit);
+      const r = f.rag;
+      const q = g.rag;
+      q.state = r.state;
+      q.strength = r.strength;
+      q.stateTime = r.stateTime;
+      q.pose = { ...r.pose };
+      q.footY = r.footY;
+      r.parts.forEach((p, k) => {
+        const b = q.parts[k]!.body;
+        b.setTransform(p.body.getPosition(), p.body.getAngle());
+        b.setLinearVelocity(p.body.getLinearVelocity());
+        b.setAngularVelocity(p.body.getAngularVelocity());
+        b.setAwake(true);
+      });
+    });
+    c.events.length = 0;
+    return c;
+  }
 
   constructor(
     readonly level: LevelDef,
     seed = 1,
   ) {
     this.rng = new Rng(seed);
+    this.water = (level.water ?? []).map((w) => ({ ...w, frozen: false }));
+    this.wind = level.wind ?? 0;
     this.world = new World({ gravity: { x: 0, y: GRAVITY }, allowSleep: true });
     this.anchor = this.world.createBody({ type: 'static' });
     this.anchor.setUserData({ kind: 'anchor' } satisfies BodyTag);
@@ -233,7 +367,7 @@ export class Sim {
       fixed: !!o.fixed,
       chunk,
     };
-    const ent: Ent = { id: this.nextId++, name: o.id, desc, body, hp: o.hp ?? mat.hp ?? Infinity, burning: -1, fuse: -1, age: 0, dead: false, charred };
+    const ent: Ent = { id: this.nextId++, name: o.id, desc, body, hp: o.hp ?? mat.hp ?? Infinity, burning: -1, fuse: -1, age: 0, dead: false, charred, frozen: false, inLava: 0, hurts: chunk ? undefined : o.hurts };
     body.setUserData({ kind: 'ent', ent } satisfies BodyTag);
     this.ents.push(ent);
     return ent;
@@ -249,6 +383,17 @@ export class Sim {
       new RopeJoint({ maxLength: len, localAnchorA: r.anchor, localAnchorB: local, collideConnected: false, bodyA: this.anchor, bodyB: ent.body }),
     );
     this.ropes.push({ id: r.id, def: r, joint, ent, local, cutAt: -1 });
+    if (r.swing) {
+      // a moving target: no damping, pushed sideways once
+      ent.swinging = true;
+      ent.body.setAngularDamping(0.3);
+      ent.body.setLinearDamping(0);
+      ent.body.setLinearVelocity({ x: r.swing, y: 0 });
+      return;
+    }
+    // a hanging load comes to rest instead of swinging for ever (normal damping once it is cut)
+    ent.body.setAngularDamping(2);
+    ent.body.setLinearDamping(0.4);
   }
 
   entByName(name: string): Ent | undefined {
@@ -277,7 +422,8 @@ export class Sim {
     return MIN_SPEED + (MAX_SPEED - MIN_SPEED) * clamp(power, 0, 1);
   }
 
-  fire(side: Side, angle: number, power: number, ammo: AmmoId): Arrow {
+  /** `volley`: an extra arrow of the same turn (a boss volley): the shot's stats go on. */
+  fire(side: Side, angle: number, power: number, ammo: AmmoId, volley = false): Arrow {
     const p = this.muzzle(side, angle);
     const speed = Sim.speedFor(power);
     const def = AMMO[ammo];
@@ -287,7 +433,9 @@ export class Sim {
     const arrow: Arrow = { id: this.nextId++, ammo, side, body, prev: { ...p }, age: 0, alive: true };
     body.setUserData({ kind: 'arrow', arrow } satisfies BodyTag);
     this.arrows.push(arrow);
-    this.stats = { side, ropes: 0, breaks: 0, explosions: 0, ignites: 0, direct: 0, env: 0, self: 0, kill: false };
+    if (!volley || !this.stats) {
+      this.stats = { side, ropes: 0, breaks: 0, explosions: 0, ignites: 0, direct: 0, env: 0, self: 0, kill: false, trapKill: false, envTo: [0, 0], heads: 0 };
+    }
     this.events.push({ t: 'shot', side, ammo, x: p.x, y: p.y, angle, power });
     // recoil pose: arm stays pointing for a moment
     this.fighters[side].aim = angle;
@@ -298,7 +446,7 @@ export class Sim {
   previewPath(side: Side, angle: number, power: number, seconds: number): Vec[] {
     const p = this.muzzle(side, angle);
     const speed = Sim.speedFor(power);
-    const vx = Math.cos(angle) * speed;
+    let vx = Math.cos(angle) * speed;
     let vy = Math.sin(angle) * speed;
     let x = p.x;
     let y = p.y;
@@ -306,6 +454,7 @@ export class Sim {
     const n = Math.round(seconds / DT);
     for (let i = 0; i < n; i++) {
       vy += GRAVITY * DT;
+      vx += this.wind * DT;
       x += vx * DT;
       y += vy * DT;
       if (i % 3 === 2) out.push({ x, y });
@@ -366,8 +515,10 @@ export class Sim {
         if (ta.kind !== 'part' || tb.kind !== 'part') this.events.push({ t: 'impact', x: p.x, y: p.y, sound: snd, strength });
       }
     }
-    if (ta.kind === 'part') this.fighterImpact(ta.side!, bb, tb, vn, p);
-    if (tb.kind === 'part') this.fighterImpact(tb.side!, ba, ta, vn, p);
+    // things hurt by their own speed (a fighter flopping onto a resting crate is not hit by it)
+    const own = (v: Vec) => Math.abs(v.x * n.x + v.y * n.y);
+    if (ta.kind === 'part') this.fighterImpact(ta.side!, bb, tb, vn, p, own(vb));
+    if (tb.kind === 'part') this.fighterImpact(tb.side!, ba, ta, vn, p, own(va));
   }
 
   private idOf(b: Body): number {
@@ -378,7 +529,7 @@ export class Sim {
   }
 
   /** Damage from things hitting a fighter: grows with the mass and the impact speed. */
-  private fighterImpact(side: Side, other: Body, ot: BodyTag, vn: number, p: Vec): void {
+  private fighterImpact(side: Side, other: Body, ot: BodyTag, vn: number, p: Vec, vOther: number): void {
     const f = this.fighters[side];
     if (!f.alive) return;
     if (ot.kind === 'part' && ot.side === side) return;
@@ -386,18 +537,23 @@ export class Sim {
     let key: number;
     if (other.isStatic() || ot.kind === 'terrain' || ot.kind === 'anchor' || ot.ent?.desc.fixed) {
       // falling onto the ground
-      if (vn > 7.5) dmg = (vn - 7.5) * 5;
+      if (vn > 7.5) dmg = (vn - 7.5) * 5 * TRAP_SCALE;
       key = -1;
     } else if (ot.kind === 'part') {
       return;
     } else {
       const m = Math.min(other.getMass(), 60);
-      if (vn > 2) dmg = 6.5 * Math.sqrt(m) * Math.pow(vn - 2, 1.3);
+      const v = Math.min(vn, vOther);
+      const hurts = ot.ent?.hurts;
+      // a trap load does its designed damage on a solid hit (less when it only bumps you)
+      if (hurts) dmg = v > 1.5 ? hurts * clamp((v - 1.5) / 3.5, 0.3, 1) : 0;
+      else if (v > 2) dmg = 6.5 * Math.sqrt(m) * Math.pow(v - 2, 1.3) * TRAP_SCALE;
       key = ot.ent?.id ?? 0;
     }
     if (dmg < 3) return;
+    // the same body hurts the same fighter at most once every 2.5 s (no damage from resting on you)
     const last = f.lastHit.get(key) ?? -9;
-    if (this.time - last < 0.45) return;
+    if (this.time - last < 2.5) return;
     f.lastHit.set(key, this.time);
     this.hurt(side, dmg, p, false);
     if (dmg > 6) f.rag.hit(clamp(dmg / 40, 0.5, 1.5));
@@ -427,20 +583,55 @@ export class Sim {
   /* Damage, breaking, fire, explosions                                  */
   /* ------------------------------------------------------------------ */
 
-  hurt(side: Side, amount: number, p: Vec, direct: boolean): void {
+  hurt(side: Side, amount: number, p: Vec, direct: boolean, zone?: HitZone): void {
     const f = this.fighters[side];
     if (!f.alive || !this.damageOn) return;
-    const dmg = Math.round(amount);
+    let dmg = Math.round(amount);
+    const st = this.stats;
+    // traps: one "trap moment" per fighter = environment hits less than TRAP_WINDOW s apart (even
+    // across turns). Its first hit counts in full, what piles up after it (the fall, debris, fire,
+    // lava) counts TRAP_FOLLOW_UP, and the whole moment never does more than TRAP_CAP.
+    if (!direct) {
+      if (this.time - this.envAt[side] > TRAP_WINDOW) this.envSum[side] = 0;
+      const used = this.envSum[side];
+      if (used > 0) dmg = Math.round(dmg * TRAP_FOLLOW_UP);
+      dmg = Math.max(0, Math.min(dmg, this.trapCap - used));
+      this.envSum[side] += dmg;
+      this.envAt[side] = this.time;
+      if (st) st.envTo[side] = Math.max(st.envTo[side], this.envSum[side]);
+    }
     if (dmg <= 0) return;
     f.hp = Math.max(0, f.hp - dmg);
-    const st = this.stats;
     if (st) {
       if (side === st.side) st.self += dmg;
       else if (direct) st.direct += dmg;
       else st.env += dmg;
+      if (zone === 'head' && side !== st.side) st.heads++;
     }
-    this.events.push({ t: 'damage', side, amount: dmg, x: p.x, y: p.y, direct, hp: f.hp });
-    if (f.hp <= 0) this.knockOut(side);
+    this.events.push({ t: 'damage', side, amount: dmg, x: p.x, y: p.y, direct, hp: f.hp, zone });
+    if (f.hp <= 0) {
+      if (st && st.side !== side && !direct) st.trapKill = true;
+      this.knockOut(side);
+    }
+  }
+
+  /** The trap cap (tools raise it to measure raw trap damage). */
+  trapCap = TRAP_CAP;
+  /** Environment damage outside any shot (between turns), with the same cap. */
+  private envSum: [number, number] = [0, 0];
+  private envAt: [number, number] = [-99, -99];
+  resetTrapCap(): void {
+    this.envSum = [0, 0];
+  }
+
+  /** A fighter that fell out, into lava or water: damage, then back on their start spot. */
+  private hazard(f: Fighter, p: Vec): void {
+    this.hurt(f.side, HAZARD_DAMAGE, p, false);
+    if (!f.alive) return;
+    const def = f.side === 0 ? this.level.player : this.level.rival;
+    f.rag.placeAt(def.x, def.y);
+    f.rag.hit(0.6);
+    this.events.push({ t: 'respawn', side: f.side, x: def.x, y: def.y });
   }
 
   private knockOut(side: Side): void {
@@ -505,6 +696,11 @@ export class Sim {
     r.joint = null;
     r.cutAt = this.time;
     r.ent.body.setAwake(true);
+    if (!this.ropes.some((o) => o !== r && o.joint && o.ent === r.ent)) {
+      r.ent.swinging = false;
+      r.ent.body.setAngularDamping(r.ent.desc.shape === 'ball' ? 0.4 : 0.15);
+      r.ent.body.setLinearDamping(0.02);
+    }
     const [a, b] = this.ropeEnds(r);
     if (count && this.stats) this.stats.ropes++;
     this.events.push({ t: 'ropeCut', id: r.id, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
@@ -530,11 +726,47 @@ export class Sim {
     this.events.push({ t: 'ignite', x: p.x, y: p.y });
   }
 
-  explode(x: number, y: number, r = 2.6, power = 26): void {
-    this.explodeQueue.push({ x, y, r, power });
+  /** Ice arrow: the body becomes slippery and stops burning. */
+  frost(e: Ent): void {
+    if (e.dead) return;
+    e.burning = -1;
+    if (!MATERIALS[e.desc.mat].explosive) e.fuse = -1;
+    if (!e.frozen) {
+      e.frozen = true;
+      for (let f = e.body.getFixtureList(); f; f = f.getNext()) f.setFriction(0.02);
+      // contacts keep their mixed friction: refresh them
+      for (let ce = e.body.getContactList(); ce; ce = ce.next ?? null) ce.contact.resetFriction();
+      e.body.setAwake(true);
+      const p = e.body.getPosition();
+      this.events.push({ t: 'frost', x: p.x, y: p.y });
+    }
   }
 
-  private doExplode(x: number, y: number, r: number, power: number): void {
+  /** Freezes a water pool into a thick, slippery ice platform. */
+  freezeWater(w: WaterState): void {
+    if (w.frozen) return;
+    w.frozen = true;
+    const ice = this.addObj({ shape: 'box', x: (w.x0 + w.x1) / 2, y: w.y + 0.25, w: w.x1 - w.x0 + 0.1, h: 0.5, mat: 'ice', fixed: true, look: 'iceBlock', depth: 3, hp: 1e9 });
+    ice.frozen = true;
+    for (let f = ice.body.getFixtureList(); f; f = f.getNext()) f.setFriction(0.03);
+    if (this.stats) this.stats.ignites++;
+    this.events.push({ t: 'freeze', x: (w.x0 + w.x1) / 2, y: w.y, w: w.x1 - w.x0 });
+  }
+
+  private waterAt(x: number, y: number): WaterState | undefined {
+    return this.water.find((w) => !w.frozen && x >= w.x0 && x <= w.x1 && y >= w.y && y <= w.y + w.depth + 1);
+  }
+
+  private lavaAt(x: number, y: number): boolean {
+    return (this.level.lava ?? []).some((l) => x >= l.x0 && x <= l.x1 && y >= l.y);
+  }
+
+  /** `hurt` scales the damage to fighters (TNT 1, bombs much less: they are for structures). */
+  explode(x: number, y: number, r = 2.6, power = 26, hurt = 1): void {
+    this.explodeQueue.push({ x, y, r, power, hurt });
+  }
+
+  private doExplode(x: number, y: number, r: number, power: number, hurt = 1): void {
     if (this.stats) this.stats.explosions++;
     this.events.push({ t: 'explode', x, y, r });
     for (const e of this.ents) {
@@ -552,7 +784,8 @@ export class Sim {
         e.body.applyAngularImpulse(this.rng.range(-1, 1) * k * e.body.getInertia() * 6, true);
       }
       if (m.explosive) {
-        if (e.fuse < 0 || e.fuse > 0.2) e.fuse = 0.18;
+        // TNT sets off its neighbours; a bomb only a barrel it lands right next to
+        if ((hurt >= 1 || k > 0.45) && (e.fuse < 0 || e.fuse > 0.2)) e.fuse = 0.18;
       } else if (Number.isFinite(e.hp) && !e.desc.chunk) {
         e.hp -= 70 * k;
         if (e.hp <= 0) this.breakQueue.add(e);
@@ -564,12 +797,13 @@ export class Sim {
       const d = Math.hypot(tp.x - x, tp.y - y);
       if (d > r + 0.4) continue;
       const k = clamp(1 - d / (r + 0.4), 0, 1);
-      this.hurt(f.side, 30 + 80 * k, tp, false);
+      this.hurt(f.side, (30 + 60 * k) * hurt * TRAP_SCALE, tp, false);
       f.rag.hit(1.4);
       for (const p of f.rag.parts) {
         const pp = p.body.getPosition();
         const dl = Math.hypot(pp.x - x, pp.y - y) || 1;
-        const s = power * 0.09 * k * p.body.getMass() * 4;
+        // bombs (hurt < 1) shove much less than TNT
+        const s = power * 0.09 * k * p.body.getMass() * 4 * Math.min(1, hurt * 1.5);
         p.body.applyLinearImpulse({ x: ((pp.x - x) / dl) * s, y: ((pp.y - y) / dl - 0.6) * s }, pp, true);
       }
     }
@@ -592,7 +826,7 @@ export class Sim {
     const ot = tag(h.other);
     this.world.destroyBody(a.body);
     if (a.ammo === 'bomb') {
-      this.explode(h.point.x, h.point.y, 2.3, 24);
+      this.explode(h.point.x, h.point.y, 2.3, 16, 0.3);
       return;
     }
     let sound: string;
@@ -607,6 +841,7 @@ export class Sim {
         h.other.applyLinearImpulse({ x: (vel.x / speed) * j, y: (vel.y / speed) * j }, h.point, true);
       }
       if (a.ammo === 'fire') this.ignite(e);
+      if (a.ammo === 'ice') this.frost(e);
       if (m.explosive && a.ammo === 'heavy') e.fuse = Math.min(e.fuse < 0 ? 9 : e.fuse, 0.08);
       if (Number.isFinite(e.hp) && !m.explosive && !e.desc.chunk) {
         const crack = a.ammo === 'heavy' && e.desc.mat === 'stone' ? 70 : def.crack;
@@ -617,10 +852,12 @@ export class Sim {
     } else if (ot.kind === 'part' && ot.side !== undefined) {
       const f = this.fighters[ot.side];
       sound = 'punch';
-      const j = def.push * speed * 0.6;
+      const zone = zoneOf(ot.part!);
+      // a jolt, not a launch (the flinch comes from the ragdoll going limp)
+      const j = def.push * speed * (zone === 'head' ? 0.18 : 0.3);
       h.other.applyLinearImpulse({ x: (vel.x / speed) * j, y: (vel.y / speed) * j }, h.point, true);
-      this.hurt(ot.side, def.direct * (ot.part === 'head' ? 1.5 : 1), h.point, true);
-      if (f.alive) f.rag.hit(0.35);
+      this.hurt(ot.side, ZONE_DAMAGE[zone] * def.direct * speedFactor(speed), h.point, true, zone);
+      if (f.alive) f.rag.hit(zone === 'head' ? 0.75 : zone === 'body' ? 0.55 : 0.35);
       if (a.ammo === 'fire') this.events.push({ t: 'ignite', x: h.point.x, y: h.point.y });
       part = { side: ot.side, name: ot.part! };
     } else {
@@ -656,14 +893,49 @@ export class Sim {
       }
       f.rag.update(DT);
     }
+    if (this.wind !== 0) for (const a of this.arrows) if (a.alive) a.body.applyForceToCenter({ x: this.wind * a.body.getMass(), y: 0 }, true);
+    // water drags and floats things a little; lava burns and swallows them
+    for (const e of this.ents) {
+      if (e.dead || e.desc.fixed) continue;
+      const p = e.body.getPosition();
+      if (this.water.length && this.waterAt(p.x, p.y)) {
+        const v = e.body.getLinearVelocity();
+        const m = e.body.getMass();
+        e.body.applyForceToCenter({ x: -v.x * m * 3, y: -v.y * m * 3 - m * GRAVITY * 0.55 }, true);
+        if (e.burning >= 0) e.burning = -1;
+      }
+      if (this.level.lava && this.lavaAt(p.x, p.y + e.desc.h * 0.3)) {
+        const v = e.body.getLinearVelocity();
+        const m = e.body.getMass();
+        e.body.applyForceToCenter({ x: -v.x * m * 4, y: -v.y * m * 4 - m * GRAVITY * 0.7 }, true);
+        if (e.inLava === 0) this.events.push({ t: 'lava', x: p.x, y: p.y });
+        e.inLava += DT;
+        if (MATERIALS[e.desc.mat].flammable) this.ignite(e);
+      }
+    }
     this.world.step(DT, 8, 3);
     this.time += DT;
     this.steps++;
 
-    // arrows: rope cutting, lifetime
+    // arrows: wind, water, rope cutting, lifetime
     for (const a of this.arrows) {
       if (!a.alive) continue;
       const p = a.body.getPosition();
+      const pool = this.waterAt(p.x, p.y);
+      if (pool) {
+        a.alive = false;
+        this.world.destroyBody(a.body);
+        if (a.ammo === 'ice') this.freezeWater(pool);
+        else if (a.ammo === 'bomb') this.explode(p.x, pool.y, 2.3, 16, 0.3);
+        this.events.push({ t: 'splash', x: p.x, y: pool.y, big: false });
+        continue;
+      }
+      if (this.lavaAt(p.x, p.y)) {
+        a.alive = false;
+        this.world.destroyBody(a.body);
+        this.events.push({ t: 'lava', x: p.x, y: p.y });
+        continue;
+      }
       for (const r of this.ropes) {
         if (!r.joint) continue;
         const [ra, rb] = this.ropeEnds(r);
@@ -672,7 +944,7 @@ export class Sim {
           if (a.ammo === 'bomb') {
             a.alive = false;
             this.world.destroyBody(a.body);
-            this.explode(p.x, p.y, 2.3, 24);
+            this.explode(p.x, p.y, 2.3, 16, 0.3);
           }
         }
       }
@@ -719,6 +991,10 @@ export class Sim {
           else this.breakQueue.add(e);
         }
       }
+      if (e.inLava > 1.6) {
+        this.removeEnt(e);
+        continue;
+      }
       if (e.desc.chunk && e.age > 6 && e.desc.w * e.desc.h < 0.2) {
         const v = e.body.getLinearVelocity();
         if (Math.hypot(v.x, v.y) < 0.3) this.removeEnt(e);
@@ -729,16 +1005,23 @@ export class Sim {
     this.breakQueue.clear();
     const ex = this.explodeQueue;
     this.explodeQueue = [];
-    for (const x of ex) this.doExplode(x.x, x.y, x.r, x.power);
+    for (const x of ex) this.doExplode(x.x, x.y, x.r, x.power, x.hurt);
     for (const s of this.stuck) s.age += DT;
 
     // fighters falling out of the world
     for (const f of this.fighters) {
       if (!f.alive) continue;
       const tp = f.rag.torso.getPosition();
-      if (tp.y > this.level.killY || (this.level.lavaY !== undefined && f.rag.feetY() > this.level.lavaY)) {
+      const feet = f.rag.feetY();
+      if (tp.y > this.level.killY) {
         this.events.push({ t: 'fall', x: tp.x, y: tp.y });
-        this.hurt(f.side, f.hp, tp, false);
+        this.hazard(f, tp);
+      } else if (this.lavaAt(tp.x, feet - 0.05)) {
+        this.events.push({ t: 'lava', x: tp.x, y: feet });
+        this.hazard(f, tp);
+      } else if (this.waterAt(tp.x, tp.y)) {
+        this.events.push({ t: 'splash', x: tp.x, y: this.waterAt(tp.x, tp.y)!.y, big: true });
+        this.hazard(f, tp);
       }
     }
     this.quiet = this.rawSettled() ? this.quiet + DT : 0;
@@ -755,15 +1038,21 @@ export class Sim {
   private rawSettled(): boolean {
     if (this.arrows.length > 0 || this.explodeQueue.length > 0) return false;
     for (const e of this.ents) {
-      if (e.dead || e.desc.fixed) continue;
+      if (e.dead) continue;
+      // fixed bodies count while they burn or tick (a burning roof is still coming down)
+      if (e.desc.fixed) {
+        if (e.fuse >= 0 || e.burning >= 0) return false;
+        continue;
+      }
       if (e.fuse >= 0) return false;
       if (e.burning >= 0 && !e.desc.chunk) return false;
-      if (!e.body.isAwake()) continue;
+      if (!e.body.isAwake() || e.swinging) continue;
       const v = e.body.getLinearVelocity();
-      if (Math.hypot(v.x, v.y) > 0.25 || Math.abs(e.body.getAngularVelocity()) > 0.4) return false;
+      // a log spinning in place on its rope is not "moving" for the turn
+      if (Math.hypot(v.x, v.y) > 0.25 || (e.desc.shape === 'box' && Math.abs(e.body.getAngularVelocity()) > 0.4)) return false;
     }
     for (const f of this.fighters) {
-      if (f.rag.maxSpeed() > 0.8) return false;
+      if (f.rag.maxSpeed() > 1.2) return false;
       if (f.alive && f.rag.state === 'limp') return false;
     }
     return true;
