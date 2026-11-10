@@ -278,25 +278,31 @@
   "rivalHp": 100,
   "solution": [
    {
-    "ammo": "arrow",
-    "angle": -0.6794501921927676,
-    "power": 0.6071428571428571,
-    "target": "rope chandelier-chain"
+    "ammo": "heavy",
+    "angle": -1.1905585219934107,
+    "power": 0.35714285714285715,
+    "target": "rival head"
    },
    {
     "ammo": "heavy",
-    "angle": -1.4611442885766535,
-    "power": 1,
+    "angle": -1.2090571138716733,
+    "power": 0.35714285714285715,
+    "target": "rival head"
+   },
+   {
+    "ammo": "heavy",
+    "angle": -1.2438605327950176,
+    "power": 0.35714285714285715,
     "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -1.2399402115643108,
+    "angle": -1.2604978646339937,
     "power": 0.35714285714285715,
     "target": "rival head"
    }
   ],
-  "avgShots": 3,
+  "avgShots": 7.2,
   "maxTrap": 80
  },
  {
@@ -904,14 +910,14 @@
     "target": "tnt"
    },
    {
-    "ammo": "arrow",
-    "angle": -0.17615132926923585,
+    "ammo": "heavy",
+    "angle": -0.1758286306211409,
     "power": 0.8214285714285714,
     "target": "rival head"
    }
   ],
-  "avgShots": 3.8,
-  "maxTrap": 80
+  "avgShots": 4.2,
+  "maxTrap": 78
  },
  {
   "id": "desert-8",
@@ -925,18 +931,18 @@
    },
    {
     "ammo": "heavy",
-    "angle": -0.21912565912712786,
+    "angle": -0.22792736732200555,
     "power": 0.6071428571428571,
     "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -0.3265473927392564,
-    "power": 0.35714285714285715,
+    "angle": -0.2202563586180263,
+    "power": 0.6071428571428571,
     "target": "rival head"
    }
   ],
-  "avgShots": 3.8,
+  "avgShots": 3,
   "maxTrap": 80
  },
  {

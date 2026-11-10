@@ -40,8 +40,8 @@ const d7 = level('desert', 7, { wind: -2.4, ammo: { fire: 1, heavy: 2 }, ...part
 // tricky: a stone slab shields the hanging barrel's rope; strong wind
 const d8 = level('desert', 8, {
   wind: 3,
-  ammo: { fire: 1, heavy: 2, bomb: 1 },
-  ...parts(hangingTnt(11.6, 1.6), cover(box(10.9, -5.4, 0.4, 1.3, 'stone', 'stoneBlock', { id: 'slab', fixed: true, hp: 110, depth: 1 })), sandWall(10.1, 3, 's'), playerCrates(), playerTnt()),
+  ammo: { fire: 1, bomb: 1 },
+  ...parts(hangingTnt(11.6, 1.6), cover(box(10.9, -5.4, 0.4, 1.3, 'stone', 'stoneBlock', { id: 'slab', fixed: true, hp: 110, depth: 1 })), sandWall(10.1, 2, 's'), playerCrates(), playerTnt()),
   rivalTargets: ['pTnt'],
   rivalAmmo: ['fire'],
 });

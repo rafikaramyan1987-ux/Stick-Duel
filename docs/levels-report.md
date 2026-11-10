@@ -28,7 +28,7 @@ at least 4 player shots on average.
 | 9 | forest-9 (boss) | 160 | 0.27 | won in 4 shots, 94 HP left, 3★ | 2/5 | 7.0 | 63 | 63 (arrow → rope ram-hold) | 2206 |
 | 10 | castle-1 | 100 | 0.30 | won in 2 shots, 90 HP left, 3★ (trap K.O.) | 4/5 | 4.5 | 80 | 80 (heavy → sw1-1) | 2676 |
 | 11 | castle-2 | 100 | 0.32 | won in 3 shots, 100 HP left, 3★ (trap K.O.) | 5/5 | 6.2 | 80 | 80 (heavy → rival) | 2485 |
-| 12 | castle-3 | 100 | 0.33 | won in 3 shots, 100 HP left, 2★ | 4/5 | 3.0 **< 4** | 80 | 80 (heavy → chandelier) | 2147 |
+| 12 | castle-3 | 100 | 0.33 | won in 4 shots, 100 HP left, 2★ | 5/5 | 7.2 | 80 | 80 (heavy → chandelier) | 3814 |
 | 13 | castle-4 (tricky) | 100 | 0.34 | won in 4 shots, 100 HP left, 2★ | 3/5 | 10.7 | 80 | 80 (arrow → rival head) | 8375 |
 | 14 | castle-5 | 100 | 0.36 | won in 2 shots, 90 HP left, 3★ (trap K.O.) | 5/5 | 6.0 | 69 | 69 (heavy → sw6-1) | 2761 |
 | 15 | castle-6 | 100 | 0.38 | won in 3 shots, 80 HP left, 3★ (trap K.O.) | 5/5 | 6.4 | 64 | 53 (heavy → sw8-0) | 3714 |
@@ -50,8 +50,8 @@ at least 4 player shots on average.
 | 31 | desert-4 (tricky) wind 2.2 | 100 | 0.51 | won in 4 shots, 100 HP left, 2★ | 5/5 | 6.2 | 55 | 55 (fire → bw-0) | 2222 |
 | 32 | desert-5 wind -1.8 | 100 | 0.52 | won in 3 shots, 42 HP left, 2★ | 5/5 | 4.8 | 51 | 51 (heavy → rival) | 1281 |
 | 33 | desert-6 wind 1.5 | 100 | 0.54 | won in 3 shots, 74 HP left, 3★ | 5/5 | 5.0 | 80 | 80 (fire → s1) | 1410 |
-| 34 | desert-7 wind -2.4 | 100 | 0.55 | won in 2 shots, 100 HP left, 2★ | 5/5 | 3.8 **< 4** | 80 | 80 (arrow → rope rope) | 1737 |
-| 35 | desert-8 (tricky) wind 3 | 100 | 0.57 | won in 3 shots, 52 HP left, 2★ | 5/5 | 3.8 **< 4** | 80 | 78 (heavy → s0) | 2700 |
+| 34 | desert-7 wind -2.4 | 100 | 0.55 | won in 2 shots, 100 HP left, 2★ | 5/5 | 4.2 | 78 | 78 (heavy → rope rope) | 2355 |
+| 35 | desert-8 (tricky) wind 3 | 100 | 0.57 | won in 3 shots, 76 HP left, 2★ | 1/5 | 3.0 **< 4** | 80 | 77 (heavy → rival) | 2571 |
 | 36 | desert-9 (boss) wind -1.5 | 200 | 0.58 | won in 6 shots, 33 HP left, 2★ (trap K.O.) | 2/5 | 6.5 | 80 | 80 (heavy → rival head) | 3460 |
 | 37 | frozen-1 | 100 | 0.54 | won in 4 shots, 72 HP left, 2★ | 3/5 | 6.3 | 38 | 38 (heavy → rival head) | 4074 |
 | 38 | frozen-2 | 100 | 0.56 | won in 3 shots, 77 HP left, 2★ | 1/5 | 7.0 | 80 | 51 (ice → block) | 2751 |
@@ -72,7 +72,7 @@ at least 4 player shots on average.
 | 53 | volcano-8 (tricky) | 100 | 0.72 | won in 2 shots, 73 HP left, 3★ | 3/5 | 7.3 | 80 | 80 (heavy → boulder) | 3907 |
 | 54 | volcano-9 (boss) | 220 | 0.74 | won in 6 shots, 68 HP left, 3★ | 1/5 | 6.0 | 80 | 80 (arrow → rope rope) | 4266 |
 
-Average over all winning duels: 5.3 player shots.
+Average over all winning duels: 5.4 player shots.
 
 
 ## Sharp bot playthroughs
@@ -88,7 +88,7 @@ Average over all winning duels: 5.3 player shots.
 - **forest-9:** fire → trunk · fire → rope ram-swing · arrow → rival head · arrow → rival head
 - **castle-1:** heavy → sw1-1 · arrow → rope chandelier-chain
 - **castle-2:** arrow → rope chandelier-chain · heavy → rival head · heavy → rival head
-- **castle-3:** arrow → rope chandelier-chain · heavy → rival head · arrow → rival head
+- **castle-3:** heavy → rival head · heavy → rival head · heavy → rival head · arrow → rival head
 - **castle-4:** fire → rope chandelier-chain · arrow → rope chandelier-chain · heavy → rival head · arrow → rival head
 - **castle-5:** heavy → sw6-1 · arrow → rope chandelier-chain
 - **castle-6:** heavy → rival head · arrow → rope ram-hold · arrow → rope ram-swing
@@ -110,7 +110,7 @@ Average over all winning duels: 5.3 player shots.
 - **desert-4:** fire → tnt · arrow → rival head · arrow → rival head · arrow → rival head
 - **desert-5:** fire → boulder-stop · heavy → rival head · arrow → rival head
 - **desert-6:** bomb → rival head · arrow → rival head · arrow → rival head
-- **desert-7:** heavy → tnt · arrow → rival head
+- **desert-7:** heavy → tnt · heavy → rival head
 - **desert-8:** heavy → rival head · heavy → rival head · arrow → rival head
 - **desert-9:** bomb → rope ram-swing · arrow → rival head · heavy → rival head · arrow → rival head · arrow → rope tntRope · fire → tntHang
 - **frozen-1:** heavy → rival head · arrow → rival head · arrow → rival head · arrow → rival head
@@ -132,4 +132,4 @@ Average over all winning duels: 5.3 player shots.
 - **volcano-8:** bomb → stopShield · arrow → rival head
 - **volcano-9:** bomb → rope ram-swing · heavy → rival head · heavy → rival head · arrow → rope rope · arrow → rival head · arrow → rival head
 
-**3 level(s) failed.**
+**1 level(s) failed.**
