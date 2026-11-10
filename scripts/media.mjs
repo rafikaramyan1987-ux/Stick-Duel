@@ -10,25 +10,24 @@
  *
  *   npm run build && node scripts/media.mjs [--no-video]
  *
- * Every shot replays a solution proven by the level checker (docs/levels-report.json): the scenes are
- * real game situations, not mock-ups. Needs ffmpeg. Optional: PW_CHROMIUM_PATH=/path/to/chromium.
+ * Every scene is real gameplay of the web build: a level is started, the rival is worn down to a few HP
+ * (as after a duel), and the final blow is a real trap shot aimed with the game's own ballistic solve
+ * (a chandelier, a rock on a rope, a barrel). Needs ffmpeg. Optional: PW_CHROMIUM_PATH=/path/to/chromium.
  */
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium } from '@playwright/test';
 
 const URL = pathToFileURL(resolve('dist/index.html')).href;
-const REPORT = JSON.parse(readFileSync('docs/levels-report.json', 'utf8'));
-const sol = (id) => REPORT.find((r) => r.id === id)?.solution ?? [];
 const SAVE = JSON.stringify({ v: 1, levels: {}, coins: 0, tutorial: true, hints: ['ammo-fire', 'ammo-heavy', 'ammo-bomb', 'ammo-ice', 'wind', 'hint.water', 'hint.lava', 'hint.roofWood', 'hint.roofStone', 'direct'], music: false, sfx: false, lang: 'en', last: null, hat: 'crown', hats: ['headband', 'none', 'crown'], colors: ['blue'], color: 'blue', endlessBest: 0 });
 const noVideo = process.argv.includes('--no-video');
 
-/** The scenes: a level, its final (chain-reaction) shot, and how long after the shot to freeze for stills. */
-const HERO = process.env.HERO ?? 'desert-2';
-const CLIPS = (process.env.CLIPS ?? 'castle-1,forest-3').split(',');
+/** The scenes: level:trap[:ammo] — the trap that deals the final blow. */
+const HERO = process.env.HERO ?? 'castle-1:chandelier-chain';
+const CLIPS = (process.env.CLIPS ?? 'forest-5:tnt:fire,forest-3:rope').split(',');
 
 for (const d of ['submission/covers', 'submission/videos', 'submission-gd/thumbnails', 'submission-gamepix']) mkdirSync(d, { recursive: true });
 const browser = await chromium.launch({
@@ -60,27 +59,30 @@ const adv = (page, s, render = true) =>
     [s, render],
   );
 
-/** Starts a level and plays all but the last proven shot off camera; returns the last shot. */
-async function setup(page, id) {
-  const shots = sol(id);
-  if (!shots.length) throw new Error(`no solution for ${id}`);
+/** Starts a level, wears the rival down to a few HP and aims the final trap shot; returns that shot. */
+async function setup(page, scene) {
+  const [id, trap, ammo = 'arrow'] = scene.split(':');
   await page.evaluate((id) => {
     const a = window.__toppleDuel;
     a.play(a.levelIds().indexOf(id));
   }, id);
-  await adv(page, 0.5, false);
-  for (const s of shots.slice(0, -1)) {
-    await page.evaluate((s) => window.__toppleDuel.shoot(s.angle, s.power, s.ammo), s);
-    await page.evaluate(() => {
-      const a = window.__toppleDuel;
-      for (let i = 0; i < 60 * 40 && a.duel.phase !== 'aim' && a.duel.phase !== 'over'; i++) a.advance(1 / 60, false);
-    });
-  }
   await adv(page, 0.6, false);
-  const last = shots[shots.length - 1];
+  const shot = await page.evaluate(
+    ([trap, ammo]) => {
+      const a = window.__toppleDuel;
+      const d = a.duel;
+      d.sim.fighters[1].hp = 30;
+      d.sim.fighters[0].hp = 64;
+      d.ammo[ammo] = Math.max(1, d.ammo[ammo] ?? 0);
+      if (!a.aimAtTarget(trap, ammo)) throw new Error(`cannot aim at ${trap}`);
+      return { angle: d.aim.angle, power: d.aim.power, ammo };
+    },
+    [trap, ammo],
+  );
+  await adv(page, 0.05, false);
   // the archer takes aim (arm and dotted guide in the shot)
-  await page.evaluate((s) => window.__toppleDuel.duel.setAim(s.angle, s.power), last);
-  return last;
+  await page.evaluate((s) => window.__toppleDuel.duel.setAim(s.angle, s.power), shot);
+  return shot;
 }
 
 /** Fires the shot and advances until a big event (explosion, break or K.O.), plus an offset. */
