@@ -20,8 +20,10 @@ Media: covers and ~20 s trailers in [`submission/`](submission/), the level chec
   break them (wood about 3 arrows, stone about 6 or 2 heavy bolts).
 - **Traps** (ropes holding rocks, logs or chandeliers, explosive barrels, logs on slopes, ice pillars,
   boulders behind a stopper, swinging rams) do 40–80 damage, but need a small target, two steps or the
-  right ammo. **A trap never does more than 80 in one shot**, so it can never K.O. a full-HP fighter on its
-  own. Falling into water, lava or out of the arena costs 30 HP and puts you back on your spot.
+  right ammo. Environment hits less than 6 s apart (even across turns) are one "trap moment": the first hit
+  counts in full, what piles up after it (the fall, debris, fire, lava) 35 %, and **a trap moment never does
+  more than 80**, so it can never K.O. a full-HP fighter on its own. Falling into water, lava or out of the
+  arena costs 30 HP and puts you back on your spot.
 - **The rival** plays by the same rules: it shoots at you and through your cover, and from world 2 on it
   also shoots the traps on your side. Its accuracy grows by world and by level.
 - **Ammo:** normal arrows are unlimited; special ammo is limited per level and unlocks over time: fire
@@ -31,7 +33,7 @@ Media: covers and ~20 s trailers in [`submission/`](submission/), the level chec
   boulders), desert (wind, sand, barrels), frozen lake (ice pillars, sliding blocks, the lake), volcano
   (lava). Levels 1–3 teach direct shooting, cover and the first easy trap; from level 4 on traps need
   precision or two steps. Moving targets (swinging chandeliers, logs, barrels) from castle 5. Every 4th
-  level is a tricky one. Bosses have 160–250 HP and a special weapon (a 3-arrow volley, heavy bolts, fire
+  level is a tricky one. Bosses have 160–220 HP and a special weapon (a 3-arrow volley, heavy bolts, fire
   arrows or bombs).
 - **Stars:** win · win with more than half your HP · a trap K.O. or a chain reaction. The final blow is
   replayed in slow motion.
