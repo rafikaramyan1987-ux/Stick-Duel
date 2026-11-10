@@ -53,13 +53,16 @@ export async function winCurrentLevel(page: Page): Promise<void> {
   expect(shots.length, `no solution for ${id}`).toBeGreaterThan(0);
   for (const s of shots) {
     if ((await page.evaluate(`${APP}.duel.phase`)) !== 'aim') break;
+    // these tests are about the game flow (the level checker proves the balance): the player stays up
+    await page.evaluate(`${APP}.duel.sim.fighters[0].hp = 1000`);
     expect(await page.evaluate(`${APP}.shoot(${s.angle}, ${s.power}, ${JSON.stringify(s.ammo)})`)).toBe(true);
     await untilAim(page);
   }
   for (let i = 0; i < 20 && (await page.evaluate(`${APP}.duel.phase`)) === 'aim'; i++) {
-    await page.evaluate(`(() => { const a = ${APP}; a.duel.sim.fighters[0].hp = 100; a.aimAtTarget('rival head'); a.autoFire(); })()`);
+    await page.evaluate(`(() => { const a = ${APP}; a.duel.sim.fighters[0].hp = 1000; a.aimAtTarget('rival head'); a.autoFire(); })()`);
     await untilAim(page);
   }
+  await page.evaluate(`(() => { const f = ${APP}.duel.sim.fighters[0]; f.hp = Math.min(f.hp, f.maxHp); })()`);
   await finishDuel(page);
   await expect(page.locator('.card.result.won')).toBeVisible({ timeout: 10_000 });
 }
