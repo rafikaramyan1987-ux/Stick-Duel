@@ -81,6 +81,8 @@ export class View {
   chars: [CharacterView, CharacterView] | null = null;
   private dots: THREE.InstancedMesh;
   private time = 0;
+  /** Hats knocked off by headshots: they fly, spin and land. */
+  private flyingHats: Array<{ obj: THREE.Object3D; vx: number; vy: number; spin: number; landed: boolean }> = [];
   private terrainGround: (x: number) => number = () => 0;
 
   constructor(private readonly stage: Stage) {
@@ -149,11 +151,38 @@ export class View {
     this.fx.clear();
     this.chars = null;
     this.dots.count = 0;
+    this.flyingHats = [];
+  }
+
+  /** A headshot: the hat flies off (dir = +1 to the right). */
+  knockHat(side: 0 | 1, dir: 1 | -1): void {
+    const c = this.chars?.[side];
+    const hat = c?.hat;
+    if (!c || !hat || !hat.parent) return;
+    this.root.attach(hat);
+    c.hat = null;
+    this.flyingHats.push({ obj: hat, vx: dir * 2.6, vy: 5.2, spin: -dir * 9, landed: false });
+  }
+
+  private updateHats(dt: number): void {
+    for (const h of this.flyingHats) {
+      if (h.landed) continue;
+      h.vy -= 14 * dt;
+      h.obj.position.x += h.vx * dt;
+      h.obj.position.y += h.vy * dt;
+      h.obj.rotation.z += h.spin * dt;
+      const ground = -this.terrainGround(h.obj.position.x) + 0.12;
+      if (h.vy < 0 && h.obj.position.y <= ground) {
+        h.obj.position.y = ground;
+        h.landed = true;
+      }
+    }
   }
 
   /** Puts every mesh where the frame says. */
   sync(frame: Frame, dt: number): void {
     this.time += dt;
+    this.updateHats(dt);
     const seen = new Set<number>();
     for (const e of frame.ents) {
       seen.add(e.id);

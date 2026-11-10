@@ -22,7 +22,7 @@ export type Side = 0 | 1;
 
 export interface AmmoDef {
   id: AmmoId;
-  /** Damage of a direct hit on a fighter (small on purpose: the environment does the real work). */
+  /** Multiplier on the zone damage of a direct hit (head 35, body 20, arm/leg 10 at full speed). */
   direct: number;
   /** Push impulse per (m/s) of arrow speed. */
   push: number;
@@ -32,12 +32,26 @@ export interface AmmoDef {
 }
 
 export const AMMO: Record<AmmoId, AmmoDef> = {
-  arrow: { id: 'arrow', direct: 6, push: 0.22, crack: 6, radius: 0.05 },
-  fire: { id: 'fire', direct: 7, push: 0.18, crack: 4, radius: 0.05 },
-  heavy: { id: 'heavy', direct: 10, push: 1.3, crack: 55, radius: 0.08 },
-  ice: { id: 'ice', direct: 6, push: 0.2, crack: 4, radius: 0.05 },
+  arrow: { id: 'arrow', direct: 1, push: 0.22, crack: 22, radius: 0.05 },
+  fire: { id: 'fire', direct: 0.9, push: 0.18, crack: 12, radius: 0.05 },
+  heavy: { id: 'heavy', direct: 1.25, push: 1.3, crack: 55, radius: 0.08 },
+  ice: { id: 'ice', direct: 0.9, push: 0.2, crack: 12, radius: 0.05 },
   bomb: { id: 'bomb', direct: 0, push: 0, crack: 0, radius: 0.16 },
 };
+
+export type HitZone = 'head' | 'body' | 'limb';
+/** Damage of a direct hit at full speed, by zone. */
+export const ZONE_DAMAGE: Record<HitZone, number> = { head: 35, body: 20, limb: 10 };
+/** The most damage the environment can do to one fighter during one shot: a trap never K.O.s a full-HP fighter. */
+export const TRAP_CAP = 80;
+/** Falling out of the arena, into lava or into deep water: this much damage, then back to the start spot. */
+export const HAZARD_DAMAGE = 35;
+/** Things that fall or blow up hurt fighters by mass and speed, scaled so a big trap lands at 40–80. */
+export const TRAP_SCALE = 0.6;
+
+export const zoneOf = (part: PartName): HitZone => (part === 'head' ? 'head' : part === 'torso' ? 'body' : 'limb');
+/** Slow arrows hurt less: 50 % at the slowest, 100 % from about 85 % power. */
+export const speedFactor = (speed: number): number => clamp(0.3 + (0.7 * speed) / (MAX_SPEED * 0.92), 0.5, 1);
 
 export interface EntDesc {
   shape: 'box' | 'ball';
@@ -70,6 +84,10 @@ export interface Ent {
   frozen: boolean;
   /** Seconds spent in lava. */
   inLava: number;
+  /** Swings for ever on its rope (a moving target); does not keep the turn from ending. */
+  swinging?: boolean;
+  /** A trap load: the damage it does to a fighter on a solid hit (by design, 40–80). */
+  hurts?: number;
 }
 
 /** A water pool at runtime. */
@@ -119,7 +137,8 @@ export type SimEvent =
   | { t: 'ropeCut'; id: string; x: number; y: number }
   | { t: 'ignite'; x: number; y: number }
   | { t: 'explode'; x: number; y: number; r: number }
-  | { t: 'damage'; side: Side; amount: number; x: number; y: number; direct: boolean; hp: number }
+  | { t: 'damage'; side: Side; amount: number; x: number; y: number; direct: boolean; hp: number; zone?: HitZone }
+  | { t: 'respawn'; side: Side; x: number; y: number }
   | { t: 'ko'; side: Side; x: number; y: number }
   | { t: 'stick'; x: number; y: number; sound: string; ammo: AmmoId }
   | { t: 'fall'; x: number; y: number }
@@ -154,6 +173,11 @@ export interface ShotStats {
   /** Damage the shooter did to themself. */
   self: number;
   kill: boolean;
+  /** The K.O. came from the environment (a trap), not from the arrow itself. */
+  trapKill: boolean;
+  /** Environment damage per fighter during this shot (capped at TRAP_CAP). */
+  envTo: [number, number];
+  heads: number;
 }
 
 interface BodyTag {
@@ -209,7 +233,9 @@ export class Sim {
     c.steps = this.steps;
     c.quiet = this.quiet;
     c.damageOn = this.damageOn;
-    c.stats = this.stats ? { ...this.stats } : null;
+    c.stats = this.stats ? { ...this.stats, envTo: [...this.stats.envTo] } : null;
+    c.envFree = [...this.envFree];
+    c.trapCap = this.trapCap;
     c.impactCooldown = new Map(this.impactCooldown);
     const src = new Map(this.ents.filter((e) => !e.dead).map((e) => [e.id, e]));
     for (const e of c.ents.slice()) if (!src.has(e.id)) c.removeEnt(e);
@@ -336,7 +362,7 @@ export class Sim {
       fixed: !!o.fixed,
       chunk,
     };
-    const ent: Ent = { id: this.nextId++, name: o.id, desc, body, hp: o.hp ?? mat.hp ?? Infinity, burning: -1, fuse: -1, age: 0, dead: false, charred, frozen: false, inLava: 0 };
+    const ent: Ent = { id: this.nextId++, name: o.id, desc, body, hp: o.hp ?? mat.hp ?? Infinity, burning: -1, fuse: -1, age: 0, dead: false, charred, frozen: false, inLava: 0, hurts: chunk ? undefined : o.hurts };
     body.setUserData({ kind: 'ent', ent } satisfies BodyTag);
     this.ents.push(ent);
     return ent;
@@ -352,6 +378,14 @@ export class Sim {
       new RopeJoint({ maxLength: len, localAnchorA: r.anchor, localAnchorB: local, collideConnected: false, bodyA: this.anchor, bodyB: ent.body }),
     );
     this.ropes.push({ id: r.id, def: r, joint, ent, local, cutAt: -1 });
+    if (r.swing) {
+      // a moving target: no damping, pushed sideways once
+      ent.swinging = true;
+      ent.body.setAngularDamping(0.3);
+      ent.body.setLinearDamping(0);
+      ent.body.setLinearVelocity({ x: r.swing, y: 0 });
+      return;
+    }
     // a hanging load comes to rest instead of swinging for ever (normal damping once it is cut)
     ent.body.setAngularDamping(2);
     ent.body.setLinearDamping(0.4);
@@ -383,7 +417,8 @@ export class Sim {
     return MIN_SPEED + (MAX_SPEED - MIN_SPEED) * clamp(power, 0, 1);
   }
 
-  fire(side: Side, angle: number, power: number, ammo: AmmoId): Arrow {
+  /** `volley`: an extra arrow of the same turn (a boss volley): the shot's stats go on. */
+  fire(side: Side, angle: number, power: number, ammo: AmmoId, volley = false): Arrow {
     const p = this.muzzle(side, angle);
     const speed = Sim.speedFor(power);
     const def = AMMO[ammo];
@@ -393,7 +428,10 @@ export class Sim {
     const arrow: Arrow = { id: this.nextId++, ammo, side, body, prev: { ...p }, age: 0, alive: true };
     body.setUserData({ kind: 'arrow', arrow } satisfies BodyTag);
     this.arrows.push(arrow);
-    this.stats = { side, ropes: 0, breaks: 0, explosions: 0, ignites: 0, direct: 0, env: 0, self: 0, kill: false };
+    if (!volley || !this.stats) {
+      this.stats = { side, ropes: 0, breaks: 0, explosions: 0, ignites: 0, direct: 0, env: 0, self: 0, kill: false, trapKill: false, envTo: [0, 0], heads: 0 };
+      this.envFree = [0, 0];
+    }
     this.events.push({ t: 'shot', side, ammo, x: p.x, y: p.y, angle, power });
     // recoil pose: arm stays pointing for a moment
     this.fighters[side].aim = angle;
@@ -473,8 +511,10 @@ export class Sim {
         if (ta.kind !== 'part' || tb.kind !== 'part') this.events.push({ t: 'impact', x: p.x, y: p.y, sound: snd, strength });
       }
     }
-    if (ta.kind === 'part') this.fighterImpact(ta.side!, bb, tb, vn, p);
-    if (tb.kind === 'part') this.fighterImpact(tb.side!, ba, ta, vn, p);
+    // things hurt by their own speed (a fighter flopping onto a resting crate is not hit by it)
+    const own = (v: Vec) => Math.abs(v.x * n.x + v.y * n.y);
+    if (ta.kind === 'part') this.fighterImpact(ta.side!, bb, tb, vn, p, own(vb));
+    if (tb.kind === 'part') this.fighterImpact(tb.side!, ba, ta, vn, p, own(va));
   }
 
   private idOf(b: Body): number {
@@ -485,7 +525,7 @@ export class Sim {
   }
 
   /** Damage from things hitting a fighter: grows with the mass and the impact speed. */
-  private fighterImpact(side: Side, other: Body, ot: BodyTag, vn: number, p: Vec): void {
+  private fighterImpact(side: Side, other: Body, ot: BodyTag, vn: number, p: Vec, vOther: number): void {
     const f = this.fighters[side];
     if (!f.alive) return;
     if (ot.kind === 'part' && ot.side === side) return;
@@ -493,13 +533,17 @@ export class Sim {
     let key: number;
     if (other.isStatic() || ot.kind === 'terrain' || ot.kind === 'anchor' || ot.ent?.desc.fixed) {
       // falling onto the ground
-      if (vn > 7.5) dmg = (vn - 7.5) * 5;
+      if (vn > 7.5) dmg = (vn - 7.5) * 5 * TRAP_SCALE;
       key = -1;
     } else if (ot.kind === 'part') {
       return;
     } else {
       const m = Math.min(other.getMass(), 60);
-      if (vn > 2) dmg = 6.5 * Math.sqrt(m) * Math.pow(vn - 2, 1.3);
+      const v = Math.min(vn, vOther);
+      const hurts = ot.ent?.hurts;
+      // a trap load does its designed damage on a solid hit (less when it only bumps you)
+      if (hurts) dmg = v > 1.5 ? hurts * clamp((v - 1.5) / 3.5, 0.3, 1) : 0;
+      else if (v > 2) dmg = 6.5 * Math.sqrt(m) * Math.pow(v - 2, 1.3) * TRAP_SCALE;
       key = ot.ent?.id ?? 0;
     }
     if (dmg < 3) return;
@@ -535,20 +579,49 @@ export class Sim {
   /* Damage, breaking, fire, explosions                                  */
   /* ------------------------------------------------------------------ */
 
-  hurt(side: Side, amount: number, p: Vec, direct: boolean): void {
+  hurt(side: Side, amount: number, p: Vec, direct: boolean, zone?: HitZone): void {
     const f = this.fighters[side];
     if (!f.alive || !this.damageOn) return;
-    const dmg = Math.round(amount);
+    let dmg = Math.round(amount);
+    const st = this.stats;
+    // traps: at most TRAP_CAP per fighter per shot, whatever piles up
+    if (!direct) {
+      const used = st ? st.envTo[side] : this.envFree[side];
+      dmg = Math.min(dmg, this.trapCap - used);
+      if (st) st.envTo[side] += Math.max(0, dmg);
+      else this.envFree[side] += Math.max(0, dmg);
+    }
     if (dmg <= 0) return;
     f.hp = Math.max(0, f.hp - dmg);
-    const st = this.stats;
     if (st) {
       if (side === st.side) st.self += dmg;
       else if (direct) st.direct += dmg;
       else st.env += dmg;
+      if (zone === 'head' && side !== st.side) st.heads++;
     }
-    this.events.push({ t: 'damage', side, amount: dmg, x: p.x, y: p.y, direct, hp: f.hp });
-    if (f.hp <= 0) this.knockOut(side);
+    this.events.push({ t: 'damage', side, amount: dmg, x: p.x, y: p.y, direct, hp: f.hp, zone });
+    if (f.hp <= 0) {
+      if (st && st.side !== side && !direct) st.trapKill = true;
+      this.knockOut(side);
+    }
+  }
+
+  /** The trap cap (tools raise it to measure raw trap damage). */
+  trapCap = TRAP_CAP;
+  /** Environment damage outside any shot (between turns), with the same cap. */
+  private envFree: [number, number] = [0, 0];
+  resetTrapCap(): void {
+    this.envFree = [0, 0];
+  }
+
+  /** A fighter that fell out, into lava or water: damage, then back on their start spot. */
+  private hazard(f: Fighter, p: Vec): void {
+    this.hurt(f.side, HAZARD_DAMAGE, p, false);
+    if (!f.alive) return;
+    const def = f.side === 0 ? this.level.player : this.level.rival;
+    f.rag.placeAt(def.x, def.y);
+    f.rag.hit(0.6);
+    this.events.push({ t: 'respawn', side: f.side, x: def.x, y: def.y });
   }
 
   private knockOut(side: Side): void {
@@ -614,6 +687,7 @@ export class Sim {
     r.cutAt = this.time;
     r.ent.body.setAwake(true);
     if (!this.ropes.some((o) => o !== r && o.joint && o.ent === r.ent)) {
+      r.ent.swinging = false;
       r.ent.body.setAngularDamping(r.ent.desc.shape === 'ball' ? 0.4 : 0.15);
       r.ent.body.setLinearDamping(0.02);
     }
@@ -713,7 +787,7 @@ export class Sim {
       const d = Math.hypot(tp.x - x, tp.y - y);
       if (d > r + 0.4) continue;
       const k = clamp(1 - d / (r + 0.4), 0, 1);
-      this.hurt(f.side, (30 + 80 * k) * hurt, tp, false);
+      this.hurt(f.side, (30 + 80 * k) * hurt * TRAP_SCALE, tp, false);
       f.rag.hit(1.4);
       for (const p of f.rag.parts) {
         const pp = p.body.getPosition();
@@ -768,10 +842,12 @@ export class Sim {
     } else if (ot.kind === 'part' && ot.side !== undefined) {
       const f = this.fighters[ot.side];
       sound = 'punch';
-      const j = def.push * speed * 0.6;
+      const zone = zoneOf(ot.part!);
+      // a jolt, not a launch (the flinch comes from the ragdoll going limp)
+      const j = def.push * speed * (zone === 'head' ? 0.18 : 0.3);
       h.other.applyLinearImpulse({ x: (vel.x / speed) * j, y: (vel.y / speed) * j }, h.point, true);
-      this.hurt(ot.side, def.direct * (ot.part === 'head' ? 1.5 : 1), h.point, true);
-      if (f.alive) f.rag.hit(0.35);
+      this.hurt(ot.side, ZONE_DAMAGE[zone] * def.direct * speedFactor(speed), h.point, true, zone);
+      if (f.alive) f.rag.hit(zone === 'head' ? 0.75 : zone === 'body' ? 0.55 : 0.35);
       if (a.ammo === 'fire') this.events.push({ t: 'ignite', x: h.point.x, y: h.point.y });
       part = { side: ot.side, name: ot.part! };
     } else {
@@ -929,13 +1005,13 @@ export class Sim {
       const feet = f.rag.feetY();
       if (tp.y > this.level.killY) {
         this.events.push({ t: 'fall', x: tp.x, y: tp.y });
-        this.hurt(f.side, f.hp, tp, false);
+        this.hazard(f, tp);
       } else if (this.lavaAt(tp.x, feet - 0.05)) {
         this.events.push({ t: 'lava', x: tp.x, y: feet });
-        this.hurt(f.side, f.hp, tp, false);
+        this.hazard(f, tp);
       } else if (this.waterAt(tp.x, tp.y)) {
         this.events.push({ t: 'splash', x: tp.x, y: this.waterAt(tp.x, tp.y)!.y, big: true });
-        this.hurt(f.side, f.hp, tp, false);
+        this.hazard(f, tp);
       }
     }
     this.quiet = this.rawSettled() ? this.quiet + DT : 0;
@@ -960,7 +1036,7 @@ export class Sim {
       }
       if (e.fuse >= 0) return false;
       if (e.burning >= 0 && !e.desc.chunk) return false;
-      if (!e.body.isAwake()) continue;
+      if (!e.body.isAwake() || e.swinging) continue;
       const v = e.body.getLinearVelocity();
       // a log spinning in place on its rope is not "moving" for the turn
       if (Math.hypot(v.x, v.y) > 0.25 || (e.desc.shape === 'box' && Math.abs(e.body.getAngularVelocity()) > 0.4)) return false;

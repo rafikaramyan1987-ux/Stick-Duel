@@ -1,8 +1,8 @@
 # Topple Duel
 
-A turn-based **2.5D physics duel** where you win by using the environment, not by direct hits.
-Your rival hides behind walls and roofs; a direct arrow only scratches them. So you shoot the world
-instead: cut the rope that holds a log, drop the chandelier, set off the barrels — and let gravity do the rest.
+A turn-based **2.5D physics archery duel**. You and your rival take turns shooting at each other from
+behind cover that wears down under the arrows, and the arena is full of traps: cut the rope that holds a
+rock, light a barrel, free a boulder, knock your rival into the lake.
 
 Media: covers and ~18 s trailers in [`submission/`](submission/), the level checker's report in
 [`docs/levels-report.md`](docs/levels-report.md), the Phase A preview in [`docs/preview/`](docs/preview/).
@@ -13,38 +13,52 @@ Media: covers and ~18 s trailers in [`submission/`](submission/), the level chec
   (the whole arc in the tutorial) and a power meter sits above your archer. Keyboard: arrows aim / power,
   **Space** shoots, **1–5** pick the ammo, **P** pauses (`KeyboardEvent.code`: QWERTY and AZERTY; Escape and
   Ctrl/Cmd are never used).
-- **Damage comes from things that fall or fly**, scaled by their mass and impact speed. A direct arrow does
-  6–15 points; a dropped chandelier does over 200. Ropes and chains snap when shot, wood and stone break into
-  chunky pieces, fire spreads to touching wood, TNT sets off its neighbours.
-- **Ammo**, unlocked over time: arrow (cuts ropes, small push) → fire arrow (burns wood, lights barrels,
-  forest 4) → heavy bolt (big push, cracks stone, castle) → bomb (area blast, mountains) → ice arrow (freezes
-  water into a bridge, makes bodies slippery, frozen lake). Each level gives a limited set.
-- **Six worlds × (8 levels + a boss arena)** = 54 levels: forest (ropes, logs, rams), castle (chandeliers,
-  stone roofs), mountains (boulders on cliffs, wind), desert (sand, hanging barrels), frozen lake (ponds to
-  freeze, sliding ice blocks), volcano (lava, stilts). Levels 1–3 have one obvious solution; from level 4
-  the rival is protected (a roof that only fire removes, a door two heavy bolts crack…), so par grows to 2–3
-  shots and the order matters. Every 4th level is a tricky one.
-- **The rival** takes turns and uses the environment against you (a crate over your head, a barrel next to
-  you); its accuracy grows from world to world.
-- **Stars:** win · within par · a trick shot (a chain reaction, or a win without any direct hit). The winning
-  chain reaction is replayed in slow motion.
-- **2 players** on one device (six symmetric arenas), **Endless** (random arenas from proven hazards, HP
-  carries over, best score saved), **shop** with 10 hats and 9 colours for coins.
+- **A real duel:** both fighters have 100 HP and take turns. Direct hits do damage by zone: **head 35, body
+  20, arm/leg 10**, scaled by the arrow's speed, so a duel takes about 4–8 hits. Hits make the fighter
+  flinch and stagger, a headshot knocks the hat off, and comic damage numbers pop up (no blood).
+- **Cover wears down:** wooden walls, stone blocks, crates and shields stop arrows; arrows stick in and
+  break them (wood about 3 arrows, stone about 6 or 2 heavy bolts).
+- **Traps** (ropes holding rocks, logs or chandeliers, explosive barrels, logs on slopes, ice pillars,
+  boulders behind a stopper, swinging rams) do 40–80 damage, but need a small target, two steps or the
+  right ammo. **A trap never does more than 80 in one shot**, so it can never K.O. a full-HP fighter on its
+  own. Falling into water, lava or out of the arena costs 35 HP and puts you back on your spot.
+- **The rival** plays by the same rules: it shoots at you and through your cover, and from world 2 on it
+  also shoots the traps on your side. Its accuracy grows by world and by level.
+- **Ammo:** normal arrows are unlimited; special ammo is limited per level and unlocks over time: fire
+  arrow (burns wood, lights barrels, forest 5), heavy bolt (big push, cracks stone, castle), bomb (area
+  blast, mountains), ice arrow (freezes water, makes bodies slide, frozen lake).
+- **Six worlds × (8 levels + a boss)** = 54 levels: forest, castle (chandeliers), mountains (wind,
+  boulders), desert (wind, sand, barrels), frozen lake (ice pillars, sliding blocks, the lake), volcano
+  (lava). Levels 1–3 teach direct shooting, cover and the first easy trap; from level 4 on traps need
+  precision or two steps. Moving targets (swinging chandeliers, logs, barrels) from castle 5. Every 4th
+  level is a tricky one. Bosses have 160–250 HP and a special weapon (a 3-arrow volley, heavy bolts, fire
+  arrows or bombs).
+- **Stars:** win · win with more than half your HP · a trap K.O. or a chain reaction. The final blow is
+  replayed in slow motion.
+- **2 players** on one device (six symmetric arenas with cover and traps on both sides), **Endless**
+  (random arenas from proven modules, HP carries over, best score saved), **shop** with 10 hats and 9
+  colours for coins.
 - **10 languages** (en, fr, de, it, es, pt, nl, pl, tr, ru), one JSON file each; the language comes from the
   platform (GamePix.lang(), CrazyGames locale, browser language) and can be changed in Settings.
-- **Juice:** camera shake, short slow motion on collapses and explosions, comic damage bubbles, expressive
+- **Juice:** camera shake, short slow motion on K.O.s and explosions, comic damage bubbles, expressive
   faces, particles made in code.
 
 ## Level checker
 
-`npm run levels:check` runs a bot over every level with the real game (fixed 60 Hz step, seed 1, rival turns
-included): it tries every candidate first shot (aimed at every rope, body and the rival, flat and lobbed, at
-several speeds, plus a grid of angles × powers, for every ammo type) and searches the most promising states for
-a win within par. Every win is replayed from scratch before it counts. It also plays a direct-hit-only
-strategy and computes the most damage direct hits could ever do. The run fails if a level has no win within
-par, if a level after the first three can be won in one shot, or if direct hits alone win from level 3 on.
-Results: [`docs/levels-report.md`](docs/levels-report.md) (+ `.json`, whose solutions the e2e tests replay).
-Rival HP values come from measured hazard damage (`src/levels/tuning.ts`).
+`npm run levels:check` plays every level as a real duel with the game's own code (fixed 60 Hz step, rival
+turns and rival AI included):
+
+- a **sharp bot** tries every candidate shot each turn on a copy of the game (aimed at the rival's head and
+  body, every rope, every named body and the water, flat and lobbed, several speeds, every ammo it has) and
+  plays the best one for real; its real playthrough proves the level can be won, is replayed from scratch,
+  and is what the e2e tests replay;
+- five **human bots** make the same choices with a player's aim errors;
+- every candidate shot measures the trap damage done to each fighter in that shot.
+
+The run fails if the sharp bot does not win, if a trap ever does more than 80 in one shot, or if the human
+bots' winning duels last fewer than 4 player shots on average. Results:
+[`docs/levels-report.md`](docs/levels-report.md) (+ `.json`). In CI the six worlds run as parallel jobs and a
+last job builds the report.
 
 ## Tech
 
@@ -62,8 +76,8 @@ Rival HP values come from measured hazard damage (`src/levels/tuning.ts`).
 
 ```
 src/physics   simulation (sim.ts: ropes, fire, explosions, water/ice, lava, wind), ragdoll, materials, aiming
-src/levels    the 54 arenas (one file per world), building blocks (kit.ts), versus arenas, Endless generator,
-              level checker (checker.ts), tuned rival HP
+src/levels    the 54 arenas (one file per world), building blocks (kit.ts: cover, traps), versus arenas,
+              Endless generator, level checker (checker.ts: duel bots)
 src/game      duel/turn controller (incl. 2 players), rival AI, save data, cosmetics, frame capture for replays
 src/render    stage (renderer, camera, lights), Kenney model loader, props, characters, terrain, backdrop, particles
 src/ui        app (screens, HUD, input, tutorial, ads), icons

@@ -1,30 +1,27 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 import { LEVELS, WORLD_LEVELS } from '../../src/levels';
-import { checkLevel } from '../../src/levels/checker';
+import { checkLevel, TRAP_CAP } from '../../src/levels/checker';
 import type { WorldId } from '../../src/levels/types';
 
 /**
- * Level checker for one world: proves a win within par for every level (real game rules, rival
- * turns included), and that from global level 4 on no single shot wins, and from level 3 on a
- * direct-hit-only strategy does not win. Results go to .levels/<world>.json for the report.
+ * Level checker for one world (real duels, rival turns included): every level is won by the sharp
+ * bot, a trap never does more than 80 damage in one shot (so it never K.O.s a full-HP fighter), and
+ * winning duels last at least 4 player shots on average. Results go to .levels/<world>.json.
  */
 export function runWorld(world: WorldId): void {
   const results: unknown[] = [];
   for (const lv of WORLD_LEVELS[world]) {
-    const index = LEVELS.indexOf(lv); // 0-based global level number
-    it(`${lv.id} (level ${index + 1})`, () => {
+    const index = LEVELS.indexOf(lv) + 1;
+    it(`${lv.id} (level ${index})`, () => {
       const r = checkLevel(lv);
-      results.push({ ...r, index: index + 1, world, n: lv.n, boss: !!lv.boss, tricky: !!lv.tricky, wind: lv.wind ?? 0 });
+      results.push({ ...r, index, world, n: lv.n, boss: !!lv.boss, tricky: !!lv.tricky, wind: lv.wind ?? 0, skill: lv.rivalSkill });
       mkdirSync('.levels', { recursive: true });
       writeFileSync(`.levels/${world}.json`, JSON.stringify(results, null, 1));
-      expect(r.solution, `${lv.id}: no win found within par ${lv.par}`).not.toBeNull();
-      expect(r.solution!.length).toBeLessThanOrEqual(lv.par);
-      if (index >= 3) {
-        expect(lv.par, `${lv.id}: par must be at least 2 after the first 3 levels`).toBeGreaterThanOrEqual(2);
-        expect(r.oneShot, `${lv.id}: a single shot wins (${JSON.stringify(r.oneShot)})`).toBeNull();
-      }
-      if (index >= 2) expect(r.directOnly.win, `${lv.id}: direct hits alone win`).toBe(false);
+      expect(r.solution, `${lv.id}: the sharp bot did not win`).not.toBeNull();
+      expect(r.maxTrap, `${lv.id}: a trap did ${r.maxTrap} in one shot`).toBeLessThanOrEqual(TRAP_CAP);
+      expect(Math.min(lv.player.hp, lv.rival.hp)).toBeGreaterThan(TRAP_CAP);
+      expect(r.avgShots, `${lv.id}: winning duels last ${r.avgShots.toFixed(1)} shots on average`).toBeGreaterThanOrEqual(4);
     });
   }
 }

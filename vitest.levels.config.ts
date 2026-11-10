@@ -7,5 +7,6 @@ export default defineConfig({
     environment: 'node',
     testTimeout: 30 * 60_000,
     pool: 'forks',
+    maxWorkers: 4,
   },
 });

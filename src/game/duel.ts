@@ -13,11 +13,16 @@ export type Phase = 'aim' | 'flight' | 'rivalAim' | 'rivalFlight' | 'replay' | '
 export interface DuelResult {
   win: boolean;
   reason: 'ko' | 'shots';
+  /** Win · win with more than half of your HP · a trap K.O. or a chain reaction. */
   stars: [boolean, boolean, boolean];
   shotsUsed: number;
   chain: boolean;
-  noDirect: boolean;
+  trapKill: boolean;
+  playerHp: number;
 }
+
+/** A duel that drags on this long is lost (it cannot happen with sensible play). */
+export const MAX_SHOTS = 40;
 
 export const AMMO_ORDER: AmmoId[] = ['arrow', 'fire', 'heavy', 'ice', 'bomb'];
 
@@ -48,6 +53,8 @@ export class Duel {
   chain = false;
   /** Damage the player's arrows did to the rival directly. */
   directOnRival = 0;
+  /** The rival was K.O.'d by the environment. */
+  trapKill = false;
   private rec: Recording | null = null;
   private replay: { rec: Recording; pos: number; end: number; speed: number; emitted: number } | null = null;
   result: DuelResult | null = null;
@@ -73,7 +80,8 @@ export class Duel {
       this.sim = new Sim(level, seed);
       this.sim.warmUp();
     }
-    this.ammo = { arrow: 0, fire: 0, heavy: 0, ice: 0, bomb: 0, ...level.ammo };
+    // normal arrows are unlimited
+    this.ammo = { fire: 0, heavy: 0, ice: 0, bomb: 0, ...level.ammo, arrow: Infinity };
     this.rivalAmmo = {};
     for (const a of level.rivalAmmo ?? []) this.rivalAmmo[a] = (this.rivalAmmo[a] ?? 0) + 1;
     const facing = level.rival.x >= level.player.x ? 1 : -1;
@@ -95,9 +103,6 @@ export class Duel {
     this.sim.setAim(this.turn, this.aim.angle);
   }
 
-  get shotsLeft(): number {
-    return AMMO_ORDER.reduce((n, a) => n + (this.ammo[a] ?? 0), 0);
-  }
 
   /** Facing of the side whose turn it is. */
   get facing(): 1 | -1 {
@@ -125,8 +130,7 @@ export class Duel {
 
   fire(): boolean {
     if (!this.canFire()) return false;
-    if ((this.ammo[this.selected] ?? 0) <= 0) return false;
-    this.ammo[this.selected]--;
+    if (this.selected !== 'arrow') this.ammo[this.selected]--;
     this.shotsUsed++;
     this.rec = { frames: [], events: [], koIndex: -1, firstEnv: -1 };
     this.sim.fire(this.turn, this.aim.angle, this.aim.power, this.selected);
@@ -198,8 +202,10 @@ export class Duel {
       const e = k * k * (3 - 2 * k);
       this.sim.setAim(1, ra.from + (ra.shot.angle - ra.from) * e);
       if (ra.t >= 0.95) {
-        if (ra.shot.ammo !== 'arrow') this.rivalAmmo[ra.shot.ammo] = (this.rivalAmmo[ra.shot.ammo] ?? 1) - 1;
+        if (ra.shot.ammo !== 'arrow' && !ra.shot.weapon) this.rivalAmmo[ra.shot.ammo] = (this.rivalAmmo[ra.shot.ammo] ?? 1) - 1;
         this.sim.fire(1, ra.shot.angle, ra.shot.power, ra.shot.ammo);
+        // boss volley: two more arrows fanned around the first
+        if (ra.shot.volley) for (const d of [-0.07, 0.07]) this.sim.fire(1, ra.shot.angle + d, ra.shot.power, 'arrow', true);
         this.rivalTurns++;
         this.rivalAim = null;
         this.setPhase('rivalFlight');
@@ -241,6 +247,7 @@ export class Duel {
     if (st && st.side === 0) {
       const envEvents = st.ropes + st.breaks + st.explosions + st.ignites;
       if (envEvents >= 2 && st.env > 0) this.chain = true;
+      if (st.trapKill) this.trapKill = true;
       this.directOnRival += st.direct;
     }
     const p = this.sim.fighters[0];
@@ -253,7 +260,7 @@ export class Duel {
         this.setPhase('aim');
         return;
       }
-      if (this.shotsLeft <= 0) return this.finish(false, 'shots');
+      if (this.shotsUsed >= MAX_SHOTS) return this.finish(false, 'shots');
       this.startRival();
     } else {
       this.sim.setAim(1, null);
@@ -271,14 +278,15 @@ export class Duel {
   }
 
   private finish(win: boolean, reason: DuelResult['reason']): void {
-    const noDirect = this.directOnRival === 0;
+    const hp = this.sim.fighters[0].hp;
     this.result = {
       win,
       reason,
       shotsUsed: this.shotsUsed,
       chain: this.chain,
-      noDirect,
-      stars: [win, win && this.shotsUsed <= this.level.par, win && (this.chain || noDirect)],
+      trapKill: this.trapKill,
+      playerHp: hp,
+      stars: [win, win && hp > 50, win && (this.trapKill || this.chain)],
     };
     const rec = this.rec;
     if (win && rec && rec.koIndex >= 0 && rec.frames.length > 10 && !this.headless) {
@@ -324,6 +332,7 @@ export class Duel {
     d.rivalAmmo = { ...this.rivalAmmo };
     d.rivalTurns = this.rivalTurns;
     d.chain = this.chain;
+    d.trapKill = this.trapKill;
     d.directOnRival = this.directOnRival;
     return d;
   }
@@ -337,7 +346,6 @@ export class Duel {
     f.rag.strength = 1;
     f.rag.stateTime = 0;
     f.rag.placeAt(this.level.player.x, this.level.player.y);
-    if (this.shotsLeft <= 0) this.ammo.arrow = (this.ammo.arrow ?? 0) + 2;
     if (!this.selectAmmo(this.selected)) this.selectAmmo(AMMO_ORDER.find((a) => (this.ammo[a] ?? 0) > 0) ?? 'arrow');
     this.result = null;
     this.replay = null;

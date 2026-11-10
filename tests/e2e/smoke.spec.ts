@@ -11,9 +11,10 @@ test('first visit: in level 1 within 5 s, tutorial hand on the rope, drag back a
   await expect(page.locator('.hud')).toBeVisible({ timeout: 5_000 });
   expect(Date.now() - t0).toBeLessThan(5_000);
   await expect(page.locator('.tutorial .hand')).toBeVisible();
-  await expect(page.locator('.tutorial .tip b')).toHaveText('Aim at the rope!');
+  await expect(page.locator('.tutorial .tip b')).toHaveText('Aim at your rival!');
   await expect(page.locator('.hp.p1 .val')).toHaveText('100');
-  await expect(page.locator('.shots .sv')).toHaveText('5');
+  // normal arrows are unlimited
+  await expect(page.locator('.ab[data-ammo="arrow"] .cnt')).toHaveText('∞');
 
   // drag back (down-left) and release: shoots up and to the right
   const vp = page.viewportSize()!;
@@ -24,9 +25,8 @@ test('first visit: in level 1 within 5 s, tutorial hand on the rope, drag back a
   for (let i = 1; i <= 10; i++) await page.mouse.move(x0 - i * 14, y0 + i * 8);
   await page.mouse.up();
   await page.waitForFunction(`${APP}.duel.shotsUsed === 1`);
-  await expect(page.locator('.shots .sv')).toHaveText('4');
-  // the first shot ends the tutorial for good
-  await expect(page.locator('.tutorial .tip b')).toHaveText('Gravity does the rest…');
+  // the first shot ends the tutorial for good, with the damage per zone
+  await expect(page.locator('.tutorial .tip b')).toHaveText('Head 35 · Body 20 · Arms and legs 10');
   expect(await page.evaluate((k) => JSON.parse(localStorage.getItem(k) ?? '{}').tutorial, SAVE_KEY)).toBe(true);
   await finishDuel(page);
   expect(external).toEqual([]);
@@ -40,11 +40,13 @@ test('winning a level: slow-motion replay, stars, next level; progress is saved'
   await expect(page.locator('.hud')).toBeVisible();
   // the replay starts on its own after the K.O. (checked in the unit tests); here: the result
   await winCurrentLevel(page);
-  await expect(page.locator('.star.on')).toHaveCount(3);
   await expect(page.locator('#next')).toBeVisible();
   const save = await page.evaluate((k) => JSON.parse(localStorage.getItem(k) ?? '{}'), SAVE_KEY);
-  expect(save.levels['forest-1'].stars).toEqual([true, true, true]);
-  expect(save.coins).toBe(25);
+  const stars = save.levels['forest-1'].stars as boolean[];
+  expect(stars[0]).toBe(true);
+  await expect(page.locator('.star.on')).toHaveCount(stars.filter(Boolean).length);
+  // 10 coins for the win, 5 per star
+  expect(save.coins).toBe(10 + 5 * stars.filter(Boolean).length);
   await page.locator('#next').click();
   await expect(page.locator('.lvname')).toContainText('Forest 2');
 });
@@ -162,5 +164,5 @@ test('all HUD and menu buttons are on screen without scrolling', async ({ page }
   };
   for (const id of ['#play', '#worlds', '#versus', '#endless', '#settings']) await inside(id);
   await page.locator('#play').click();
-  for (const sel of ['#pause', '.hp.p0', '.hp.p1', '.shots', '.ab']) await inside(sel);
+  for (const sel of ['#pause', '.hp.p0', '.hp.p1', '.ab']) await inside(sel);
 });

@@ -121,9 +121,9 @@
    },
    {
     "ammo": "arrow",
-    "angle": -0.1802417290073461,
-    "power": 0.7857142857142857,
-    "target": "rival head"
+    "angle": -0.4937406105900061,
+    "power": 0.23428571428571426,
+    "target": "rival"
    }
   ],
   "oneShot": false,
@@ -366,9 +366,9 @@
     "target": "rival head"
    },
    {
-    "ammo": "bomb",
-    "angle": -0.26120168523845555,
-    "power": 0.5,
+    "ammo": "heavy",
+    "angle": -0.17684794643723822,
+    "power": 0.8057142857142857,
     "target": "rival head"
    }
   ],
@@ -480,20 +480,20 @@
   "solution": [
    {
     "ammo": "fire",
-    "angle": -0.4246028276626408,
-    "power": 0.5,
-    "target": "roof"
+    "angle": -0.8782085875433858,
+    "power": 0.21428571428571427,
+    "target": "ram"
    },
    {
     "ammo": "fire",
-    "angle": -0.436833465133445,
-    "power": 0.5,
+    "angle": -0.2998995540449094,
+    "power": 1,
     "target": "roof top"
    },
    {
     "ammo": "heavy",
-    "angle": -0.14201084461412464,
-    "power": 1,
+    "angle": -0.25994149670363587,
+    "power": 0.52,
     "target": "rival head"
    }
   ],
@@ -658,9 +658,9 @@
     "target": "rival"
    },
    {
-    "ammo": "heavy",
-    "angle": -0.26297752535121105,
-    "power": 0.5,
+    "ammo": "arrow",
+    "angle": -0.14902423707955853,
+    "power": 0.96,
     "target": "rival head"
    }
   ],
@@ -706,9 +706,9 @@
     "target": "water"
    },
    {
-    "ammo": "ice",
-    "angle": -1.459724628706753,
-    "power": 0.5,
+    "ammo": "arrow",
+    "angle": -1.3535033164243702,
+    "power": 0.23428571428571426,
     "target": "rope rope"
    }
   ],
@@ -757,8 +757,8 @@
    },
    {
     "ammo": "arrow",
-    "angle": -1.348914541353595,
-    "power": 0.21428571428571427,
+    "angle": -1.3735033164243702,
+    "power": 0.2542857142857143,
     "target": "rope rope"
    }
   ],
@@ -983,21 +983,15 @@
   "solution": [
    {
     "ammo": "arrow",
-    "angle": -1.2670681020261758,
-    "power": 0.5,
-    "target": "legR"
+    "angle": -0.3375378193906592,
+    "power": 1,
+    "target": "rival"
    },
    {
     "ammo": "fire",
-    "angle": -1.2760337783092626,
-    "power": 0.5,
-    "target": "legR"
-   },
-   {
-    "ammo": "arrow",
-    "angle": -0.19799140219083797,
-    "power": 0.21428571428571427,
-    "target": "legL"
+    "angle": -1.228212295635808,
+    "power": 0.48,
+    "target": "rope crate"
    }
   ],
   "oneShot": false,
@@ -1022,8 +1016,8 @@
    },
    {
     "ammo": "fire",
-    "angle": -1.4964524398203491,
-    "power": 0.5,
+    "angle": -1.0155552445418985,
+    "power": 0.23428571428571426,
     "target": "rope ram-hold"
    }
   ],

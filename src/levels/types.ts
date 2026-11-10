@@ -48,6 +48,8 @@ interface BaseObj {
   depth?: number;
   /** Overrides the material's hit points. */
   hp?: number;
+  /** A trap load: damage to a fighter on a solid hit (40–80 by design; otherwise mass × speed). */
+  hurts?: number;
 }
 
 export interface BoxObj extends BaseObj {
@@ -79,6 +81,8 @@ export interface RopeDef {
   local?: V2;
   /** Rope or chain (look only; both are cut by any arrow). */
   kind?: 'rope' | 'chain';
+  /** A moving target: the load keeps swinging (initial sideways speed, m/s). */
+  swing?: number;
 }
 
 /** A rectangular pool: surface at y, from x0 to x1, bottom at y + depth. */
@@ -103,11 +107,7 @@ export interface LevelDef {
   n: number;
   /** i18n key of the level name. */
   name: string;
-  /** Shots the player may fire. */
-  shots: number;
-  /** Shots for the second star. */
-  par: number;
-  /** Ammo the player has (arrow counts are included in shots; other types are limited). */
+  /** Special ammo the player has (normal arrows are unlimited). */
   ammo: Partial<Record<AmmoId, number>>;
   player: FighterDef;
   rival: FighterDef;
@@ -118,9 +118,9 @@ export interface LevelDef {
   view: { x0: number; x1: number; y0: number; y1: number };
   /** Below this y everything is gone (falls off the world). */
   killY: number;
-  /** Lava pools: fighters touching them are K.O., bodies burn and sink. */
+  /** Lava pools: fighters touching them take damage and go back to their spot; bodies burn and sink. */
   lava?: Pool[];
-  /** Water pools: fighters falling in are out (splash); ice arrows freeze them into platforms. */
+  /** Water pools: fighters falling in take damage (splash) and go back; ice arrows freeze them into platforms. */
   water?: Pool[];
   /** Horizontal wind acceleration on arrows (m/s², + is to the right). */
   wind?: number;
@@ -134,6 +134,8 @@ export interface LevelDef {
   rivalSkill: number;
   /** Special ammo the rival may use on its targets (it always has normal arrows). */
   rivalAmmo?: AmmoId[];
+  /** Boss weapon: a 3-arrow volley, or a special ammo the boss fires every other turn. */
+  rivalWeapon?: 'volley' | 'heavy' | 'fire' | 'bomb';
   /** Tutorial / hint: the id of the rope or object the first-time hint points at. */
   hintTarget?: string;
   /** Every 4th level is a tricky one. */

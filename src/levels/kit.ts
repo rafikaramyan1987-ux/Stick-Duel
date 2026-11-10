@@ -1,4 +1,3 @@
-import { TUNED_HP } from './tuning';
 import type { BoxObj, BallObj, LevelDef, ObjDef, Pool, RopeDef, TerrainDef, V2, WorldId } from './types';
 
 /**
@@ -70,10 +69,10 @@ export const sand = (x: number, groundY: number, w: number, h: number, id?: stri
 export const glass = (x: number, y: number, w: number, h = 0.25, id?: string): BoxObj => box(x, y, w, h, 'glass', 'glass', { id, fixed: true, depth: 2 });
 
 export function log(id: string, x: number, y: number, r = 0.7): BallObj {
-  return { id, shape: 'ball', x, y, r, mat: 'wood', look: 'log', hp: 999, depth: 1.6 };
+  return { id, shape: 'ball', x, y, r, mat: 'wood', look: 'log', hp: 999, depth: 1.6, hurts: 45 };
 }
 export function boulder(id: string, x: number, y: number, r = 0.75): BallObj {
-  return { id, shape: 'ball', x, y, r, mat: 'rock', look: 'boulder', depth: 1.5 };
+  return { id, shape: 'ball', x, y, r, mat: 'rock', look: 'boulder', depth: 1.5, hurts: 55 };
 }
 
 /** Something hanging on a rope from an anchor; the body is placed `len` below the anchor. */
@@ -84,8 +83,8 @@ export function hang(ropeId: string, anchor: V2, len: number, body: ObjDef, kind
   return { obj, rope: { id: ropeId, anchor, body: id, local: { x: 0, y: -h / 2 }, kind } };
 }
 
-export const rock = (id: string, w = 1, h = 1): BoxObj => box(0, 0, w, h, 'stone', 'stoneBlock', { id });
-export const chandelier = (id: string): BoxObj => box(0, 0, 2, 0.5, 'metal', 'chandelier', { id, depth: 1.4 });
+export const rock = (id: string, w = 1, h = 1, hurts = 50): BoxObj => ({ ...box(0, 0, w, h, 'stone', 'stoneBlock', { id, hp: 1e9 }), hurts });
+export const chandelier = (id: string, hurts = 60): BoxObj => ({ ...box(0, 0, 2, 0.5, 'metal', 'chandelier', { id, depth: 1.4 }), hurts });
 
 /** A gallows-style frame: a post and a beam on top, to hang things from. */
 export function gallows(x: number, groundY: number, h: number, reach: number): ObjDef[] {
@@ -103,7 +102,6 @@ export function shelter(x0: number, x1: number, groundY: number, h: number, mat:
 }
 
 export interface LevelSpec {
-  par: number;
   rivalHp?: number;
   rivalX?: number;
   rivalY?: number;
@@ -124,7 +122,7 @@ export interface LevelSpec {
   hintTarget?: string;
   boss?: boolean;
   rivalLook?: string;
-  shots?: number;
+  rivalWeapon?: LevelDef['rivalWeapon'];
 }
 
 /** Adds the full-width ground unless a piece of terrain already is one (pits, ponds, lava pits). */
@@ -133,22 +131,19 @@ function withGround(world: WorldId, t: TerrainDef[]): TerrainDef[] {
   return full ? t : [flat(SURFACE[world]), ...t];
 }
 
-const SKILL: Record<WorldId, number> = { forest: 0.25, castle: 0.35, mountains: 0.45, desert: 0.55, frozen: 0.65, volcano: 0.75 };
+const SKILL: Record<WorldId, number> = { forest: 0.15, castle: 0.3, mountains: 0.38, desert: 0.46, frozen: 0.54, volcano: 0.62 };
 
 export function level(world: WorldId, n: number, s: LevelSpec): LevelDef {
   const objects = [...s.objects, ...(s.hangs ?? []).map((h) => h.obj)];
   const ropes = [...(s.ropes ?? []), ...(s.hangs ?? []).map((h) => h.rope)];
-  const ammoTotal = Object.values(s.ammo).reduce((a, b) => a + (b ?? 0), 0);
   return {
     id: `${world}-${n}`,
     world,
     n,
     name: s.boss ? `boss.${world}` : `world.${world}`,
-    shots: s.shots ?? ammoTotal,
-    par: s.par,
     ammo: s.ammo,
     player: { x: s.playerX ?? PX, y: s.playerY ?? 0, hp: 100 },
-    rival: { x: s.rivalX ?? RX, y: s.rivalY ?? 0, hp: TUNED_HP[`${world}-${n}`] ?? s.rivalHp ?? (s.boss ? 180 : 100) },
+    rival: { x: s.rivalX ?? RX, y: s.rivalY ?? 0, hp: s.rivalHp ?? (s.boss ? 180 : 100) },
     terrain: withGround(world, s.terrain ?? []),
     objects,
     ropes,
@@ -159,12 +154,49 @@ export function level(world: WorldId, n: number, s: LevelSpec): LevelDef {
     wind: s.wind,
     rivalTargets: s.rivalTargets,
     rivalAmmo: s.rivalAmmo,
-    rivalSkill: Math.min(0.9, (s.rivalSkill ?? SKILL[world]) + (n - 1) * 0.02),
+    rivalSkill: Math.min(0.8, (s.rivalSkill ?? SKILL[world]) + (n - 1) * 0.015),
     hintTarget: s.hintTarget,
     tricky: n % 4 === 0 && !s.boss,
     boss: s.boss,
     rivalLook: s.rivalLook,
+    rivalWeapon: s.rivalWeapon,
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* Cover: wears down under arrows                                      */
+/* ------------------------------------------------------------------ */
+
+/** A wooden wall (planks on a fixed frame): about 3 arrows break it, one fire arrow burns it. */
+export function woodWall(x: number, h: number, groundY = 0, id?: string, hp = 60): BoxObj {
+  return box(x, groundY - h / 2, 0.42, h, 'wood', 'woodPlank', { id: id ?? nid('ww'), fixed: true, hp, depth: 1.6 });
+}
+
+/** Stacked stone blocks: about 6 arrows or 2 heavy bolts each; heavy bolts push them over. */
+export function stoneWall(x: number, rows: number, groundY = 0, prefix = nid('sw'), s = 0.75): BoxObj[] {
+  return Array.from({ length: rows }, (_, i) => on(groundY - i * s, x, s, s, 'stone', 'stoneBlock', { id: `${prefix}-${i}`, hp: 110 }));
+}
+
+/** Stacked crates: 2 arrows each, they burn and topple. */
+export function crateStack(x: number, rows: number, groundY = 0, prefix = nid('cs'), s = 0.8): BoxObj[] {
+  return Array.from({ length: rows }, (_, i) => crate(x, groundY - i * s, s, `${prefix}-${i}`));
+}
+
+/** A shield on a pole: covers the head and shoulders only (the body stays open). */
+export function shield(x: number, groundY = 0, id?: string, top = 2.55, h = 1.05): ObjDef[] {
+  return [box(x, groundY - top + h / 2, 0.36, h, 'wood', 'crateStrong', { id: id ?? nid('sh'), fixed: true, hp: 44, depth: 1 }), { ...post(x, groundY, top - h, 0.16), mat: 'metal' }];
+}
+
+/** A heavy thing standing on an ice pillar: two arrows (or one heavy bolt) shatter the pillar. */
+export function icePillar(id: string, x: number, groundY: number, h: number, load: ObjDef): ObjDef[] {
+  const lh = load.shape === 'box' ? load.h : load.r * 2;
+  return [on(groundY, x, 0.45, h, 'ice', 'iceBlock', { id: `${id}-ice`, hp: 40 }), { ...load, id, x, y: groundY - h - lh / 2 } as ObjDef];
+}
+
+/** A chandelier (or log) swinging for ever on a chain from a beam: a moving target. */
+export function swinger(id: string, anchor: V2, len: number, load: ObjDef, speed = 2.2, kind: RopeDef['kind'] = 'chain'): Part {
+  const hg = hang(id, anchor, len, { ...load, id: load.id ?? `${id}-load`, hurts: load.hurts ?? 45 }, kind);
+  return { objects: [hg.obj], ropes: [{ ...hg.rope, swing: speed }] };
 }
 
 /* ------------------------------------------------------------------ */
@@ -234,20 +266,24 @@ export function slopeLog(id: string, ropeId: string, x0: number, x1: number, x2:
   };
 }
 
-/** A log hanging from `anchor`, pulled aside to (holdX, holdY) by a second rope to a post. */
-export function pendulum(id: string, anchor: V2, len: number, pullAngle: number, holdPostX: number, groundY = 0, r = 0.7, frame = true): Part {
+/**
+ * A ram: a log hanging from `anchor` on its swing rope, pulled aside and held there by a second rope
+ * up to the same beam at holdX (nothing stands in the firing line). Cut the hold rope: it swings in.
+ */
+export function pendulum(id: string, anchor: V2, len: number, pullAngle: number, holdX: number, groundY = 0, r = 0.7, frame = true): Part {
   const bx = anchor.x - Math.sin(pullAngle) * len;
   const by = anchor.y + Math.cos(pullAngle) * len;
-  const postH = groundY - by + 0.2;
-  const objects: ObjDef[] = [log(id, bx, by, r), post(holdPostX, groundY, Math.max(1, postH))];
+  void groundY;
+  const objects: ObjDef[] = [log(id, bx, by, r)];
   // the frame post stands behind the rival's spot, not on it; iron-hard timber (does not burn)
   const px = Math.max(anchor.x + 3.4, 13.7);
-  if (frame) objects.push({ ...post(px, groundY, groundY - anchor.y + 0.2, 0.4), mat: 'metal' }, box((anchor.x - 0.3 + px) / 2, anchor.y - 0.1, px - anchor.x + 0.6, 0.36, 'metal', 'woodPlank', { fixed: true, depth: 0.8 }));
+  const x0 = Math.min(holdX, anchor.x) - 0.4;
+  if (frame) objects.push({ ...post(px, groundY, groundY - anchor.y + 0.2, 0.4), mat: 'metal' }, box((x0 + px) / 2, anchor.y - 0.1, px - x0 + 0.4, 0.36, 'metal', 'woodPlank', { fixed: true, depth: 0.8 }));
   return {
     objects,
     ropes: [
       { id: `${id}-swing`, anchor: { x: anchor.x, y: anchor.y + 0.1 }, body: id },
-      { id: `${id}-hold`, anchor: { x: holdPostX, y: groundY - Math.max(1, postH) + 0.1 }, body: id },
+      { id: `${id}-hold`, anchor: { x: holdX, y: anchor.y + 0.1 }, body: id },
     ],
   };
 }
@@ -276,7 +312,7 @@ export function ledge(id: string, x0: number, x1: number, y: number, tilt: numbe
   const cx = sx - dir * 1.15;
   const cy = y + tilt * ((cx - x0) / (x1 - x0));
   if (thing === 'boulder') objects.push(boulder(id, cx, cy - 0.78, 0.75));
-  else objects.push(box(cx, cy - 0.55, 1.1, 1.1, 'stone', 'stoneBlock', { id, angle: Math.atan2(tilt, x1 - x0) }));
+  else objects.push({ ...box(cx, cy - 0.55, 1.1, 1.1, 'stone', 'stoneBlock', { id, angle: Math.atan2(tilt, x1 - x0) }), hurts: 55 });
   return { terrain: [terrain], objects, ropes: [] };
 }
 
@@ -326,3 +362,23 @@ export function hut(x0: number, x1: number, roofY: number, front: 'wood' | 'ston
     ropes: [],
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* Traps on the player's side (the rival shoots at them from world 2)  */
+/* ------------------------------------------------------------------ */
+
+/** A load hanging over the player's spot, its frame post behind the player. Rope id `pRope`. */
+export function playerDrop(load: ObjDef, dropH = 1.3, groundY = 0): Part {
+  return drop('pRope', PX, dropH, { ...load, id: 'pLoad' }, -0.9, groundY);
+}
+
+/** A barrel next to the player (the rival lights it with a fire arrow). id `pTnt`. */
+export const playerTnt = (x = 3.5, groundY = 0): Part => ({ objects: [tnt(x, groundY, 'pTnt')], ropes: [] });
+
+/** Standard player cover: two crates. */
+export const playerCrates = (x = 2.7, rows = 2): Part => ({ objects: crateStack(x, rows, 0, 'pc'), ropes: [] });
+
+export const cover = (...objects: ObjDef[]): Part => ({ objects, ropes: [] });
+
+/** A wooden board fixed in the air (hides a rope or a stopper): two arrows or one fire arrow. */
+export const board = (x: number, y: number, h: number, id?: string): BoxObj => box(x, y, 0.32, h, 'wood', 'crateStrong', { id: id ?? nid('bd'), fixed: true, hp: 44, depth: 1 });

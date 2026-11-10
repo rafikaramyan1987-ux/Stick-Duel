@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { levelById, LEVELS } from '../../src/levels';
 import type { LevelDef } from '../../src/levels/types';
 import { aimsAt } from '../../src/physics/aim';
-import { AMMO, Sim, segSegDist } from '../../src/physics/sim';
+import { HAZARD_DAMAGE, Sim, segSegDist, TRAP_CAP, ZONE_DAMAGE } from '../../src/physics/sim';
 
 const run = (s: Sim, seconds: number) => {
   for (let i = 0; i < seconds * 60; i++) s.step();
@@ -15,9 +15,7 @@ function arena(objects: LevelDef['objects'] = [], ropes: LevelDef['ropes'] = [])
     world: 'forest',
     n: 1,
     name: 'level.forest1',
-    shots: 3,
-    par: 1,
-    ammo: { arrow: 3 },
+    ammo: {},
     player: { x: 0, y: 0, hp: 100 },
     rival: { x: 10, y: 0, hp: 100 },
     terrain: [{ surface: 'grass', points: [{ x: -10, y: 0 }, { x: 25, y: 0 }, { x: 25, y: 5 }, { x: -10, y: 5 }] }],
@@ -37,11 +35,11 @@ describe('simulation', () => {
       const before = s.fighters.map((f) => f.rag.torso.getPosition().x);
       run(s, 4);
       s.fighters.forEach((f, i) => {
-        expect(f.hp).toBe(f.maxHp);
-        expect(f.alive).toBe(true);
-        expect(Math.abs(f.rag.torso.getPosition().x - before[i]!)).toBeLessThan(0.3);
+        expect(f.hp, lv.id).toBe(f.maxHp);
+        expect(f.alive, lv.id).toBe(true);
+        expect(Math.abs(f.rag.torso.getPosition().x - before[i]!), lv.id).toBeLessThan(0.3);
       });
-      expect(s.isSettled()).toBe(true);
+      expect(s.isSettled(), lv.id).toBe(true);
     }
   });
 
@@ -58,17 +56,30 @@ describe('simulation', () => {
     expect(out[0]).toBe(out[1]);
   });
 
-  it('a direct arrow hit only does a little damage', () => {
-    const s = new Sim(arena(), 1);
-    s.warmUp();
-    const target = s.fighters[1].rag.torso.getPosition();
-    const aim = aimsAt(s, 0, { x: target.x, y: target.y })[0]!;
-    s.fire(0, aim.angle, aim.power, 'arrow');
-    run(s, 3);
-    const dmg = 100 - s.fighters[1].hp;
-    expect(dmg).toBeGreaterThan(0);
-    expect(dmg).toBeLessThanOrEqual(AMMO.arrow.direct * 1.5);
-    expect(s.stats?.direct).toBe(dmg);
+  it('direct hits do damage by zone (head 35, body 20, arm/leg 10), scaled by the arrow speed', () => {
+    const hit = (part: 'head' | 'torso' | 'thighF', speedIdx: number) => {
+      const s = new Sim(arena(), 1);
+      s.warmUp();
+      const zone: string[] = [];
+      const target = s.fighters[1].rag.byName[part].body.getPosition();
+      const aim = aimsAt(s, 0, { x: target.x, y: target.y }, [[12, 21][speedIdx]!]).find((a) => a.angle > -0.6)!;
+      s.fire(0, aim.angle, aim.power, 'arrow');
+      for (let i = 0; i < 120; i++) {
+        s.step();
+        for (const e of s.events.splice(0)) if (e.t === 'damage' && e.direct) zone.push(`${e.zone}:${e.amount}`);
+      }
+      return { zone, dmg: s.stats!.direct };
+    };
+    const head = hit('head', 1);
+    const body = hit('torso', 1);
+    expect(head.zone[0]).toMatch(/^head:/);
+    expect(body.zone[0]).toMatch(/^body:/);
+    expect(head.dmg).toBeGreaterThan(28);
+    expect(head.dmg).toBeLessThanOrEqual(ZONE_DAMAGE.head);
+    expect(body.dmg).toBeGreaterThan(15);
+    expect(body.dmg).toBeLessThanOrEqual(ZONE_DAMAGE.body);
+    // a slow arrow hurts less
+    expect(hit('torso', 0).dmg).toBeLessThan(body.dmg);
   });
 
   it('an arrow cuts a rope and the dropped weight hurts by mass and speed', () => {
@@ -84,8 +95,29 @@ describe('simulation', () => {
     run(s, 4);
     expect(s.rope('r')!.joint).toBeNull();
     expect(s.stats!.ropes).toBe(1);
-    expect(s.fighters[1].hp).toBeLessThan(40);
-    expect(s.stats!.env).toBeGreaterThan(60);
+    // a heavy rock: a lot of damage, but never more than the trap cap
+    expect(s.stats!.env).toBeGreaterThan(40);
+    expect(s.stats!.env).toBeLessThanOrEqual(TRAP_CAP);
+    expect(s.fighters[1].alive).toBe(true);
+  });
+
+  it('a trap never K.O.s a fighter at full HP: two rocks and a barrel in one shot still stop at the cap', () => {
+    const lv = arena(
+      [
+        { id: 'rock', shape: 'box', x: 10, y: -5, w: 1.2, h: 1.2, mat: 'stone', look: 'stoneBlock' },
+        { id: 'rock2', shape: 'box', x: 10.2, y: -7, w: 1.2, h: 1.2, mat: 'stone', look: 'stoneBlock' },
+        { id: 'tnt', shape: 'box', x: 9.2, y: -0.5, w: 0.8, h: 1, mat: 'barrel', look: 'barrelTnt' },
+      ],
+      [{ id: 'r', anchor: { x: 10, y: -8.5 }, body: 'rock', local: { x: 0, y: -0.6 } }],
+    );
+    const s = new Sim(lv, 1);
+    s.warmUp();
+    const aim = aimsAt(s, 0, { x: 9.2, y: -0.5 }).find((a) => a.angle > -0.8)!;
+    s.fire(0, aim.angle, aim.power, 'fire');
+    run(s, 6);
+    expect(s.stats!.envTo[1]).toBeLessThanOrEqual(TRAP_CAP);
+    expect(s.fighters[1].hp).toBeGreaterThanOrEqual(100 - TRAP_CAP);
+    expect(s.fighters[1].alive).toBe(true);
   });
 
   it('a fire arrow ignites a barrel, which explodes and breaks wood nearby into chunks', () => {
@@ -115,12 +147,14 @@ describe('simulation', () => {
     expect(s.entByName('tnt')).toBeDefined();
   });
 
-  it('falling out of the world is a K.O.', () => {
+  it('falling out of the world costs HP and puts the fighter back on their spot', () => {
     const s = new Sim(arena(), 1);
     s.warmUp();
     for (const p of s.fighters[1].rag.parts) p.body.setTransform({ x: p.body.getPosition().x + 30, y: p.body.getPosition().y }, p.body.getAngle());
     run(s, 4);
-    expect(s.fighters[1].alive).toBe(false);
+    expect(s.fighters[1].alive).toBe(true);
+    expect(s.fighters[1].hp).toBe(100 - HAZARD_DAMAGE);
+    expect(Math.abs(s.fighters[1].rag.torso.getPosition().x - 10)).toBeLessThan(1);
   });
 
   it('segment distance helper', () => {

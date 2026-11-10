@@ -1,59 +1,60 @@
-import { bunker, drop, hut, level, log, parts, pendulum, post, rock, slopeLog, tnt } from './kit';
+import { board, crateStack, drop, level, log, parts, pendulum, rock, shield, slopeLog, tnt, woodWall, type Part } from './kit';
 import type { LevelDef } from './types';
 
 /**
- * Forest: ropes and logs. Levels 1–3 have one obvious solution (par 1). From level 4 on the rival
- * is protected: a roof that only fire removes, or two hazards that are each too weak alone
- * (HP tuned in src/levels/tuning.ts). The level checker proves both.
+ * Forest: the first duels. Level 1 teaches shooting (no cover), level 2 cover (it wears down under
+ * arrows), level 3 the first easy trap (a rock on a rope over the rival). From level 4 on the traps
+ * need precision (a thin rope behind cover) or two steps (burn the wall, then cut the rope).
  */
 const G = 'grass' as const;
-const WALL = 'post' as const;
+const cover = (...objects: Part['objects']): Part => ({ objects, ropes: [] });
 
-const f1 = level('forest', 1, { par: 1, ammo: { arrow: 5 }, ...parts(slopeLog('log', 'rope', 10.6, 6.2, 4.8, -3.6, G, 0.9, 0.22)), hintTarget: 'rope' });
+const f1 = level('forest', 1, { ammo: {}, objects: [], hintTarget: 'rival' });
 
-const f2 = level('forest', 2, {
-  par: 1,
-  ammo: { arrow: 5 },
-  ...parts(drop('rope', 11.6, 2.2, rock('rock', 1, 1), 13.3), { objects: [post(9.8, 0, 2.6)], ropes: [] }),
+const f2 = level('forest', 2, { ammo: {}, ...parts(cover(woodWall(10.2, 1.7), ...crateStack(2.7, 2))), hintTarget: 'cover' });
+
+const f3 = level('forest', 3, {
+  ammo: {},
+  ...parts(cover(woodWall(10.2, 1.6), ...crateStack(2.7, 2)), drop('rope', 11.6, 1.2, rock('rock', 1.1, 0.9), 13.4)),
   hintTarget: 'rope',
 });
 
-const f3 = level('forest', 3, { par: 1, ammo: { arrow: 5 }, ...parts(pendulum('ram', { x: 10.3, y: -7.6 }, 5, 1.05, 5)), hintTarget: 'ram-hold' });
+/* ---------- from here on: traps need precision or two steps ---------- */
 
-/* ---------- from here on: par 2 or more ---------- */
-
-// tricky: the log above the roof is useless until fire takes the roof away
-const f4 = level('forest', 4, { par: 2, ammo: { arrow: 4, fire: 2 }, ...parts(bunker(10.3, 12.9, -3.1, 'wood', WALL), drop('rope', 11.6, 2.2, log('log', 0, 0, 0.65), 13.6)), hintTarget: 'roof' });
-
-// the ram swings into the hut's wooden door: burn the door, then release the ram
-const f5 = level('forest', 5, { par: 2, ammo: { arrow: 4, fire: 1 }, ...parts(pendulum('ram', { x: 10.3, y: -7.6 }, 5.6, 0.95, 5), hut(10.6, 13.2, -3.2, 'wood', WALL)), rivalX: 11.9 });
-
-const f6 = level('forest', 6, {
-  par: 2,
-  ammo: { arrow: 4, fire: 2 },
-  ...parts(bunker(10.3, 12.9, -3.2, 'wood', WALL), drop('rope', 11.6, 2.6, rock('rock', 1, 1), 13.6), { objects: [tnt(3.3, 0, 'tntPlayer')], ropes: [] }),
-  rivalTargets: ['tntPlayer'],
-  rivalAmmo: ['fire'],
+// tricky: the log's rope is high up behind a shield; cover on both sides
+const f4 = level('forest', 4, {
+  ammo: {},
+  ...parts(slopeLog('log', 'rope', 10.7, 6.6, 5.2, -3.6, G, 0.8, 0.24), cover(board(5.0, -4.3, 1.3, 'ropeShield'), ...crateStack(11.2, 2, 0, 'rc'), ...crateStack(2.7, 2))),
+  rivalX: 12.1,
 });
 
-// a stone door this time: heavy bolts crack it, then the log can roll in
-const f7 = level('forest', 7, { par: 3, ammo: { arrow: 3, heavy: 3 }, ...parts(slopeLog('log', 'rope', 10.4, 7.2, 5.8, -3.4, G, 0.75, 0.25), hut(10.9, 13.5, -3.2, 'stone', WALL)), rivalX: 12.2 });
+// fire arrows: the barrel next to the rival only goes off with fire
+const f5 = level('forest', 5, { ammo: { fire: 2 }, ...parts(cover(woodWall(10.1, 1.7), tnt(12.8, 0, 'tnt'), ...crateStack(2.7, 2))) });
 
-// tricky: burn the roof, drop the log, then swing the ram
+// the ram swings in once its hold rope is cut (a thin target low behind the wall)
+const f6 = level('forest', 6, { ammo: { fire: 1 }, ...parts(pendulum('ram', { x: 10.6, y: -7.4 }, 5, 1.05, 4.9), cover(woodWall(9.8, 1.7), ...crateStack(2.7, 2))), rivalX: 11.9 });
+
+// two steps: burn the wooden lid over the rope, then cut it
+const f7 = level('forest', 7, {
+  ammo: { fire: 2 },
+  ...parts(drop('rope', 11.6, 1.6, log('log', 0, 0, 0.6), 13.6), cover(...shield(10.9, 0, 'lid', 6.4, 1.5), woodWall(10.1, 1.8), ...crateStack(2.7, 2), ...crateStack(3.5, 1))),
+});
+
+// tricky: a rock behind a shield and a barrel behind a wall
 const f8 = level('forest', 8, {
-  par: 3,
-  rivalX: 11.9,
-  ammo: { arrow: 4, fire: 2 },
-  ...parts(pendulum('ram', { x: 9.4, y: -7.8 }, 5, 0.95, 4.4), bunker(10.6, 13.2, -3.1, 'wood', WALL, 0, 1.6), drop('rope', 11.9, 2.4, log('log', 0, 0, 0.6), 13.9)),
+  ammo: { fire: 1 },
+  ...parts(drop('rope', 11.8, 1.4, rock('rock', 1, 0.9), 13.6), cover(...shield(10.4, 0, 'shield', 3.4, 1.1), woodWall(9.9, 1.6), tnt(13.3, 0, 'tnt'), ...crateStack(2.7, 2))),
+  rivalX: 11.8,
 });
 
-// boss: Oakheart in his treehouse bunker
+// boss: Oakheart (volley of three arrows), a trunk over his head and the ram
 const fBoss = level('forest', 9, {
   boss: true,
-  par: 3,
-  ammo: { arrow: 5, fire: 2 },
-  ...parts(bunker(10.3, 12.9, -3.2, 'wood', WALL), drop('trunk', 11.6, 2.4, log('trunk', 0, 0, 0.75), 13.6), pendulum('ram', { x: 8.8, y: -7.6 }, 4.6, 0.9, 4.2)),
+  rivalHp: 160,
+  ammo: { fire: 2 },
+  ...parts(drop('trunk', 11.6, 1.6, log('trunk', 0, 0, 0.7), 13.6), pendulum('ram', { x: 10.6, y: -7.4 }, 5, 1.05, 4.9), cover(woodWall(10, 1.8), ...crateStack(2.7, 2))),
   rivalLook: 'forestBoss',
+  rivalWeapon: 'volley',
 });
 
 export const FOREST: LevelDef[] = [f1, f2, f3, f4, f5, f6, f7, f8, fBoss];

@@ -1,21 +1,22 @@
 import type { Vec } from '../core/math';
+import { Rng } from '../core/rng';
 import { AMMO_ORDER, Duel } from '../game/duel';
 import { aimsAt } from '../physics/aim';
-import { AMMO } from '../physics/sim';
+import { TRAP_CAP } from '../physics/sim';
 import type { AmmoId, LevelDef } from './types';
 
 /**
- * Level checker bot. It plays a level with the real game rules (the same Duel the game uses,
- * rival turns included, fixed 60 Hz step, fixed seed), searching aim angles, power and ammo:
+ * Level checker. Bots play every level as a real duel: the same Duel the game uses (rival turns
+ * and rival AI included, fixed 60 Hz step, fixed seed), from the first shot to the K.O.
  *
- * - every candidate first shot is tried, so it knows whether a one-shot win exists;
- * - a beam search over the most promising states looks for a win within par;
- * - every win it finds is replayed from scratch, shot by shot, before it counts;
- * - a direct-hit-only strategy (every shot aimed at the rival) is played too, and the maximum
- *   damage direct hits could ever do is compared with the rival's HP.
- *
- * Candidates: shots aimed (ballistic solve, flat and lobbed, several speeds) at every rope, every
- * named body and the rival, plus a coarse grid of angles × powers, for every ammo type left.
+ * - The "sharp" bot: every turn it tries every candidate shot on a copy of the game (aimed at the
+ *   rival's head and body, every rope, every named body and the water, flat and lobbed, several
+ *   speeds, every ammo it has), plays the best one for real, and goes on until the duel is over.
+ *   Its real playthrough is the proof that the level can be won (and the e2e tests replay it).
+ * - "Human" bots: the same choices with aim and power errors like a player's (several seeds). The
+ *   average length of their winning duels must be at least 4 player shots.
+ * - Traps: every candidate shot measures the damage the environment did to each fighter in one
+ *   shot; it must never be more than 80, so a trap alone never K.O.s a fighter at full HP.
  */
 export interface Shot {
   ammo: AmmoId;
@@ -24,24 +25,40 @@ export interface Shot {
   target: string;
 }
 
+export interface DuelRun {
+  win: boolean;
+  shots: Shot[];
+  playerHp: number;
+  rivalHp: number;
+  stars: number;
+  trapKill: boolean;
+  chain: boolean;
+}
+
 export interface LevelCheck {
   id: string;
-  par: number;
-  shots: number;
   rivalHp: number;
+  /** The sharp bot's winning duel (null = it did not win). */
   solution: Shot[] | null;
-  /** A first shot that wins on its own (null = none among all candidates). */
-  oneShot: Shot | null;
-  directOnly: { win: boolean; damage: number };
-  /** Most damage direct hits could do with all the level's ammo (all head hits). */
-  directBound: number;
-  /** Most damage a single first shot did (and with what). */
-  bestSingle: { damage: number; shot: Shot | null };
+  sharp: DuelRun;
+  humans: DuelRun[];
+  /** Average player shots of the human bots' winning duels. */
+  avgShots: number;
+  /** Most damage the environment did to one fighter in one shot (any candidate, any run). */
+  maxTrap: number;
+  /** Most trap damage dealt to the rival in one shot, and how. */
+  bestTrap: { damage: number; target: string };
   sims: number;
   ms: number;
 }
 
+/** Human-like aim errors. */
+export const HUMAN_ANGLE_ERR = 0.03;
+export const HUMAN_POWER_ERR = 0.035;
+export const HUMAN_RUNS = 5;
+
 const MAX_TURN_STEPS = 60 * 40;
+const MAX_SHOTS = 24;
 
 type Outcome = 'win' | 'lose' | 'continue' | 'invalid';
 
@@ -59,9 +76,9 @@ export function playShot(d: Duel, s: Shot, stopAfterPlayer = false): Outcome {
   return 'lose';
 }
 
-/** Replays a whole solution from the start: true if it wins with exactly these shots. */
-export function verify(level: LevelDef, shots: Shot[]): boolean {
-  const d = new Duel(level, 1, { headless: true });
+/** Replays a shot list from the start: true if it wins with exactly these shots. */
+export function verify(level: LevelDef, shots: Shot[], seed = 1): boolean {
+  const d = new Duel(level, seed, { headless: true });
   for (let i = 0; i < shots.length; i++) {
     const r = playShot(d, shots[i]!);
     if (r === 'win') return i === shots.length - 1;
@@ -70,200 +87,143 @@ export function verify(level: LevelDef, shots: Shot[]): boolean {
   return false;
 }
 
-/**
- * A win found on a copied state can miss by a hair when replayed for real (copies drift a little).
- * Replay the earlier shots exactly and try small variations of the last one, each verified from scratch.
- */
-function refine(level: LevelDef, path: Shot[]): Shot[] | null {
-  const last = path[path.length - 1]!;
-  const prefix = path.slice(0, -1);
-  for (const da of [0, -0.01, 0.01, -0.02, 0.02, -0.035, 0.035]) {
-    for (const dp of [0, -0.02, 0.02, -0.04, 0.04]) {
-      const cand = [...prefix, { ...last, angle: last.angle + da, power: Math.min(1, Math.max(0, last.power + dp)) }];
-      if (verify(level, cand)) return cand;
-    }
-  }
-  return null;
-}
-
 function targets(d: Duel): Array<{ name: string; p: Vec }> {
   const s = d.sim;
   const out: Array<{ name: string; p: Vec }> = [];
-  for (const r of s.ropes) {
-    if (!r.joint) continue;
-    const [a, b] = s.ropeEnds(r);
-    for (const k of [0.3, 0.6]) out.push({ name: `rope ${r.id}`, p: { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k } });
+  const r = s.fighters[1].rag;
+  out.push({ name: 'rival head', p: { x: r.head.getPosition().x, y: r.head.getPosition().y } });
+  out.push({ name: 'rival', p: { x: r.torso.getPosition().x, y: r.torso.getPosition().y } });
+  // the player's own side (own cover, the traps over the player) is never worth a shot
+  const mid = d.level.player.x + (d.level.rival.x > d.level.player.x ? 2.8 : -2.8);
+  for (const rope of s.ropes) {
+    if (!rope.joint) continue;
+    const [a, b] = s.ropeEnds(rope);
+    if (Math.max(a.x, b.x) < mid) continue; // (levels: the player is on the left)
+    for (const k of [0.35, 0.65]) out.push({ name: `rope ${rope.id}`, p: { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k } });
   }
   for (const e of s.ents) {
     if (e.dead || !e.name) continue;
     const p = e.body.getPosition();
+    if (p.x < mid) continue;
     out.push({ name: e.name, p: { x: p.x, y: p.y } });
-    out.push({ name: `${e.name} top`, p: { x: p.x, y: p.y - e.desc.h * 0.35 } });
   }
   for (const w of s.water) if (!w.frozen) out.push({ name: 'water', p: { x: (w.x0 + w.x1) / 2, y: w.y + 0.05 } });
-  const r = s.fighters[1].rag;
-  out.push({ name: 'rival', p: { x: r.torso.getPosition().x, y: r.torso.getPosition().y } });
-  out.push({ name: 'rival head', p: { x: r.head.getPosition().x, y: r.head.getPosition().y } });
   return out;
 }
 
-export function candidates(d: Duel, grid: boolean): Shot[] {
+export function candidates(d: Duel): Shot[] {
   const out: Shot[] = [];
   const seen = new Set<string>();
-  const add = (s: Shot) => {
-    const k = `${s.ammo}|${s.angle.toFixed(2)}|${s.power.toFixed(2)}`;
-    if (seen.has(k)) return;
-    seen.add(k);
-    out.push(s);
-  };
   const ammo = AMMO_ORDER.filter((a) => (d.ammo[a] ?? 0) > 0);
-  const tg = targets(d);
-  for (const a of ammo) {
-    for (const t of tg) {
-      for (const aim of aimsAt(d.sim, 0, t.p, [10, 14, 18, 21])) add({ ammo: a, angle: aim.angle, power: aim.power, target: t.name });
-    }
-  }
-  if (grid) {
-    const f = d.facing;
+  for (const t of targets(d)) {
     for (const a of ammo) {
-      for (let up = -0.2; up <= 1.45; up += 0.15) {
-        for (const power of [0.35, 0.6, 0.85, 1]) add({ ammo: a, angle: f === 1 ? -up : -Math.PI + up, power, target: 'grid' });
+      // special ammo only where it can matter: on things (not on the rival) or bombs near the rival
+      if (a !== 'arrow' && t.name.startsWith('rival') && a !== 'heavy' && a !== 'bomb') continue;
+      for (const aim of aimsAt(d.sim, 0, t.p, [12, 15.5, 18.5, 21])) {
+        const k = `${a}|${aim.angle.toFixed(3)}|${aim.power.toFixed(2)}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        out.push({ ammo: a, angle: aim.angle, power: aim.power, target: t.name });
       }
     }
   }
   return out;
 }
 
-function score(d: Duel, before: Duel): number {
-  const r = d.sim.fighters[1];
-  const p = d.sim.fighters[0];
-  const st = d.sim.stats;
-  // environmental damage and changes to the arena count; direct hits barely (they never win a level)
-  let s = -(before.sim.fighters[0].hp - p.hp) * 0.5;
-  if (st && st.side === 0) s += st.env * 4 + st.direct * 0.3 + st.ropes * 6 + st.breaks * 4 + st.explosions * 6 + st.ignites * 5;
-  else s += (before.sim.fighters[1].hp - r.hp) * 2;
-  s += d.sim.water.filter((w) => w.frozen).length * 8 - before.sim.water.filter((w) => w.frozen).length * 8;
-  // hazards that moved closer to the rival
-  const rp = r.rag.torso.getPosition();
-  for (const e of d.sim.ents) {
-    if (e.dead || e.desc.fixed) continue;
-    const q = e.body.getPosition();
-    const dist = Math.hypot(q.x - rp.x, q.y - rp.y);
-    if (dist < 2.5) s += (2.5 - dist) * Math.min(4, e.body.getMass() * 0.05);
-  }
-  return s;
+interface Eval {
+  shot: Shot;
+  score: number;
 }
 
-/** Plays every shot at the rival with the ammo that hurts most directly. */
-function directOnly(level: LevelDef): { win: boolean; damage: number } {
-  const d = new Duel(level, 1, { headless: true });
-  const start = d.sim.fighters[1].hp;
-  for (let i = 0; i < 20; i++) {
-    const ammo = AMMO_ORDER.filter((a) => (d.ammo[a] ?? 0) > 0 && a !== 'bomb' && a !== 'fire').sort((a, b) => AMMO[b].direct - AMMO[a].direct)[0];
-    if (!ammo) break;
-    const head = d.sim.fighters[1].rag.head.getPosition();
-    const aims = aimsAt(d.sim, 0, { x: head.x, y: head.y }, [12, 16, 21]);
-    const aim = aims[0];
-    if (!aim) break;
-    const r = playShot(d, { ammo, angle: aim.angle, power: aim.power, target: 'rival head' });
-    // a win only counts as "direct only" if every point of damage came from the arrows themselves
-    if (r === 'win') return { win: d.directOnRival >= start, damage: start };
-    if (r !== 'continue') break;
-  }
-  return { win: false, damage: start - d.sim.fighters[1].hp };
+export class Stats {
+  sims = 0;
+  maxTrap = 0;
+  bestTrap = { damage: 0, target: '' };
 }
 
-/** Raw damage each first shot does (rival HP raised out of reach), best per target. */
-export function measure(level: LevelDef): Array<{ target: string; damage: number; shot: Shot }> {
-  const lv: LevelDef = { ...level, rival: { ...level.rival, hp: 9999 } };
-  const base = new Duel(lv, 1, { headless: true });
-  const best = new Map<string, { target: string; damage: number; shot: Shot }>();
-  for (const c of candidates(base, true)) {
-    // the player's shot only (no rival turn)
-    const d = new Duel(lv, 1, { headless: true });
-    d.sim.fire(0, c.angle, c.power, c.ammo);
-    for (let i = 0; i < 60 * 8; i++) {
-      d.sim.step();
-      if (i > 60 && d.sim.isSettled()) break;
+/** Plays one candidate on a copy (the player's shot only) and scores it. */
+export function evaluate(base: Duel, c: Shot, st: Stats): Eval | null {
+  const d = base.clone();
+  st.sims++;
+  if (playShot(d, c, true) === 'invalid') return null;
+  const s = d.sim.stats;
+  const env = s ? Math.max(...s.envTo) : 0;
+  st.maxTrap = Math.max(st.maxTrap, env);
+  if (s && s.envTo[1] > st.bestTrap.damage) st.bestTrap = { damage: s.envTo[1], target: `${c.ammo} → ${c.target}` };
+  const before = base.sim.fighters;
+  const after = d.sim.fighters;
+  const dealt = before[1].hp - after[1].hp;
+  const taken = before[0].hp - after[0].hp;
+  let score = dealt * 1 - taken * 1.5;
+  if (!after[1].alive) score += 1000;
+  if (!after[0].alive) score -= 1000;
+  // progress on the arena: broken cover, cut ropes, fire, explosions (a trap set up for later)
+  if (s) score += s.breaks * 3 + s.ropes * 4 + s.explosions * 3 + s.ignites * 2;
+  // special ammo is worth keeping for when it matters
+  if (c.ammo !== 'arrow') score -= 4;
+  return { shot: c, score };
+}
+
+/** Plays a whole duel. `noise` = null for the sharp bot, else the human errors' random source. */
+export function playDuel(level: LevelDef, st: Stats, noise: Rng | null, seed = 1, log?: (d: Duel) => void): DuelRun {
+  const d = new Duel(level, seed, { headless: true });
+  log?.(d);
+  const shots: Shot[] = [];
+  let out: Outcome = 'continue';
+  while (out === 'continue' && shots.length < MAX_SHOTS) {
+    const evals = candidates(d)
+      .map((c) => evaluate(d, c, st))
+      .filter((e): e is Eval => !!e)
+      .sort((a, b) => b.score - a.score);
+    const best = evals[0];
+    if (!best) break;
+    let shot = best.shot;
+    if (noise) {
+      // a human does not always see the best shot, and never aims perfectly
+      const pick = evals[Math.min(evals.length - 1, noise.chance(0.25) ? 1 : 0)]!.shot;
+      shot = { ...pick, angle: pick.angle + noise.gauss() * HUMAN_ANGLE_ERR, power: Math.min(1, Math.max(0, pick.power + noise.gauss() * HUMAN_POWER_ERR)) };
     }
-    const dmg = 9999 - d.sim.fighters[1].hp;
-    const key = c.target.replace(/ top$/, '');
-    if (dmg > (best.get(key)?.damage ?? -1)) best.set(key, { target: key, damage: dmg, shot: c });
+    out = playShot(d, shot, false);
+    shots.push(shot);
+    const s = d.sim.stats;
+    if (s) st.maxTrap = Math.max(st.maxTrap, ...s.envTo);
   }
-  return [...best.values()].filter((b) => b.damage > 0).sort((a, b) => b.damage - a.damage);
+  const r = d.result;
+  return {
+    win: out === 'win',
+    shots,
+    playerHp: d.sim.fighters[0].hp,
+    rivalHp: d.sim.fighters[1].hp,
+    stars: r ? r.stars.filter(Boolean).length : 0,
+    trapKill: !!r?.trapKill,
+    chain: !!r?.chain,
+  };
 }
 
-export function checkLevel(level: LevelDef, opts: { beam?: number; maxDepth?: number } = {}): LevelCheck {
+export function checkLevel(level: LevelDef, opts: { humans?: number } = {}): LevelCheck {
   const t0 = Date.now();
-  const beam = opts.beam ?? 14;
-  const maxDepth = opts.maxDepth ?? level.par;
-  const base = new Duel(level, 1, { headless: true });
-  let sims = 0;
-  let oneShot: Shot | null = null;
-  const bestSingle: LevelCheck['bestSingle'] = { damage: 0, shot: null };
-  const rivalStart = base.sim.fighters[1].hp;
-  let solution: Shot[] | null = null;
-  let frontier: Array<{ d: Duel; path: Shot[]; score: number }> = [{ d: base, path: [], score: 0 }];
-  for (let depth = 1; depth <= maxDepth && !solution; depth++) {
-    const next: Array<{ d: Duel; path: Shot[]; score: number }> = [];
-    for (const node of frontier) {
-      for (const c of candidates(node.d, depth === 1)) {
-        // first shots run on a fresh duel (exactly the game); deeper ones on copies (verified after)
-        const child = depth === 1 ? new Duel(level, 1, { headless: true }) : node.d.clone();
-        sims++;
-        const r = playShot(child, c);
-        if (depth === 1) {
-          const dmg = rivalStart - child.sim.fighters[1].hp;
-          if (dmg > bestSingle.damage) {
-            bestSingle.damage = dmg;
-            bestSingle.shot = c;
-          }
-        }
-        if (r === 'win') {
-          const path = [...node.path, c];
-          if (depth === 1 && !oneShot) oneShot = c;
-          if (!solution && path.length <= level.par) solution = verify(level, path) ? path : path.length > 1 ? refine(level, path) : null;
-          if (depth === 1) continue; // keep scanning: every first shot is tried
-          if (solution) break;
-        } else if (r === 'continue') {
-          next.push({ d: child, path: [...node.path, c], score: node.score + score(child, node.d) });
-        }
-      }
-      if (solution && depth > 1) break;
-    }
-    next.sort((a, b) => b.score - a.score);
-    // keep different plans in the beam: the best state of every distinct sequence of targets first,
-    // then the next best ones (so "burn the roof first" is not crowded out by ten ways to cut a rope)
-    const picked: typeof next = [];
-    const seenKeys = new Set<string>();
-    const keyOf = (n: (typeof next)[number]) => n.path.map((s) => `${s.ammo}@${s.target.replace(/ top$/, '')}`).join('>');
-    const width = depth === 1 ? beam : Math.round(beam * 0.7);
-    for (const n of next) {
-      if (picked.length >= width + (depth === 1 ? 10 : 0)) break;
-      const k = keyOf(n);
-      if (seenKeys.has(k)) continue;
-      seenKeys.add(k);
-      picked.push(n);
-    }
-    for (const n of next) {
-      if (picked.length >= beam) break;
-      if (!picked.includes(n)) picked.push(n);
-    }
-    frontier = picked;
-  }
-  let bound = 0;
-  for (const a of AMMO_ORDER) bound += AMMO[a].direct * 1.5 * (level.ammo[a] ?? 0);
+  const st = new Stats();
+  let sharp = playDuel(level, st, null);
+  // the sharp bot's real playthrough is the proof; make sure it replays exactly
+  if (sharp.win && !verify(level, sharp.shots)) sharp = { ...sharp, win: false };
+  const humans: DuelRun[] = [];
+  for (let i = 0; i < (opts.humans ?? HUMAN_RUNS); i++) humans.push(playDuel(level, st, new Rng(1000 + i * 77), 1 + i));
+  // the human bots' wins say how long a duel lasts (the sharp bot only if no human won)
+  const hw = humans.filter((r) => r.win);
+  const wins = hw.length ? hw : [sharp].filter((r) => r.win);
+  const avgShots = wins.length ? wins.reduce((n, r) => n + r.shots.length, 0) / wins.length : 0;
   return {
     id: level.id,
-    par: level.par,
-    shots: level.shots,
     rivalHp: level.rival.hp,
-    solution,
-    oneShot,
-    directOnly: directOnly(level),
-    directBound: bound,
-    bestSingle,
-    sims,
+    solution: sharp.win ? sharp.shots : null,
+    sharp,
+    humans,
+    avgShots,
+    maxTrap: st.maxTrap,
+    bestTrap: st.bestTrap,
+    sims: st.sims,
     ms: Date.now() - t0,
   };
 }
+
+export { TRAP_CAP };

@@ -552,7 +552,7 @@ export class App {
           'div.info',
           {},
           h('div.lvname', {}, this.mode === 'endless' ? t('endless.wave', { n: this.endless.wave }) : this.mode === 'versus' ? t('menu.versus') : this.levelLabel(d.level), d.level.tricky && this.mode === 'adventure' ? h('span.tricky', {}, t('hud.tricky')) : null),
-          h('div.shots', {}, h('span.k', {}, t('hud.shots')), h('b.sv'), this.mode === 'adventure' ? h('span.par', {}, t('hud.par', { n: d.level.par })) : null, d.level.wind ? h('span.wind', { title: t('hud.wind') }, `${d.level.wind > 0 ? '➜' : '⬅'} ${Math.abs(d.level.wind).toFixed(1)}`) : null),
+          d.level.wind ? h('div.shots', {}, h('span.wind', { title: t('hud.wind') }, `${t('hud.wind')} ${d.level.wind > 0 ? '➜' : '⬅'} ${Math.abs(d.level.wind).toFixed(1)}`)) : null,
         ),
         hp('p1', this.mode === 'versus' ? t('versus.p2') : t('hud.rival')),
       ),
@@ -575,7 +575,6 @@ export class App {
     this.hudRefs = {
       p0: this.hud.querySelector('.hp.p0') as HTMLElement,
       p1: this.hud.querySelector('.hp.p1') as HTMLElement,
-      shots: this.hud.querySelector('.shots .sv') as HTMLElement,
       turn: this.hud.querySelector('.turn') as HTMLElement,
       power: this.hud.querySelector('.powermeter') as HTMLElement,
     };
@@ -589,7 +588,7 @@ export class App {
     const d = this.duel;
     if (!d) return;
     const f = d.sim.fighters;
-    const key = `${f[0].hp}|${f[1].hp}|${d.shotsLeft}|${d.phase}|${d.selected}|${AMMO_ORDER.map((a) => d.ammo[a]).join(',')}|${getLang()}`;
+    const key = `${f[0].hp}|${f[1].hp}|${d.phase}|${d.selected}|${AMMO_ORDER.map((a) => d.ammo[a]).join(',')}|${getLang()}`;
     if (!force && key === this.hudCache) return;
     this.hudCache = key;
     for (const s of [0, 1] as const) {
@@ -600,11 +599,10 @@ export class App {
       (el.querySelector('.val') as HTMLElement).textContent = `${f[s].hp}`;
       el.classList.toggle('low', k < 0.34);
     }
-    if (this.hudRefs.shots) this.hudRefs.shots.textContent = String(d.shotsLeft);
     for (const b of Array.from(this.hud.querySelectorAll<HTMLButtonElement>('.ab'))) {
       const a = b.dataset.ammo as AmmoId;
       const n = d.ammo[a] ?? 0;
-      (b.querySelector('.cnt') as HTMLElement).textContent = String(n);
+      (b.querySelector('.cnt') as HTMLElement).textContent = Number.isFinite(n) ? String(n) : '∞';
       b.classList.toggle('sel', d.selected === a);
       b.disabled = n <= 0;
     }
@@ -675,15 +673,16 @@ export class App {
         else sound('soft_med', 0.4);
         break;
       case 'damage':
-        if (!replay) this.damageBubble(e.amount, e.x, e.y, e.direct, e.side);
+        if (!replay) this.damageBubble(e.amount, e.x, e.y, e.direct, e.side, e.zone);
         sound(e.direct ? 'punch_med' : 'punch_heavy', e.direct ? 0.6 : 1);
         this.view.chars?.[e.side].setFace('hurt', 0.8);
+        // headshot: the hat flies off
+        if (e.zone === 'head') this.view.knockHat(e.side, e.x < (this.duel?.sim.fighters[e.side].rag.torso.getPosition().x ?? e.x) ? 1 : -1);
         if (!e.direct && e.amount > 20) this.stage.shake(0.35, 0.35);
-        if (!replay && e.direct && e.side === 1 && !this.save.hints.includes('direct') && this.duel?.level.id !== 'forest-1') {
-          this.save.hints.push('direct');
-          this.persist();
-          this.later(() => this.flashBanner(t('hint.direct'), 3), 600);
-        }
+        else if (e.zone === 'head') this.stage.shake(0.18, 0.2);
+        break;
+      case 'respawn':
+        audio.play('whoosh', { volume: 0.5, pitch: 1.3 });
         break;
       case 'ko':
         audio.play('ko', { volume: 0.9 });
@@ -790,7 +789,7 @@ export class App {
     audio.play(r.win ? 'win' : 'lose', { volume: 0.8 });
     if (r.win) this.view.fx.bitsBurst(this.duel!.level.rival.x, 4, 'confetti', 40, 6);
     const last = this.levelIndex >= LEVELS.length - 1;
-    const labels: Key[] = ['star.win', 'star.par', 'star.trick'];
+    const labels: Key[] = ['star.win', 'star.hp', 'star.trap'];
     const stars = h('div.stars3');
     r.stars.forEach((s, i) => {
       const el = h(`div.star${s ? '.on' : ''}`, { style: `animation-delay:${0.15 + i * 0.22}s` }, h('i', { html: ICONS.star }), h('span', {}, t(labels[i]!)));
@@ -884,11 +883,11 @@ export class App {
 
   /* ───────────── comic bubbles ───────────── */
 
-  private damageBubble(amount: number, x: number, y: number, direct: boolean, side: number): void {
+  private damageBubble(amount: number, x: number, y: number, direct: boolean, side: number, zone?: string): void {
     const p = this.stage.toScreen(x, y - 0.6);
-    const big = !direct && amount >= 20;
-    const word = direct ? '' : amount >= 60 ? t('bubble.crash') : amount >= 20 ? t('bubble.bonk') : '';
-    const el = h(`div.bubble${direct ? '.small' : ''}${big ? '.big' : ''}${side === 0 ? '.mine' : ''}`, { style: `left:${p.x}px;top:${p.y}px` }, word ? h('em', {}, word) : null, h('b', {}, `-${amount}`));
+    const big = (!direct && amount >= 20) || zone === 'head';
+    const word = zone === 'head' ? t('bubble.head') : direct ? '' : amount >= 60 ? t('bubble.crash') : amount >= 20 ? t('bubble.bonk') : '';
+    const el = h(`div.bubble${direct && zone !== 'head' ? '.small' : ''}${big ? '.big' : ''}${side === 0 ? '.mine' : ''}`, { style: `left:${p.x}px;top:${p.y}px` }, word ? h('em', {}, word) : null, h('b', {}, `-${amount}`));
     this.bubbles.append(el);
     this.later(() => el.remove(), 1500);
   }
@@ -944,9 +943,16 @@ export class App {
     const ring = el.querySelector('.ring') as HTMLElement | null;
     const hand = el.querySelector('.hand') as HTMLElement | null;
     const rope = d.level.hintTarget ? d.sim.rope(d.level.hintTarget) : undefined;
-    if (rope && ring) {
+    let at: { x: number; y: number } | null = null;
+    if (rope) {
       const [a, b] = d.sim.ropeEnds(rope);
-      const p = this.stage.toScreen((a.x + b.x) / 2, (a.y + b.y) / 2);
+      at = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    } else if (d.level.hintTarget === 'rival') {
+      const tp = d.sim.fighters[1].rag.torso.getPosition();
+      at = { x: tp.x, y: tp.y - 0.3 };
+    }
+    if (at && ring) {
+      const p = this.stage.toScreen(at.x, at.y);
       ring.style.left = `${p.x}px`;
       ring.style.top = `${p.y}px`;
     }
@@ -986,8 +992,9 @@ export class App {
       this.hintTimer = this.later(() => this.flashBanner(t('hint.wind'), 3.5), 1700);
       return;
     }
-    const roof = level.objects.find((o) => o.id === 'roof');
-    const key: Key | null = level.water?.length ? 'hint.water' : level.lava?.length ? 'hint.lava' : roof ? (roof.mat === 'wood' ? 'hint.roofWood' : roof.mat === 'stone' ? 'hint.roofStone' : null) : null;
+    // the teaching levels, then the first water / lava / moving target / boss weapon
+    const teach: Record<string, Key> = { 'forest-2': 'hint.cover', 'forest-3': 'hint.trap', 'forest-4': 'hint.trapHard', 'castle-1': 'hint.rivalTraps' };
+    const key: Key | null = teach[level.id] ?? (level.water?.length ? 'hint.water' : level.lava?.length ? 'hint.lava' : level.ropes.some((r) => r.swing) ? 'hint.moving' : level.rivalWeapon ? (`hint.boss.${level.rivalWeapon}` as Key) : null);
     if (!key || this.save.hints.includes(key)) return;
     this.save.hints.push(key);
     this.persist();
@@ -1314,7 +1321,11 @@ export class App {
     if (!d || d.phase !== 'aim') return false;
     let target: { x: number; y: number } | null = null;
     const rope = d.sim.rope(name);
-    if (rope) {
+    const rival = d.sim.fighters[d.turn === 0 ? 1 : 0].rag;
+    if (name === 'rival head' || name === 'rival') {
+      const p = (name === 'rival' ? rival.torso : rival.head).getPosition();
+      target = { x: p.x, y: p.y };
+    } else if (rope) {
       const [a, b] = d.sim.ropeEnds(rope);
       target = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
     } else {
@@ -1322,7 +1333,7 @@ export class App {
       if (e) target = { x: e.body.getPosition().x, y: e.body.getPosition().y };
     }
     if (!target) return false;
-    const aims = aimsAt(d.sim, 0, target);
+    const aims = aimsAt(d.sim, d.turn, target);
     const aim = pick === 'flat' ? aims.filter((a) => a.angle > -0.9).sort((a, b) => b.power - a.power)[0] : aims.find((a) => a.angle < -0.9);
     if (!aim) return false;
     d.selectAmmo(ammo);

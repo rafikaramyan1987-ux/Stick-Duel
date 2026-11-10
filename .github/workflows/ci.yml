@@ -64,7 +64,13 @@ jobs:
           retention-days: 30
 
   levels:
+    # one job per world, in parallel: real duels played by the checker bots
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        world: [forest, castle, mountains, desert, frozen, volcano]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -72,8 +78,29 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Level checker (bot proves a win within par for all 54 levels; fails if any level is unsolvable)
-        run: npm run levels:check
+      - name: Level checker (${{ matrix.world }}; the sharp bot wins, traps never do more than 80 in one shot, winning duels last 4+ shots)
+        run: npx vitest run -c vitest.levels.config.ts tests/levels/${{ matrix.world }}.test.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: levels-${{ matrix.world }}
+          path: .levels/${{ matrix.world }}.json
+          include-hidden-files: true
+          retention-days: 7
+
+  levels-report:
+    # all 54 levels together: builds docs/levels-report.md and fails if any level failed or is missing
+    needs: levels
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: levels-*
+          path: .levels
+          merge-multiple: true
+      - run: node scripts/levels-report.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

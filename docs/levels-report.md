@@ -19,7 +19,7 @@ direct hits alone never win from level 3 on.
 | 5 | forest-5 | 2 | 5 | 100 | **none** | none | fails (31 dmg) | 47 | 1466 |
 | 6 | forest-6 | 2 | 6 | 100 | fire → grid (-65.9°, 35%)<br>arrow → rope rope (-42.3°, 50%) | none | fails (36 dmg) | 57 | 185 |
 | 7 | forest-7 | 3 | 6 | 100 | **none** | none | fails (0 dmg) | 72 | 2388 |
-| 8 | forest-8 (tricky) | 3 | 6 | 100 | fire → grid (-57.3°, 35%)<br>arrow → rope ram-hold (-87.1°, 79%)<br>arrow → rival head (-10.3°, 79%) | none | fails (26 dmg) | 57 | 2625 |
+| 8 | forest-8 (tricky) | 3 | 6 | 100 | fire → grid (-57.3°, 35%)<br>arrow → rope ram-hold (-87.1°, 79%)<br>arrow → rival (-28.3°, 23%) | none | fails (26 dmg) | 57 | 2616 |
 | 9 | forest-9 (boss) | 3 | 7 | 160 | **none** | none | fails (0 dmg) | 66 | 3474 |
 | 10 | castle-1 | 2 | 5 | 100 | fire → grid (-14.3°, 60%)<br>arrow → rope chandelier-chain (-33.5°, 50%) | none | fails (27 dmg) | 48 | 173 |
 | 11 | castle-2 | 3 | 6 | 100 | heavy → grid (-5.7°, 60%)<br>heavy → rival head (1.1°, 100%) | none | fails (76 dmg) | 72 | 248 |
@@ -32,13 +32,13 @@ direct hits alone never win from level 3 on.
 | 18 | castle-9 (boss) | 3 | 7 | 160 | fire → rope ram-swing (-40.1°, 21%)<br>arrow → rope chandelier-chain (-35.3°, 50%) | none | fails (42 dmg) | 78 | 367 |
 | 19 | mountains-1 wind 1.2 | 2 | 5 | 100 | fire → rival (-82.2°, 50%)<br>fire → boulder-stop (-35.9°, 50%) | none | fails (27 dmg) | 48 | 187 |
 | 20 | mountains-2 wind -1.5 | 2 | 5 | 100 | **none** | none | fails (0 dmg) | 47 | 1227 |
-| 21 | mountains-3 wind 2 | 3 | 6 | 100 | heavy → rival head (-10.5°, 79%)<br>heavy → rival head (-10.4°, 79%)<br>bomb → rival head (-15.0°, 50%) | none | fails (89 dmg) | 63 | 1906 |
+| 21 | mountains-3 wind 2 | 3 | 6 | 100 | heavy → rival head (-10.5°, 79%)<br>heavy → rival head (-10.4°, 79%)<br>heavy → rival head (-10.1°, 81%) | none | fails (89 dmg) | 63 | 1872 |
 | 22 | mountains-4 (tricky) wind -3 | 2 | 6 | 100 | fire → grid (-65.9°, 85%)<br>arrow → rope rope (-33.3°, 79%) | none | fails (36 dmg) | 57 | 154 |
 | 23 | mountains-5 wind 1.5 | 3 | 7 | 100 | bomb → grid (-22.9°, 100%)<br>arrow → rival head (-10.1°, 79%) | none | fails (100 dmg) | 72 | 576 |
 | 24 | mountains-6 wind -2 | 3 | 7 | 100 | heavy → roof (-25.3°, 50%)<br>bomb → b (-29.3°, 79%) | none | fails (100 dmg) | 72 | 1309 |
 | 25 | mountains-7 wind 2.5 | 2 | 5 | 100 | **none** | none | fails (0 dmg) | 47 | 1069 |
 | 26 | mountains-8 (tricky) wind -2.5 | 3 | 7 | 100 | fire → rope ram-swing (-46.5°, 50%)<br>bomb → roof (-15.7°, 100%)<br>fire → rope ram-hold (-52.1°, 50%) | none | fails (0 dmg) | 57 | 3764 |
-| 27 | mountains-9 (boss) wind 2 | 3 | 7 | 160 | fire → roof (-24.3°, 50%)<br>fire → roof top (-25.0°, 50%)<br>heavy → rival head (-8.1°, 100%) | none | fails (0 dmg) | 72 | 5170 |
+| 27 | mountains-9 (boss) wind 2 | 3 | 7 | 160 | fire → ram (-50.3°, 21%)<br>fire → roof top (-17.2°, 100%)<br>heavy → rival head (-14.9°, 52%) | none | fails (0 dmg) | 72 | 4463 |
 | 28 | desert-1 | 2 | 5 | 100 | fire → grid (-31.5°, 35%)<br>arrow → rope rope (-41.2°, 50%) | none | fails (27 dmg) | 48 | 185 |
 | 29 | desert-2 | 2 | 5 | 100 | fire → grid (-22.9°, 60%)<br>arrow → rope tntRope (-42.3°, 50%) | none | fails (27 dmg) | 48 | 229 |
 | 30 | desert-3 | 2 | 5 | 100 | **none** | none | fails (0 dmg) | 47 | 1479 |
@@ -46,12 +46,12 @@ direct hits alone never win from level 3 on.
 | 32 | desert-5 | 2 | 6 | 100 | fire → grid (-14.3°, 100%)<br>fire → boulder-stop (-35.7°, 50%) | none | fails (75 dmg) | 63 | 285 |
 | 33 | desert-6 | 3 | 6 | 100 | heavy → grid (-14.3°, 60%)<br>bomb → rival (-83.7°, 100%)<br>arrow → rope rope (-31.8°, 100%) | none | fails (83 dmg) | 63 | 2000 |
 | 34 | desert-7 | 2 | 5 | 100 | fire → grid (-22.9°, 60%)<br>arrow → rope tntRope (-42.3°, 50%) | none | fails (27 dmg) | 48 | 253 |
-| 35 | desert-8 (tricky) | 3 | 6 | 100 | arrow → s1 top (-9.3°, 50%)<br>heavy → rival (-11.0°, 50%)<br>heavy → rival head (-15.1°, 50%) | none | fails (78 dmg) | 72 | 2719 |
+| 35 | desert-8 (tricky) | 3 | 6 | 100 | arrow → s1 top (-9.3°, 50%)<br>heavy → rival (-11.0°, 50%)<br>arrow → rival head (-8.5°, 96%) | none | fails (78 dmg) | 72 | 2662 |
 | 36 | desert-9 (boss) | 3 | 5 | 160 | fire → rope tntRope (-34.5°, 79%)<br>fire → roof top (-16.3°, 100%)<br>arrow → rope tntRope (-35.1°, 79%) | none | fails (0 dmg) | 48 | 5319 |
-| 37 | frozen-1 | 2 | 5 | 100 | ice → water (-68.3°, 21%)<br>ice → rope rope (-83.6°, 50%) | none | fails (0 dmg) | 45 | 613 |
+| 37 | frozen-1 | 2 | 5 | 100 | ice → water (-68.3°, 21%)<br>arrow → rope rope (-77.6°, 23%) | none | fails (0 dmg) | 45 | 562 |
 | 38 | frozen-2 | 2 | 6 | 100 | **none** | none | fails (36 dmg) | 57 | 1551 |
 | 39 | frozen-3 | 2 | 6 | 100 | fire → grid (-65.9°, 35%)<br>arrow → rope rope (-41.2°, 50%) | none | fails (36 dmg) | 57 | 241 |
-| 40 | frozen-4 (tricky) | 2 | 4 | 100 | ice → water (-68.3°, 21%)<br>arrow → rope rope (-77.3°, 21%) | none | fails (0 dmg) | 42 | 936 |
+| 40 | frozen-4 (tricky) | 2 | 4 | 100 | ice → water (-68.3°, 21%)<br>arrow → rope rope (-78.7°, 25%) | none | fails (0 dmg) | 42 | 928 |
 | 41 | frozen-5 | 2 | 5 | 100 | **none** | none | fails (0 dmg) | 47 | 3277 |
 | 42 | frozen-6 | 3 | 7 | 100 | heavy → roof (-23.8°, 50%)<br>heavy → roof (-23.5°, 50%)<br>heavy → rival (-76.6°, 50%) | none | fails (81 dmg) | 81 | 2032 |
 | 43 | frozen-7 | 2 | 7 | 100 | fire → grid (-65.9°, 35%)<br>arrow → rope rope (-42.3°, 50%) | none | fails (45 dmg) | 66 | 241 |
@@ -64,7 +64,7 @@ direct hits alone never win from level 3 on.
 | 50 | volcano-5 | 2 | 5 | 100 | **none** | none | fails (0 dmg) | 47 | 1477 |
 | 51 | volcano-6 | 3 | 6 | 100 | heavy → roof (-24.4°, 50%)<br>heavy → rival (-75.6°, 50%)<br>arrow → rope rope (-42.4°, 50%) | none | fails (69 dmg) | 72 | 1928 |
 | 52 | volcano-7 | 2 | 6 | 254 | fire → roof (-17.7°, 79%)<br>fire → boulder-stop (-35.7°, 50%) | none | fails (66 dmg) | 57 | 285 |
-| 53 | volcano-8 (tricky) | 3 | 6 | 100 | arrow → legR (-72.6°, 50%)<br>fire → legR (-73.1°, 50%)<br>arrow → legL (-11.3°, 21%) | none | fails (27 dmg) | 59 | 2565 |
-| 54 | volcano-9 (boss) | 3 | 8 | 177 | fire → rival head (-16.1°, 50%)<br>bomb → roof top (-16.3°, 100%)<br>fire → rope ram-hold (-85.7°, 50%) | none | fails (0 dmg) | 78 | 7130 |
+| 53 | volcano-8 (tricky) | 3 | 6 | 100 | arrow → rival (-19.3°, 100%)<br>fire → rope crate (-70.4°, 48%) | none | fails (27 dmg) | 59 | 2109 |
+| 54 | volcano-9 (boss) | 3 | 8 | 177 | fire → rival head (-16.1°, 50%)<br>bomb → roof top (-16.3°, 100%)<br>fire → rope ram-hold (-58.2°, 23%) | none | fails (0 dmg) | 78 | 7127 |
 
 **13 level(s) failed.**
