@@ -924,25 +924,25 @@
   "rivalHp": 100,
   "solution": [
    {
-    "ammo": "heavy",
+    "ammo": "arrow",
     "angle": -0.17472929382863844,
     "power": 0.8214285714285714,
     "target": "rival head"
    },
    {
-    "ammo": "heavy",
-    "angle": -0.22792736732200555,
-    "power": 0.6071428571428571,
+    "ammo": "arrow",
+    "angle": -0.1720844415125384,
+    "power": 0.8214285714285714,
     "target": "rival head"
    },
    {
     "ammo": "arrow",
-    "angle": -0.2202563586180263,
+    "angle": -0.2192292238809756,
     "power": 0.6071428571428571,
     "target": "rival head"
    }
   ],
-  "avgShots": 3,
+  "avgShots": 5,
   "maxTrap": 80
  },
  {
