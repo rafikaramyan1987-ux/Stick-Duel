@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MidgameThrottle, MIDGAME_INTERVAL_MS } from '../../src/platform/ads';
-import { AD_START_TIMEOUT_MS, BRIDGE_INIT_TIMEOUT, PlaygamaPlatform, PLAYGAMA_STORAGE_KEYS, type BridgeSdk } from '../../src/platform/playgama';
+import { AD_START_TIMEOUT_MS, PlaygamaPlatform, PLAYGAMA_STORAGE_KEYS, type BridgeSdk } from '../../src/platform/playgama';
 import { SAVE_KEY } from '../../src/game/progress';
 
 /** a Playgama Bridge stand-in: `ad` decides what an ad does (it emits Bridge's ad states) */
@@ -143,7 +142,7 @@ describe('Playgama platform (Bridge)', () => {
     expect(bridge.advertisement.showRewarded).not.toHaveBeenCalled();
   });
 
-  it('interstitials: never in a level, no pre-roll; between levels at most one per MIDGAME_INTERVAL_MS (app.ts throttle)', async () => {
+  it('interstitials: never in a level, no pre-roll; between levels every break asks Bridge (no game-side throttle)', async () => {
     const { pg, bridge } = await setup(watched(false));
     await pg.preroll();
     expect(bridge.advertisement.showInterstitial).not.toHaveBeenCalled();
@@ -151,18 +150,26 @@ describe('Playgama platform (Bridge)', () => {
     await pg.midgame(); // in a level
     expect(bridge.advertisement.showInterstitial).not.toHaveBeenCalled();
     pg.gameplayStop();
-    const p = pg.midgame();
-    await vi.advanceTimersByTimeAsync(1500);
-    await p;
-    expect(bridge.advertisement.showInterstitial).toHaveBeenCalledOnce();
-    // the gap the result-screen buttons keep (app.ts breakThen)
-    let now = 0;
-    const th = new MidgameThrottle(() => now);
-    expect(th.canShow()).toBe(false);
-    now = MIDGAME_INTERVAL_MS;
-    expect(th.canShow()).toBe(true);
-    th.markShown();
-    expect(th.canShow()).toBe(false);
+    for (let i = 1; i <= 2; i++) {
+      const p = pg.midgame();
+      await vi.advanceTimersByTimeAsync(1500);
+      await p;
+      // two breaks in a row: both reach Bridge; minimumDelayBetweenInterstitial (Bridge) decides what shows
+      expect(bridge.advertisement.showInterstitial).toHaveBeenCalledTimes(i);
+    }
+  });
+
+  it('records every Bridge call: game_ready is sent before any level_started / gameplay event, even if a level starts first', async () => {
+    const { pg, sent } = await setup(watched(false));
+    pg.gameplayStart();
+    pg.levelEnd(true);
+    pg.gameplayStart();
+    expect(sent).toEqual([]);
+    pg.gameReady();
+    expect(sent).toEqual(['game_ready', 'level_started', 'level_completed', 'level_started']);
+    pg.levelEnd(false);
+    expect(sent.at(-1)).toBe('level_failed');
+    expect(sent.indexOf('game_ready')).toBeLessThan(sent.findIndex((m) => m !== 'game_ready'));
   });
 
   it("platform audio off mutes without pausing; Bridge's pause and a hidden page pause + mute; restore only when nothing is left", async () => {
@@ -183,22 +190,54 @@ describe('Playgama platform (Bridge)', () => {
     expect(log).toEqual(['sound-on', 'pause', 'resume', 'sound-off']);
   });
 
-  it('Bridge that never initializes does not block the boot longer than BRIDGE_INIT_TIMEOUT', async () => {
-    const { bridge } = await setup(watched(true));
-    bridge.initialize.mockImplementation(() => new Promise(() => {}));
+  it('bridge.initialize() rejecting is logged with console.error (not silent) and the game plays on without the SDK', async () => {
+    const { bridge, sent } = await setup(watched(true));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    bridge.initialize.mockImplementation(() => Promise.reject(new Error('boom')));
+    bridge.storage.get.mockClear();
     const pg = new PlaygamaPlatform({ onAdPause: () => {} });
-    const p = pg.init();
-    await vi.advanceTimersByTimeAsync(BRIDGE_INIT_TIMEOUT + 10);
-    await p;
+    await pg.init();
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('[Playgama Bridge] bridge.initialize() failed'), expect.objectContaining({ message: 'boom' }));
+    error.mockRestore();
+    expect(bridge.storage.get).not.toHaveBeenCalled();
     expect(pg.adsUnavailable()).toBe('disabled');
     expect(pg.storage()).toBe(null);
+    sent.length = 0;
+    pg.gameReady!();
+    expect(sent).toEqual([]);
   });
 
-  it('without Bridge (script blocked) the game plays on: no ads, no SDK storage, English', async () => {
+  it("uses the outcome of index.html's boot bridge.initialize() (window.__playgamaBridgeInit) and does not initialize twice", async () => {
+    const { bridge, sent } = await setup(watched(true));
+    bridge.initialize.mockClear();
+    vi.stubGlobal('window', { bridge, __playgamaBridgeInit: Promise.resolve(null) });
+    const pg = new PlaygamaPlatform({ onAdPause: () => {} });
+    await pg.init();
+    expect(bridge.initialize).not.toHaveBeenCalled();
+    expect(pg.locale()).toBe('fr');
+    sent.length = 0;
+    pg.gameReady!();
+    expect(sent).toContain('game_ready');
+  });
+
+  it('a failed boot initialize() (window.__playgamaBridgeInit resolves to the error): no SDK, not initialized again', async () => {
+    const { bridge } = await setup(watched(true));
+    bridge.initialize.mockClear();
+    vi.stubGlobal('window', { bridge, __playgamaBridgeInit: Promise.resolve(new Error('boot failed')) });
+    const pg = new PlaygamaPlatform({ onAdPause: () => {} });
+    await pg.init();
+    expect(bridge.initialize).not.toHaveBeenCalled();
+    expect(pg.adsUnavailable()).toBe('disabled');
+  });
+
+  it('without Bridge (script blocked) the game plays on: no ads, no SDK storage, English, and says so in the console', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.stubGlobal('window', {});
     vi.stubGlobal('document', { hidden: false, addEventListener: () => {} });
     const pg = new PlaygamaPlatform({ onAdPause: () => {} });
     await pg.init();
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('[Playgama Bridge] window.bridge is missing'));
+    error.mockRestore();
     expect(pg.adsUnavailable()).toBe('disabled');
     expect(pg.storage()).toBe(null);
     expect(pg.locale()).toBe('en');

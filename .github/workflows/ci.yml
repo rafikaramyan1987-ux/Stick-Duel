@@ -115,7 +115,7 @@ jobs:
           path: ci-web/
 
   playgama:
-    # Playgama: the build with Playgama Bridge 2.4.1 (vendor/playgama-bridge/) as a zip with index.html at the root
+    # Playgama: Playgama Bridge from Playgama's CDN, initialized before the game bundle runs, as a zip with index.html at the root
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -128,11 +128,32 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Playgama build
         run: npm run build:playgama
-      - name: Playgama zip checks (index.html at the root, Bridge script referenced first in <head>, pinned Bridge build, no crazygames / gamedistribution / gamepix, Playgama's precheck)
+      - name: Playgama build calls bridge.initialize() before the game bundle and sends the documented game_ready
+        run: |
+          f=dist-playgama/index.html
+          head -c 400 $f | grep -qF '<script src="https://bridge.playgama.com/v2/stable/playgama-bridge.js"></script>' || { echo "$f: Bridge CDN script is not the first script in <head>"; exit 1; }
+          grep -qF 'window.bridge.initialize()' $f || { echo "$f: no bridge.initialize() call"; exit 1; }
+          grep -qF '<script type="text/plain" data-playgama-game>' $f || { echo "$f: game bundle not held until bridge.initialize() settles"; exit 1; }
+          ! grep -q '<script type="module"' $f || { echo "$f: a module script runs before bridge.initialize() settles"; exit 1; }
+          grep -qE "[\"'\`]game_ready[\"'\`]" $f || { echo "$f: no game_ready message"; exit 1; }
+          grep -qF '.sendMessage(' $f || { echo "$f: no platform.sendMessage call"; exit 1; }
+          grep -qF 'console.error(' $f || { echo "$f: initialize failure would be silent"; exit 1; }
+          echo "OK: $f initializes Bridge first and sends game_ready"
+      - name: Playgama zip checks (index.html at the root, CDN Bridge first in <head>, initialize() before the game, game_ready, no crazygames / gamedistribution / gamepix, Playgama's precheck with no FAIL / WARN)
         run: node scripts/playgama/zip.mjs ci-playgama/stick-duel-playgama.zip && node scripts/playgama/check.mjs ci-playgama/stick-duel-playgama.zip
-      - name: Committed zip (submission-playgama/stick-duel-playgama-v1.zip) passes the same checks
-        run: node scripts/playgama/check.mjs submission-playgama/stick-duel-playgama-v1.zip
+      - name: Committed zip (submission-playgama/stick-duel-playgama-v2.zip) passes the same checks
+        run: node scripts/playgama/check.mjs submission-playgama/stick-duel-playgama-v2.zip
+      - name: Playgama QA Tool harness (?platform_id=qa_tool; Bridge's initialize handshake, game_ready; failures logged, game playable)
+        run: |
+          node scripts/playgama/qa.mjs ci-playgama/stick-duel-playgama.zip
+          node scripts/playgama/qa.mjs submission-playgama/stick-duel-playgama-v2.zip
       - name: Bridge test (mock platform + stubbed Playgama SDK; interstitial, rewarded completed / cancelled, muted during ads)
         run: node scripts/playgama/test.mjs ci-playgama/stick-duel-playgama.zip
-      - name: Vendored Bridge = official v2.4.1 standalone playgama build (rebuilt from the tag)
-        run: bash scripts/playgama/build-bridge.sh
+      - name: The other builds never contain Playgama Bridge
+        run: |
+          npm run build
+          npm run build:crazygames
+          npm run build:gd
+          npm run build:gamepix
+          npm run build:web
+          for f in dist dist-crazygames dist-gd dist-gamepix dist-web; do if grep -q -e playgama-bridge -e bridge.playgama.com $f/index.html || test -e $f/playgama-bridge.js; then echo "$f has Playgama Bridge"; exit 1; fi; done

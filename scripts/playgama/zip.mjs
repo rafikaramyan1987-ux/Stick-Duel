@@ -1,11 +1,11 @@
 // Playgama build as a zip with index.html at the root (run `npm run build:playgama` first).
-// Usage: node scripts/playgama/zip.mjs [out.zip]   (default submission-playgama/<slug>-playgama-v1.zip)
+// Usage: node scripts/playgama/zip.mjs [out.zip]   (default submission-playgama/<slug>-playgama-v<game.version>.zip)
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import game from './game.mjs';
 
-const out = resolve(process.argv[2] ?? `submission-playgama/${game.slug}-playgama-v1.zip`);
+const out = resolve(process.argv[2] ?? `submission-playgama/${game.slug}-playgama-v${game.version}.zip`);
 const dist = resolve(game.dist);
 if (!existsSync(`${dist}/index.html`)) throw new Error(`${game.dist}/index.html missing: run \`npm run build:playgama\` first`);
 mkdirSync(dirname(out), { recursive: true });
