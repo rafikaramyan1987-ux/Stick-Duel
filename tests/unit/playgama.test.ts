@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MidgameThrottle, MIDGAME_INTERVAL_MS } from '../../src/platform/ads';
 import { AD_START_TIMEOUT_MS, PlaygamaPlatform, PLAYGAMA_STORAGE_KEYS, type BridgeSdk } from '../../src/platform/playgama';
 import { SAVE_KEY } from '../../src/game/progress';
 
@@ -143,7 +142,7 @@ describe('Playgama platform (Bridge)', () => {
     expect(bridge.advertisement.showRewarded).not.toHaveBeenCalled();
   });
 
-  it('interstitials: never in a level, no pre-roll; between levels at most one per MIDGAME_INTERVAL_MS (app.ts throttle)', async () => {
+  it('interstitials: never in a level, no pre-roll; between levels every break asks Bridge (no game-side throttle)', async () => {
     const { pg, bridge } = await setup(watched(false));
     await pg.preroll();
     expect(bridge.advertisement.showInterstitial).not.toHaveBeenCalled();
@@ -151,18 +150,26 @@ describe('Playgama platform (Bridge)', () => {
     await pg.midgame(); // in a level
     expect(bridge.advertisement.showInterstitial).not.toHaveBeenCalled();
     pg.gameplayStop();
-    const p = pg.midgame();
-    await vi.advanceTimersByTimeAsync(1500);
-    await p;
-    expect(bridge.advertisement.showInterstitial).toHaveBeenCalledOnce();
-    // the gap the result-screen buttons keep (app.ts breakThen)
-    let now = 0;
-    const th = new MidgameThrottle(() => now);
-    expect(th.canShow()).toBe(false);
-    now = MIDGAME_INTERVAL_MS;
-    expect(th.canShow()).toBe(true);
-    th.markShown();
-    expect(th.canShow()).toBe(false);
+    for (let i = 1; i <= 2; i++) {
+      const p = pg.midgame();
+      await vi.advanceTimersByTimeAsync(1500);
+      await p;
+      // two breaks in a row: both reach Bridge; minimumDelayBetweenInterstitial (Bridge) decides what shows
+      expect(bridge.advertisement.showInterstitial).toHaveBeenCalledTimes(i);
+    }
+  });
+
+  it('records every Bridge call: game_ready is sent before any level_started / gameplay event, even if a level starts first', async () => {
+    const { pg, sent } = await setup(watched(false));
+    pg.gameplayStart();
+    pg.levelEnd(true);
+    pg.gameplayStart();
+    expect(sent).toEqual([]);
+    pg.gameReady();
+    expect(sent).toEqual(['game_ready', 'level_started', 'level_completed', 'level_started']);
+    pg.levelEnd(false);
+    expect(sent.at(-1)).toBe('level_failed');
+    expect(sent.indexOf('game_ready')).toBeLessThan(sent.findIndex((m) => m !== 'game_ready'));
   });
 
   it("platform audio off mutes without pausing; Bridge's pause and a hidden page pause + mute; restore only when nothing is left", async () => {

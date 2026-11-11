@@ -49,8 +49,11 @@ English (default and fallback) and French, from Bridge's `platform.language`. La
 - **Config:** `playgama-bridge-config.json` beside `index.html` (Bridge loads `./playgama-bridge-config.json`).
 - The save is read and the menu shows after initialization; `game_ready` once the boot screen
   is gone; language from `platform.language` (English fallback); progress through Bridge Storage only (key
-  `stick-duel.save.v1`, one `storage.get` at start); `level_started` / `level_completed` / `level_failed`;
-  interstitials only between levels (result-screen buttons, at most one per 2 minutes, no pre-roll); rewarded ads
+  `stick-duel.save.v1`, one `storage.get` at start); `level_started` / `level_completed` / `level_failed`, always
+  after `game_ready` (a gameplay message sent before it is held and sent right after it); interstitials at every break
+  between levels / rounds (result-screen buttons, so never during play and never before the first level or round is
+  over; no pre-roll), with no counter or timer of the game's own: how often one shows is Bridge's call,
+  `minimumDelayBetweenInterstitial` in playgama-bridge-config.json (Playgama's interstitial docs); rewarded ads
   only from the labelled "▶ Double coins", "▶ Try <weapon> for this duel" and "▶ Revive & keep fighting" buttons (hidden where Bridge has no
   rewarded ads), with the reward only after Bridge's `rewarded` state; sound muted and the game paused during ads, on
   Bridge's pause state and when the page is hidden; Bridge's audio state mutes.

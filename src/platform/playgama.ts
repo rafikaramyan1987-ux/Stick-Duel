@@ -14,9 +14,10 @@ import type { AdHooks, AdsUnavailable, Platform, StorageLike } from './ads';
  * - `game_ready` once the boot screen is gone and the title menu takes input (`gameReady()`, from main.ts)
  * - the first gameplay start of a level → `level_started`; its result screen → `level_completed` / `level_failed`
  *   (Bridge has no gameplay start / stop)
- * - interstitials (`advertisement.showInterstitial()`) only from the result-screen buttons between levels (app.ts
- *   breakThen, which keeps the 2-minute MidgameThrottle; plus `minimumDelayBetweenInterstitial: 120` in
- *   playgama-bridge-config.json); never during a level, no pre-roll
+ * - `game_ready` is always the first lifecycle message: gameplay messages sent before it are held (send)
+ * - interstitials (`advertisement.showInterstitial()`) at every result-screen break between levels / rounds (app.ts
+ *   breakThen), with no counter or timer of the game's own: how often one shows is Bridge's call,
+ *   `minimumDelayBetweenInterstitial` in playgama-bridge-config.json; never during a level, no pre-roll
  * - rewarded (`advertisement.showRewarded()`) only from the labelled ad buttons; they are hidden (adsUnavailable)
  *   when Bridge is missing or `isRewardedSupported` is false. The reward is granted only when Bridge reports the
  *   `rewarded` state before `closed`; closed / failed without it: no reward (the button says no ad is available)
@@ -111,6 +112,8 @@ export class PlaygamaPlatform implements Platform {
   private playing = false;
   private levelOn = false;
   private readySent = false;
+  /** gameplay messages waiting for game_ready (see send) */
+  private held: string[] = [];
   private pausedBy = new Set<PauseReason>();
   /** last state given to AdHooks.onAdPause */
   paused = false;
@@ -257,6 +260,8 @@ export class PlaygamaPlatform implements Platform {
     if (this.readySent || !this.b) return;
     this.readySent = true;
     this.send('game_ready');
+    // gameplay messages from before game_ready follow it, in their order
+    for (const m of this.held.splice(0)) this.send(m);
   }
 
   gameplayStart(): void {
@@ -276,7 +281,16 @@ export class PlaygamaPlatform implements Platform {
   }
   happytime(): void {}
 
+  /**
+   * Every Bridge message goes through here. Playgama: `game_ready` comes first, so any gameplay message (level_started,
+   * level_completed, …) before it is held and sent right after it.
+   */
   private send(m: string): void {
+    if (!this.b) return;
+    if (m !== 'game_ready' && !this.readySent) {
+      this.held.push(m);
+      return;
+    }
     this.log.push(m);
     try {
       void Promise.resolve(this.b?.platform.sendMessage(m)).catch(() => {});

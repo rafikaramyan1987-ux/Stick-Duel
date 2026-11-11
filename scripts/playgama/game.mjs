@@ -26,8 +26,6 @@ export default {
     /** the value the reward changes: the player's coins */
     value: (frame) => frame.evaluate(() => window.__stickDuel.save.coins),
   },
-  /** the game's own 2-minute gap between interstitials (app.ts MidgameThrottle), skipped for the test */
-  skipGap: (frame) => frame.evaluate(() => (window.__stickDuel.throttle.last = 0)),
   /** after the result screen: Next (the between-levels interstitial slot), then the next level's intro opens */
   async next(frame) {
     await frame.evaluate(() => (window.__stickDuel.speed = 1));

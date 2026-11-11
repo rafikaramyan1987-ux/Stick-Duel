@@ -95,6 +95,11 @@ expect(alive, 'Bridge initialized (liveness ping after the QA Tool answered)');
 const ready = await until(() => seen('platform', 'game_ready'));
 expect(ready, 'game sent platform.sendMessage("game_ready") to the QA Tool');
 if (alive && ready) expect(ready.t >= alive.t, 'game_ready only after Bridge finished initializing');
+// Playgama: game_ready first, then gameplay events (level_started, level_completed, …); none may reach the platform before it
+const GAMEPLAY = new Set(['level_started', 'level_completed', 'level_failed', 'level_paused', 'level_resumed', 'gameplay_started', 'gameplay_stopped', 'in_game_loading_started', 'in_game_loading_stopped', 'player_got_achievement']);
+const lifecycle = transcript.filter((x) => x.dirn === 'in' && x.m.type === 'platform' && (x.m.action === 'game_ready' || GAMEPLAY.has(x.m.action))).map((x) => x.m.action);
+const early = lifecycle.slice(0, Math.max(0, lifecycle.indexOf('game_ready'))).filter((a) => GAMEPLAY.has(a));
+expect(lifecycle[0] === 'game_ready' && !early.length, 'game_ready is the first lifecycle message: no level_started / gameplay event before it', lifecycle.join(' → ') || 'none');
 let booted;
 try {
   await game.ready(frame, page);

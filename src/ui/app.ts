@@ -1142,11 +1142,15 @@ export class App {
     return b;
   }
 
-  /** Natural break: a midgame ad (throttled) before continuing. */
+  /**
+   * Natural break (a result screen's buttons, so never during play and never before a level / round is over): a
+   * midgame ad before continuing. Playgama: at every break, with no throttle of the game's own (Bridge's
+   * minimumDelayBetweenInterstitial paces them, as Playgama's docs require); other builds: MidgameThrottle.
+   */
   private async breakThen(next: () => void): Promise<void> {
     if (this.adBreak) return; // a second click while the ad is requested
     this.tracker.stop();
-    if (this.throttle.canShow()) {
+    if (import.meta.env.VITE_PLATFORM === 'playgama' || this.throttle.canShow()) {
       this.throttle.markShown();
       this.adBreak = true;
       try {
