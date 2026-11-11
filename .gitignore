@@ -22,3 +22,5 @@ coverage/
 !submission-playgama/*.zip
 !submission-gamemonetize/*.zip
 !submission-y8/*.zip
+submission-y8/media/.frames/
+submission-y8/media/.tmp.png
