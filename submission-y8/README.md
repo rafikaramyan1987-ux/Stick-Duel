@@ -27,7 +27,7 @@ Promos: the game's cover scene (castle boss, the hero's arrow about to land; the
 with the game logo, rendered at 1920x1080, 1080x1920 and 760x570.
 
 Video: one continuous, unedited take of real play with no intro, menus or sound, at the real game speed: the
-Sunscorch Desert boss fight. TAKE The 960x720 file is the same take for the 4:3 slot: the 16:9 picture scaled to
+Frostbite Lake boss fight against Frostfang the Yeti King. The player's first arrow is a headshot at 3 s, the Yeti King's snowball flies back at 7–8 s, and the second headshot knocks him out in the slow-motion kill cam at 12–13 s (all inside Y8's 20 s preview), followed by the 3-star Victory screen. The 960x720 file is the same take for the 4:3 slot: the 16:9 picture scaled to
 960x540 over a blurred fill of itself (a 4:3 crop would cut off the fighters and the HUD).
 
 ## Basic info (ready to paste)
@@ -85,7 +85,7 @@ size works).
 - The game pauses and mutes in `beforeAd`, and resumes and restores the player's sound / music settings in `afterAd`.
   `adBreakDone` settles each request; `.catch()` and a timeout also settle it, exactly once, so the game never gets
   stuck.
-- Rewarded (`type: 'reward'`): only from the optional buttons that name the reward first ("▶ Try the axe for this
+- Rewarded (`type: 'reward'`): only from the optional buttons that name the reward first ("▶ Try <a locked weapon> for this
   duel", "▶ Double coins", "▶ Revive & keep fighting"). `beforeReward` calls `showAdFn()`, the reward is granted only
   in `adViewed`; `adDismissed` or no ad means no reward and the button says "No ad available right now, try later",
   and the game goes on. Nothing essential is behind an ad.
