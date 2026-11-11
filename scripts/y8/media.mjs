@@ -8,7 +8,7 @@
 //    The first frame is already gameplay; the headshot knockout with its kill cam lands well inside the first 20 s.
 //  - gameplay-960x720.mp4: the same take for the 4:3 slot, scaled to 960x540 over a blurred fill of itself (so the
 //    HUD and both fighters stay in frame; a 4:3 crop would cut them)
-// The game runs on Playwright's fake clock, stepped 1/30 s per frame, so the video plays at the real game speed
+// The game runs on Playwright's fake clock, paused and stepped 1/30 s per frame, so the video plays at the real game speed
 // however long a screenshot takes; CSS animations (toasts, stars) are stepped with it.
 // Usage: npm run build && node scripts/y8/media.mjs [--only shots,promos,video] [--shot 3]
 import { execFileSync } from 'node:child_process';
@@ -62,6 +62,9 @@ async function open(browser, w, h) {
   await page.goto(BASE);
   for (let i = 0; i < 40 && !(await page.locator('#play').count()); i++) await page.clock.runFor(250);
   await page.waitForSelector('#play');
+  // freeze the clock: from here on only step() / runFor() move game time (an installed clock otherwise keeps
+  // flowing in real time, so slow screenshots would speed the game up)
+  await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 100);
   return { ctx, page, errors };
 }
 
