@@ -3,7 +3,7 @@
 //    four gameplay moments (no menus, no title screen), each rendered natively at both sizes
 //  - promo-landscape-1920x1080.jpg, promo-portrait-1080x1920.jpg, promo-card-760x570.jpg: the game's cover scene with
 //    the logo (App.coverShot, as scripts/covers.mjs) rendered at those sizes
-//  - gameplay-1280x720.mp4: ONE continuous, unedited take of real play (Desert boss, the player's shots by the game's
+//  - gameplay-1280x720.mp4: ONE continuous, unedited take of real play (Frostbite Lake boss, the player's shots by the game's
 //    own "drag back and release" helper demoShot, the boss by the game's AI), 30 fps, every frame rendered, no sound.
 //    The first frame is already gameplay; the headshot knockout with its kill cam lands well inside the first 20 s.
 //  - gameplay-960x720.mp4: the same take for the 4:3 slot, scaled to 960x540 over a blurred fill of itself (so the
@@ -161,7 +161,7 @@ const SHOTS = [
   },
 ];
 
-const TAKE = { world: 4, level: 10, seconds: 26, fps: 30, killcamBy: 18 };
+const TAKE = { world: 5, level: 10, seconds: 26, fps: 30, killcamBy: 18 };
 
 const server = await preview({ preview: { port: PORT, strictPort: true }, logLevel: 'error' });
 const browser = await chromium.launch(process.env.PW_CHROMIUM_PATH ? { executablePath: process.env.PW_CHROMIUM_PATH } : {});
