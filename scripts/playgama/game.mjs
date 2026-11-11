@@ -5,6 +5,8 @@ export default {
   slug: web.slug,
   title: 'Stick Duel',
   dist: 'dist-playgama',
+  /** the submission zip's version: submission-playgama/<slug>-playgama-v<version>.zip (v1 kept for reference) */
+  version: 2,
   exclude: web.exclude,
   query: '',
   /** a 2D-canvas game: plain Chromium (scripts/web/game.mjs `browserArgs`) */

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MidgameThrottle, MIDGAME_INTERVAL_MS } from '../../src/platform/ads';
-import { AD_START_TIMEOUT_MS, BRIDGE_INIT_TIMEOUT, PlaygamaPlatform, PLAYGAMA_STORAGE_KEYS, type BridgeSdk } from '../../src/platform/playgama';
+import { AD_START_TIMEOUT_MS, PlaygamaPlatform, PLAYGAMA_STORAGE_KEYS, type BridgeSdk } from '../../src/platform/playgama';
 import { SAVE_KEY } from '../../src/game/progress';
 
 /** a Playgama Bridge stand-in: `ad` decides what an ad does (it emits Bridge's ad states) */
@@ -183,22 +183,54 @@ describe('Playgama platform (Bridge)', () => {
     expect(log).toEqual(['sound-on', 'pause', 'resume', 'sound-off']);
   });
 
-  it('Bridge that never initializes does not block the boot longer than BRIDGE_INIT_TIMEOUT', async () => {
-    const { bridge } = await setup(watched(true));
-    bridge.initialize.mockImplementation(() => new Promise(() => {}));
+  it('bridge.initialize() rejecting is logged with console.error (not silent) and the game plays on without the SDK', async () => {
+    const { bridge, sent } = await setup(watched(true));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    bridge.initialize.mockImplementation(() => Promise.reject(new Error('boom')));
+    bridge.storage.get.mockClear();
     const pg = new PlaygamaPlatform({ onAdPause: () => {} });
-    const p = pg.init();
-    await vi.advanceTimersByTimeAsync(BRIDGE_INIT_TIMEOUT + 10);
-    await p;
+    await pg.init();
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('[Playgama Bridge] bridge.initialize() failed'), expect.objectContaining({ message: 'boom' }));
+    error.mockRestore();
+    expect(bridge.storage.get).not.toHaveBeenCalled();
     expect(pg.adsUnavailable()).toBe('disabled');
     expect(pg.storage()).toBe(null);
+    sent.length = 0;
+    pg.gameReady!();
+    expect(sent).toEqual([]);
   });
 
-  it('without Bridge (script blocked) the game plays on: no ads, no SDK storage, English', async () => {
+  it("uses the outcome of index.html's boot bridge.initialize() (window.__playgamaBridgeInit) and does not initialize twice", async () => {
+    const { bridge, sent } = await setup(watched(true));
+    bridge.initialize.mockClear();
+    vi.stubGlobal('window', { bridge, __playgamaBridgeInit: Promise.resolve(null) });
+    const pg = new PlaygamaPlatform({ onAdPause: () => {} });
+    await pg.init();
+    expect(bridge.initialize).not.toHaveBeenCalled();
+    expect(pg.locale()).toBe('fr');
+    sent.length = 0;
+    pg.gameReady!();
+    expect(sent).toContain('game_ready');
+  });
+
+  it('a failed boot initialize() (window.__playgamaBridgeInit resolves to the error): no SDK, not initialized again', async () => {
+    const { bridge } = await setup(watched(true));
+    bridge.initialize.mockClear();
+    vi.stubGlobal('window', { bridge, __playgamaBridgeInit: Promise.resolve(new Error('boot failed')) });
+    const pg = new PlaygamaPlatform({ onAdPause: () => {} });
+    await pg.init();
+    expect(bridge.initialize).not.toHaveBeenCalled();
+    expect(pg.adsUnavailable()).toBe('disabled');
+  });
+
+  it('without Bridge (script blocked) the game plays on: no ads, no SDK storage, English, and says so in the console', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.stubGlobal('window', {});
     vi.stubGlobal('document', { hidden: false, addEventListener: () => {} });
     const pg = new PlaygamaPlatform({ onAdPause: () => {} });
     await pg.init();
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('[Playgama Bridge] window.bridge is missing'));
+    error.mockRestore();
     expect(pg.adsUnavailable()).toBe('disabled');
     expect(pg.storage()).toBe(null);
     expect(pg.locale()).toBe('en');

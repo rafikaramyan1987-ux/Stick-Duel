@@ -1,4 +1,4 @@
-// Local test of the Playgama zip with the real Playgama Bridge 2.4.1 inside it, in two modes:
+// Local test of the Playgama zip with the real Playgama Bridge (from Playgama's CDN, as in the zip), in two modes:
 //  1. Bridge's mock platform (what Bridge runs outside Playgama, e.g. on localhost): the game boots, sends game_ready,
 //     plays the first level, saves through Bridge Storage, shows no rewarded buttons (mock has no rewarded ads) and its
 //     between-levels interstitial fails cleanly (the next level opens); no request leaves the local server.
@@ -18,7 +18,7 @@ import { serve } from '../web/serve.mjs';
 
 const args = process.argv.slice(2);
 const only = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
-const zip = resolve(args[0] && !args[0].startsWith('--') ? args[0] : `submission-playgama/${game.slug}-playgama-v1.zip`);
+const zip = resolve(args[0] && !args[0].startsWith('--') ? args[0] : `submission-playgama/${game.slug}-playgama-v${game.version}.zip`);
 const dir = mkdtempSync(join(tmpdir(), 'playgama-test-'));
 execFileSync('unzip', ['-q', zip, '-d', dir]);
 const server = await serve(dir);
@@ -80,6 +80,7 @@ async function open(query, { stub = false } = {}) {
   page.on('pageerror', (e) => pageErrors.push(e.message));
   await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => {
     const u = route.request().url();
+    if (u.startsWith('https://bridge.playgama.com/')) return route.continue();
     if (stub && u === 'https://playgama.com/platform-sdk/v1.js') return route.fulfill({ contentType: 'text/javascript', body: STUB });
     external.push(u);
     return route.abort();

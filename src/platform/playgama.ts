@@ -3,12 +3,12 @@ import type { LangCode } from '../i18n';
 import type { AdHooks, AdsUnavailable, Platform, StorageLike } from './ads';
 
 /**
- * Playgama Bridge (https://github.com/Playgama/bridge, v2.4.1, vendor/playgama-bridge/) adapter. Only bundled in the
- * `playgama` build (VITE_PLATFORM=playgama, see vite.config.ts and main.ts): index.html loads `./playgama-bridge.js`
- * as its first script, so `window.bridge` exists when the game boots; outside Playgama, Bridge runs its mock platform
- * (no ads).
- * - init (awaited in main.ts before the save is read and the menu shows): `bridge.initialize()` (capped at
- *   BRIDGE_INIT_TIMEOUT: without Bridge the game plays on with no ads), then `platform.language` (the game falls back
+ * Playgama Bridge (https://github.com/Playgama/bridge) adapter. Only bundled in the `playgama` build
+ * (VITE_PLATFORM=playgama, see vite.config.ts and main.ts): index.html loads Bridge from Playgama's CDN
+ * (https://bridge.playgama.com/v2/stable/playgama-bridge.js) as its first script and initializes it before the game
+ * bundle runs (scripts/playgama/boot.js); outside Playgama, Bridge runs its mock platform (no ads).
+ * - init (awaited in main.ts before the save is read and the menu shows): `bridge.initialize()`'s outcome (initBridge;
+ *   a failure is logged with console.error and the game plays on with no ads), then `platform.language` (the game falls back
  *   to English), the save through Bridge Storage (one `storage.get([...])` of every key, kept in memory; writes go to
  *   `storage.set`), `platform.isAudioEnabled`, and the AUDIO_STATE_CHANGED / PAUSE_STATE_CHANGED events
  * - `game_ready` once the boot screen is gone and the title menu takes input (`gameReady()`, from main.ts)
@@ -28,8 +28,34 @@ import type { AdHooks, AdsUnavailable, Platform, StorageLike } from './ads';
 
 /** every storage key the game uses (src/game/progress.ts SAVE_KEY), read in one `storage.get([...])` at startup */
 export const PLAYGAMA_STORAGE_KEYS = [SAVE_KEY];
-/** Bridge initialization never blocks the boot longer than this (then the game plays on without the SDK) */
-export const BRIDGE_INIT_TIMEOUT = 10_000;
+
+/**
+ * Bridge after `bridge.initialize()`, or null when it failed (logged with console.error, never silent; the game then
+ * plays on without the SDK). In the Playgama build index.html's boot script (scripts/playgama/boot.js) already called
+ * initialize() and started the game only once it settled: its outcome is `window.__playgamaBridgeInit`. No timeout of
+ * the game's own: Bridge settles the promise itself (Playgama: wait for initialization before anything else).
+ */
+export async function initBridge(): Promise<BridgeSdk | null> {
+  if (typeof window === 'undefined') return null;
+  const b = window.bridge;
+  if (!b?.initialize) {
+    console.error('[Playgama Bridge] window.bridge is missing: the game runs WITHOUT Playgama Bridge (no ads, no Bridge storage, no game_ready)');
+    return null;
+  }
+  const booted = window.__playgamaBridgeInit;
+  const err = booted
+    ? await booted
+    : await b.initialize().then(
+        () => null,
+        (e: unknown) => e ?? new Error('bridge.initialize() rejected'),
+      );
+  if (err) {
+    // the boot script has logged it already
+    if (!booted) console.error('[Playgama Bridge] bridge.initialize() failed; the game runs WITHOUT Playgama Bridge (no ads, no Bridge storage, no game_ready):', err);
+    return null;
+  }
+  return b;
+}
 /** If the ad has not opened after this long, give up and continue (same as the other portals). */
 export const AD_START_TIMEOUT_MS = 8000;
 
@@ -65,6 +91,8 @@ declare global {
     bridge?: BridgeSdk;
     /** the Playgama platform, for scripts/playgama/test.mjs */
     __playgama?: PlaygamaPlatform;
+    /** set by the Playgama build's boot script: bridge.initialize()'s outcome (null = initialized, else the error) */
+    __playgamaBridgeInit?: Promise<unknown>;
   }
 }
 
@@ -97,21 +125,9 @@ export class PlaygamaPlatform implements Platform {
 
   constructor(private readonly hooks: AdHooks) {}
 
-  async init(timeoutMs = BRIDGE_INIT_TIMEOUT): Promise<void> {
+  async init(): Promise<void> {
     if (typeof window !== 'undefined') window.__playgama = this;
-    const b = typeof window !== 'undefined' ? window.bridge : undefined;
-    if (b?.initialize) {
-      let to: ReturnType<typeof setTimeout> | undefined;
-      try {
-        await Promise.race([b.initialize(), new Promise((_, rej) => (to = setTimeout(() => rej(new Error('timeout')), timeoutMs)))]);
-        this.b = b;
-      } catch (err) {
-        console.warn('[Playgama] Bridge did not initialize: playing without it', err);
-        this.b = null;
-      } finally {
-        clearTimeout(to);
-      }
-    }
+    this.b = await initBridge();
     const s = this.b;
     if (s) {
       try {
