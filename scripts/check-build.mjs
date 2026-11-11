@@ -1,7 +1,7 @@
 // Build self-check: the build folder must be a single index.html (< 50 MB portal limit; our budget 5 MB),
 // with no external requests or links except the platform's own SDK script, no popups, no logins,
 // and no trace of the other portal's SDK or branding.
-// Usage: node scripts/check-build.mjs [web|crazygames|gd|gamepix]   (default web → dist/)
+// Usage: node scripts/check-build.mjs [web|crazygames|gd|gamepix|gamemonetize|y8]   (default web → dist/)
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 
 const platform = process.argv[2] ?? 'web';
@@ -9,11 +9,13 @@ const PLATFORMS = {
   web: { dir: 'dist', sdk: [], forbid: [/crazygames/i, /gamedistribution/i, /gdsdk/, /gamepix/i] },
   crazygames: { dir: 'dist-crazygames', sdk: ['https://sdk.crazygames.com/crazygames-sdk-v3.js'], forbid: [/gamedistribution/i, /gdsdk/, /GD_OPTIONS/, /gamepix/i] },
   gd: { dir: 'dist-gd', sdk: ['https://html5.api.gamedistribution.com/main.min.js'], forbid: [/crazygames/i, /CrazyGames/, /gamepix/i] },
+  gamemonetize: { dir: 'dist-gamemonetize', sdk: ['https://api.gamemonetize.com/sdk.js'], forbid: [/crazygames/i, /gamedistribution/i, /gdsdk/, /GD_OPTIONS/, /gamepix/i, /playgama/i, /y8\.com/i, /googlesyndication/i] },
+  y8: { dir: 'dist-y8', sdk: ['https://cdn.y8.com/minimal-sdk/2-0/y8.min.js'], forbid: [/crazygames/i, /gamedistribution/i, /gdsdk/, /GD_OPTIONS/, /gamepix/i, /playgama/i, /gamemonetize/i, /googlesyndication/i] },
   gamepix: { dir: 'dist-gamepix', sdk: ['https://integration.gamepix.com/sdk/v3/gamepix.sdk.js'], forbid: [/crazygames/i, /gamedistribution/i, /gdsdk/, /GD_OPTIONS/] },
 };
 const cfg = PLATFORMS[platform];
 if (!cfg) {
-  console.error(`unknown platform "${platform}" (web | crazygames | gd | gamepix)`);
+  console.error(`unknown platform "${platform}" (web | crazygames | gd | gamepix | gamemonetize | y8)`);
   process.exit(1);
 }
 const { dir } = cfg;

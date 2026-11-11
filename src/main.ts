@@ -6,9 +6,11 @@ import { loadSave } from './game/save';
 import { NoopPlatform, type AdHooks, type AdsUnavailable, type Platform } from './platform/ads';
 import { CrazyGamesPlatform } from './platform/crazygames';
 import { GameDistributionPlatform } from './platform/gamedistribution';
+import { GameMonetizePlatform } from './platform/gamemonetize';
 import { GamePixPlatform } from './platform/gamepix';
 import { PlaygamaPlatform } from './platform/playgama';
 import { setStorageBackend } from './platform/storage';
+import { Y8Platform } from './platform/y8';
 import { App } from './ui/app';
 
 /**
@@ -22,6 +24,8 @@ function createPlatform(hooks: AdHooks): Platform {
   if (import.meta.env.VITE_PLATFORM === 'gd') return new GameDistributionPlatform(hooks);
   if (import.meta.env.VITE_PLATFORM === 'gamepix') return new GamePixPlatform(hooks);
   if (import.meta.env.VITE_PLATFORM === 'playgama') return new PlaygamaPlatform(hooks);
+  if (import.meta.env.VITE_PLATFORM === 'gamemonetize') return new GameMonetizePlatform(hooks);
+  if (import.meta.env.VITE_PLATFORM === 'y8') return new Y8Platform(hooks);
   if (import.meta.env.VITE_PLATFORM === 'crazygames') return window.CrazyGames?.SDK ? new CrazyGamesPlatform(hooks) : new NoopPlatform();
   return new NoopPlatform();
 }

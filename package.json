@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Stick Duel \u2014 a juicy turn-based 2D physics duel with stick-figure ragdolls, six worlds and six bosses.",
+  "description": "Stick Duel — a juicy turn-based 2D physics duel with stick-figure ragdolls, six worlds and six bosses.",
   "license": "UNLICENSED",
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,8 @@
     "build:gamepix": "tsc --noEmit && vite build --mode gamepix",
     "build:web": "tsc --noEmit && vite build --mode web",
     "build:playgama": "tsc --noEmit && vite build --mode playgama",
+    "build:gamemonetize": "tsc --noEmit && vite build --mode gamemonetize",
+    "build:y8": "tsc --noEmit && vite build --mode y8",
     "zip": "node scripts/zip-dist.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -20,6 +22,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:gamepix": "playwright test -c playwright.gamepix.config.ts",
+    "test:e2e:gamemonetize": "playwright test -c playwright.gamemonetize.config.ts --trace off",
+    "test:e2e:y8": "playwright test -c playwright.y8.config.ts --trace off",
     "check": "npm run lint && npm run typecheck && npm run test",
     "covers": "node scripts/covers.mjs",
     "videos": "node scripts/videos.mjs",
@@ -35,7 +39,13 @@
     "submission:playgama": "npm run build:playgama && node scripts/playgama/zip.mjs",
     "check:playgama": "node scripts/playgama/check.mjs",
     "test:playgama": "node scripts/playgama/test.mjs",
-    "qa:playgama": "node scripts/playgama/qa.mjs"
+    "qa:playgama": "node scripts/playgama/qa.mjs",
+    "submission:gamemonetize": "npm run build:gamemonetize && node scripts/gamemonetize/zip.mjs",
+    "check:gamemonetize": "node scripts/gamemonetize/check.mjs",
+    "images:gamemonetize": "node scripts/gamemonetize/images.mjs",
+    "submission:y8": "npm run build:y8 && node scripts/y8/zip.mjs",
+    "check:y8": "node scripts/y8/check.mjs",
+    "media:y8": "node scripts/y8/media.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

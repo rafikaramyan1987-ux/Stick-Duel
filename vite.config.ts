@@ -4,12 +4,14 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 
 const CRAZYGAMES_SDK = 'https://sdk.crazygames.com/crazygames-sdk-v3.js';
 const GAMEPIX_SDK = 'https://integration.gamepix.com/sdk/v3/gamepix.sdk.js';
-const PLATFORMS = ['crazygames', 'gd', 'gamepix', 'playgama', 'web'] as const;
+/** Y8 SDK from Y8's CDN only, never bundled (docs.y8.com: `<script src=... async>` in <head>); src/platform/y8.ts initializes it */
+const Y8_SDK = 'https://cdn.y8.com/minimal-sdk/2-0/y8.min.js';
+const PLATFORMS = ['crazygames', 'gd', 'gamepix', 'playgama', 'gamemonetize', 'y8', 'web'] as const;
 type PlatformId = (typeof PLATFORMS)[number];
 
 /**
- * Build-time platform flag: VITE_PLATFORM=crazygames | gd | gamepix | playgama | web, or the build mode
- * (`vite build --mode crazygames` / `--mode gd` / `--mode gamepix` / `--mode playgama`). Anything else is the web build.
+ * Build-time platform flag: VITE_PLATFORM=crazygames | gd | gamepix | playgama | gamemonetize | y8 | web, or the build mode
+ * (`vite build --mode crazygames` / `--mode gd` / `--mode gamepix` / `--mode playgama` / `--mode gamemonetize` / `--mode y8`). Anything else is the web build.
  */
 function platformFor(mode: string): PlatformId {
   const v = process.env.VITE_PLATFORM ?? mode;
@@ -20,8 +22,9 @@ function platformFor(mode: string): PlatformId {
  * Only the `crazygames` build loads the CrazyGames SDK (in <head>, as the docs ask).
  * Only the `gamepix` build loads the GamePix SDK v3 (in <head>, before the game bundle, with the
  * manual lifecycle config the docs ask for; src/platform/gamepix.ts drives it).
- * The `gd` build injects the GameDistribution SDK from code while booting
- * (src/platform/gamedistribution.ts). The web build makes no external request at all.
+ * Only the `y8` build loads the Y8 SDK (async, in <head>, from Y8's CDN; src/platform/y8.ts initializes it).
+ * The `gd` and `gamemonetize` builds inject their SDK from code while booting
+ * (src/platform/gamedistribution.ts, src/platform/gamemonetize.ts). The web build makes no external request at all.
  */
 function platformSdk(platform: PlatformId): Plugin {
   return {
@@ -30,6 +33,7 @@ function platformSdk(platform: PlatformId): Plugin {
       let tag = '';
       if (platform === 'crazygames') tag = `<script src="${CRAZYGAMES_SDK}"></script>`;
       if (platform === 'gamepix') tag = `<script>window.GamePixConfig = { lifecycle: 'manual' };</script>\n    <script src="${GAMEPIX_SDK}"></script>`;
+      if (platform === 'y8') tag = `<script src="${Y8_SDK}" async></script>`;
       return html.replace('<!--platform-sdk-->', tag);
     },
   };
@@ -85,7 +89,7 @@ function playgamaBridge(): Plugin {
 }
 
 // Everything (code, CSS, fonts) is inlined into a single index.html:
-// dist/ (web), dist-crazygames/, dist-gd/, dist-gamepix/, dist-playgama/ (+ the Bridge config; Bridge from Playgama's CDN), and dist-web/ for `--mode web`: the ad-free build for
+// dist/ (web), dist-crazygames/, dist-gd/, dist-gamepix/, dist-gamemonetize/, dist-y8/, dist-playgama/ (+ the Bridge config; Bridge from Playgama's CDN), and dist-web/ for `--mode web`: the ad-free build for
 // open portals (itch.io, Newgrounds, Y8, Playgama), the web platform without the rewarded-ad offers (src/main.ts).
 export default defineConfig(({ mode }) => {
   const platform = platformFor(mode);

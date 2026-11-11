@@ -112,6 +112,8 @@ export class App {
     this.buildIcons();
     platform.onPlatformMuteChange(() => this.applyAudio());
     document.addEventListener('visibilitychange', () => {
+      // Y8: the platform pauses + mutes while the page is hidden and resumes on return (src/platform/y8.ts)
+      if (import.meta.env.VITE_PLATFORM === 'y8') return;
       if (document.hidden && this.isPlaying()) this.pause();
     });
     requestAnimationFrame((t0) => this.frame(t0));
@@ -136,8 +138,9 @@ export class App {
   /** Called by the platform: true while an ad plays (audio muted, game paused), false after. */
   onAdPause(paused: boolean): void {
     this.adPlaying = paused;
-    if (import.meta.env.VITE_PLATFORM === 'gamepix' && paused) {
-      // GamePix pause (ad, player menu, hidden tab): drop the aim in progress, input stays blocked
+    if ((import.meta.env.VITE_PLATFORM === 'gamepix' || import.meta.env.VITE_PLATFORM === 'gamemonetize' || import.meta.env.VITE_PLATFORM === 'y8') && paused) {
+      // GamePix pause (ad, player menu, hidden tab), GameMonetize / Y8 ad (Y8: also a hidden tab or lost focus):
+      // drop the aim in progress, input stays blocked
       this.drag = null;
       this.duel?.cancelAim();
     }
@@ -229,7 +232,7 @@ export class App {
   private bindInput(): void {
     const cv = this.canvas;
     cv.addEventListener('pointerdown', (e) => {
-      if (import.meta.env.VITE_PLATFORM === 'gamepix' && this.adPlaying) return;
+      if ((import.meta.env.VITE_PLATFORM === 'gamepix' || import.meta.env.VITE_PLATFORM === 'gamemonetize' || import.meta.env.VITE_PLATFORM === 'y8') && this.adPlaying) return;
       audio.unlock();
       // tap to skip the kill cam
       if (this.duel?.killCam && !this.session?.attract) {
@@ -269,7 +272,7 @@ export class App {
       }
     });
     window.addEventListener('keydown', (e) => {
-      if (import.meta.env.VITE_PLATFORM === 'gamepix' && this.adPlaying) return;
+      if ((import.meta.env.VITE_PLATFORM === 'gamepix' || import.meta.env.VITE_PLATFORM === 'gamemonetize' || import.meta.env.VITE_PLATFORM === 'y8') && this.adPlaying) return;
       audio.unlock();
       const duel = this.duel;
       // Playgama 1.5.2: Esc is left to the browser (exit full screen); P pauses
@@ -1145,12 +1148,14 @@ export class App {
   /**
    * Natural break (a result screen's buttons, so never during play and never before a level / round is over): a
    * midgame ad before continuing. Playgama: at every break, with no throttle of the game's own (Bridge's
-   * minimumDelayBetweenInterstitial paces them, as Playgama's docs require); other builds: MidgameThrottle.
+   * minimumDelayBetweenInterstitial paces them, as Playgama's docs require); Y8: likewise, the Y8 SDK paces its
+   * 'next' breaks (docs.y8.com ad placement: call at every allowed break and let the SDK skip); other builds:
+   * MidgameThrottle.
    */
   private async breakThen(next: () => void): Promise<void> {
     if (this.adBreak) return; // a second click while the ad is requested
     this.tracker.stop();
-    if (import.meta.env.VITE_PLATFORM === 'playgama' || this.throttle.canShow()) {
+    if (import.meta.env.VITE_PLATFORM === 'playgama' || import.meta.env.VITE_PLATFORM === 'y8' || this.throttle.canShow()) {
       this.throttle.markShown();
       this.adBreak = true;
       try {

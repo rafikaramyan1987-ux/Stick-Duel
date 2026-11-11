@@ -157,3 +157,91 @@ jobs:
           npm run build:gamepix
           npm run build:web
           for f in dist dist-crazygames dist-gd dist-gamepix dist-web; do if grep -q -e playgama-bridge -e bridge.playgama.com $f/index.html || test -e $f/playgama-bridge.js; then echo "$f has Playgama Bridge"; exit 1; fi; done
+
+  gamemonetize:
+    # GameMonetize: window.SDK_OPTIONS + api.gamemonetize.com/sdk.js loaded once at boot; interstitials only at natural
+    # breaks after a click (max one per ~2 min); no rewarded buttons; zip with index.html at the root
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Unit tests of the GameMonetize adapter
+        run: npx vitest run tests/unit/gamemonetize.test.ts
+      - name: Build GameMonetize (dist-gamemonetize/)
+        run: npm run build:gamemonetize
+      - name: Build self-check (single file, GameMonetize sdk.js the only external URL, no other portal)
+        run: node scripts/check-build.mjs gamemonetize
+      - name: Zip checks (index.html at the root, relative paths, game ID, sdk.js only, no other portal / ad network, images 512x384 / 512x512 / 512x340 JPG < 300 KB)
+        run: node scripts/gamemonetize/zip.mjs ci-gamemonetize/stick-duel-gamemonetize.zip
+      - name: Committed zip (submission-gamemonetize/stick-duel-gamemonetize-v1.zip) passes the same checks
+        run: node scripts/gamemonetize/check.mjs submission-gamemonetize/stick-duel-gamemonetize-v1.zip
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Playwright smoke test of dist-gamemonetize (stubbed SDK; loads, pre-roll paused + muted, a level played, no rewarded buttons, ad blocker, no console errors)
+        run: npm run test:e2e:gamemonetize
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-gamemonetize
+          path: playwright-report-gamemonetize/
+          retention-days: 7
+      - name: The other builds never contain GameMonetize code
+        run: |
+          npm run build
+          npm run build:crazygames
+          npm run build:gd
+          npm run build:gamepix
+          npm run build:web
+          npm run build:playgama
+          npm run build:y8
+          for f in dist dist-crazygames dist-gd dist-gamepix dist-web dist-playgama dist-y8; do if grep -rqi -e gamemonetize -e qgdkibss7nawv209v2pfh8txf4p94eas $f; then echo "$f has GameMonetize code"; exit 1; fi; done
+
+  y8:
+    # Y8: y8.min.js from Y8's CDN (async, never bundled), initialized as the portal snippet; 'start' / 'next'
+    # interstitials on clicks, rewarded only after adViewed, pause + mute on ads / hidden page / blur
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install ImageMagick + ffmpeg (media checks)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends imagemagick ffmpeg
+      - name: Unit tests of the Y8 adapter
+        run: npx vitest run tests/unit/y8.test.ts
+      - name: Build Y8 (dist-y8/)
+        run: npm run build:y8
+      - name: Build self-check (single file, Y8 CDN SDK the only external URL, no other portal)
+        run: node scripts/check-build.mjs y8
+      - name: Zip checks (index.html at the root, relative paths, CDN SDK async in <head>, IDs, snippet + ad callbacks, no other portal / ad network)
+        run: node scripts/y8/zip.mjs ci-y8/stick-duel-y8.zip
+      - name: Committed zip (submission-y8/stick-duel-y8-v1.zip) and media (exact sizes, H.264 MP4 20–30 s) pass the same checks
+        run: node scripts/y8/check.mjs submission-y8/stick-duel-y8-v1.zip
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Playwright smoke test of dist-y8 (stubbed SDK; loads, no ad before init, start / next on clicks, rewarded, blur / hidden pause, ad blocker, no console errors)
+        run: npm run test:e2e:y8
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-y8
+          path: playwright-report-y8/
+          retention-days: 7
+      - name: The other builds never contain Y8 code
+        run: |
+          npm run build
+          npm run build:crazygames
+          npm run build:gd
+          npm run build:gamepix
+          npm run build:web
+          npm run build:playgama
+          npm run build:gamemonetize
+          for f in dist dist-crazygames dist-gd dist-gamepix dist-web dist-playgama dist-gamemonetize; do if grep -rqi -e cdn.y8.com -e y8sdk -e 6af4b1f4ca1c6869a74e0a2f $f; then echo "$f has Y8 code"; exit 1; fi; done
