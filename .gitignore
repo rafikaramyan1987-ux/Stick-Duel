@@ -6,6 +6,8 @@ dist-playgama
 test-results/
 playwright-report/
 playwright-report-gamepix/
+playwright-report-gamemonetize/
+playwright-report-y8/
 .vite/
 coverage/
 .DS_Store
@@ -18,3 +20,5 @@ coverage/
 !submission-gamepix/*.zip
 !submission-web/*.zip
 !submission-playgama/*.zip
+!submission-gamemonetize/*.zip
+!submission-y8/*.zip
