@@ -17,7 +17,7 @@ import type { AdHooks, AdsUnavailable, Platform, StorageLike } from './ads';
  * - `game_ready` is always the first lifecycle message: gameplay messages sent before it are held (send)
  * - interstitials (`advertisement.showInterstitial()`) at every result-screen break between levels / rounds (app.ts
  *   breakThen), with no counter or timer of the game's own: how often one shows is Bridge's call,
- *   `minimumDelayBetweenInterstitial` in playgama-bridge-config.json; never during a level, no pre-roll
+ *   Bridge's own platform default delay between interstitials (no override in playgama-bridge-config.json); never during a level, no pre-roll
  * - rewarded (`advertisement.showRewarded()`) only from the labelled ad buttons; they are hidden (adsUnavailable)
  *   when Bridge is missing or `isRewardedSupported` is false. The reward is granted only when Bridge reports the
  *   `rewarded` state before `closed`; closed / failed without it: no reward (the button says no ad is available)

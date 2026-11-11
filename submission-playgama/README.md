@@ -53,7 +53,7 @@ English (default and fallback) and French, from Bridge's `platform.language`. La
   after `game_ready` (a gameplay message sent before it is held and sent right after it); interstitials at every break
   between levels / rounds (result-screen buttons, so never during play and never before the first level or round is
   over; no pre-roll), with no counter or timer of the game's own: how often one shows is Bridge's call,
-  `minimumDelayBetweenInterstitial` in playgama-bridge-config.json (Playgama's interstitial docs); rewarded ads
+  Bridge's own platform default delay between interstitials (no override in playgama-bridge-config.json) (Playgama's interstitial docs); rewarded ads
   only from the labelled "▶ Double coins", "▶ Try <weapon> for this duel" and "▶ Revive & keep fighting" buttons (hidden where Bridge has no
   rewarded ads), with the reward only after Bridge's `rewarded` state; sound muted and the game paused during ads, on
   Bridge's pause state and when the page is hidden; Bridge's audio state mutes.
